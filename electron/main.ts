@@ -1,7 +1,8 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import fs from 'node:fs';
 
 // const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -65,28 +66,37 @@ app.on('activate', () => {
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  registerIpcMain()
+  createWindow()
+})
+
+function registerIpcMain() {
+  ipcMain.handle('listSubdirectories', (event, dirPath: string) => {
+    return listSubdirectories(dirPath)
+  })
+}
 
 // import path from 'node:path';
-import fs from 'node:fs';
 
 
-const basePath = '/run/media/deck/Data/Games/Gal/';
+// const basePath = '/run/media/deck/Data/Games/Gal/';
 
-async function listSubdirectories(dirPath: string): Promise<void> {
+async function listSubdirectories(dirPath: string): Promise<string[]> {
   try {
-      // Read all entries in the directory
       const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
 
-      // Filter only directories
       const subdirs: string[] = entries
           .filter((entry) => entry.isDirectory())
           .map((entry) => path.join(dirPath, entry.name));
 
-      console.log('Subdirectories:', subdirs);
+      // console.log('Subdirectories AAA:', subdirs);
+      return subdirs;
   } catch (err) {
       console.error('Error reading directory:', (err as Error).message);
+      throw err;
   }
 }
 
-listSubdirectories(basePath);
+
+console.log('Hello from Electron 👋')
