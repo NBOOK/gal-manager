@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import HelloWorld from './components/HelloWorld.vue'
 // import { ref, onMounted } from 'vue'
-// import { useGameListStore, useGameStore } from './store/store'
-// import LoadingOverlay from './components/Loading.vue'
+import { useGameListStore } from './store/store'
+import LoadingOverlay from './components/Loading.vue'
 
-// const gameListStore = useGameListStore()
-// const gameStore = useGameStore()
-
+const gameListStore = useGameListStore()
 </script>
 
 <template>
@@ -19,6 +17,8 @@ import HelloWorld from './components/HelloWorld.vue'
     </a>
   </div>
   <HelloWorld msg="Vite + Vue + Test" />
+  <button @click="gameListStore.loading = true">Load Games</button>
+  <LoadingOverlay />
 </template>
 
 <style scoped>
@@ -28,9 +28,11 @@ import HelloWorld from './components/HelloWorld.vue'
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
 }
