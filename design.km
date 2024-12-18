@@ -1,0 +1,1860 @@
+{
+    "root": {
+        "data": {
+            "id": "d6ayhzfw99c0",
+            "created": 1734132027232,
+            "text": "GalManager",
+            "priority": null,
+            "progress": null,
+            "expandState": "expand"
+        },
+        "children": [
+            {
+                "data": {
+                    "id": "d6ayir933tk0",
+                    "created": 1734132087770,
+                    "text": "MainUI",
+                    "progress": null,
+                    "layout": null,
+                    "expandState": "expand"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d6ayt4slorc0",
+                            "created": 1734132900890,
+                            "text": "TopBar",
+                            "expandState": "expand",
+                            "layout": null
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d6ayt0xgggg0",
+                                    "created": 1734132892477,
+                                    "text": "Sort",
+                                    "layout": null,
+                                    "expandState": "expand"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6ayudschtk0",
+                                            "created": 1734132998830,
+                                            "text": "Name",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6ayvgulrw00",
+                                            "created": 1734133083861,
+                                            "text": "GameSize",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6ayvl6jmgg0",
+                                            "created": 1734133093291,
+                                            "text": "Location (SDCard:0, Data:1, USB:2, NetDisk:3)",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6aywkmxjk80",
+                                            "created": 1734133170468,
+                                            "text": "Link (toSDCard:0, toData:1, toUSB:2, toNetDisk:3, toThumbs:4, unlinked:5)",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6ayum5hjtk0",
+                                            "created": 1734133017039,
+                                            "text": "Brand",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6ayyfk3mwo0",
+                                            "created": 1734133316142,
+                                            "text": "Assets (complete:0, incomplete:1, missing 2)",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6az1e8en0g0",
+                                            "created": 1734133548350,
+                                            "text": "DB (complete:0, incomplete:1, missing 2)",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "d6ayr228tbs0",
+                                    "created": 1734132738215,
+                                    "text": "Search",
+                                    "layout": null,
+                                    "expandState": "expand"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6ayr40lovc0",
+                                            "created": 1734132742469,
+                                            "text": "update list instantly",
+                                            "layout": null,
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6ayrhx3kco0",
+                                            "created": 1734132772732,
+                                            "text": "\"reg:\" search using regular expression",
+                                            "layout": null,
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6ayrw7qlnk0",
+                                            "created": 1734132803850,
+                                            "text": "\"name:\" seach game title only",
+                                            "layout": null,
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6ays1y6seg0",
+                                            "created": 1734132816334,
+                                            "text": "\"brand\" search game brand only",
+                                            "layout": null,
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "d6ayt0xgggg0",
+                                    "created": 1734132892477,
+                                    "text": "Filter",
+                                    "layout": null,
+                                    "expandState": "expand"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6ayvl6jmgg0",
+                                            "created": 1734133093291,
+                                            "text": "Location (SDCard:0, Data:1, USB:2, NetDisk:3)",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6aywkmxjk80",
+                                            "created": 1734133170468,
+                                            "text": "Link (toSDCard:0, toData:1, toUSB:2, toNetDisk:3, toThumbs:4, unlinked:5)",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6ayyfk3mwo0",
+                                            "created": 1734133316142,
+                                            "text": "Assets (complete:0, incomplete:1, missing 2)",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "d6az4g9jqjc0",
+                                    "created": 1734133787865,
+                                    "text": "FreeUpSapce",
+                                    "expandState": "expand"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6b17cew75s0",
+                                            "created": 1734139656794,
+                                            "text": "Trigger FreeUpSpace for selected games",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d6b23oreq6o0",
+                            "created": 1734142191325,
+                            "text": "GameCard",
+                            "expandState": "collapse",
+                            "resource": [
+                                "Obj"
+                            ]
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d6b23uukjaw0",
+                                    "created": 1734142204577,
+                                    "text": "GameInfo",
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6azo56aimg0",
+                                    "created": 1734135331007,
+                                    "text": "Indicators",
+                                    "expandState": "expand"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6azqlim1uo0",
+                                            "created": 1734135523309,
+                                            "text": "Link",
+                                            "expandState": "expand"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "d6b19a14jxc0",
+                                                    "created": 1734139808336,
+                                                    "text": "Valid",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1bdyd4lk0",
+                                                            "created": 1734139973604,
+                                                            "text": "Show green link icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1bw8mi3s0",
+                                                            "created": 1734140013407,
+                                                            "text": "Not interactable if DB is valid",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1bjy2ogw0",
+                                                            "created": 1734139986648,
+                                                            "text": "Hover to show gray unlink icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1ckghwy00",
+                                                            "created": 1734140066126,
+                                                            "text": "Click to trigger Unlink",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "d6b18d1pufk0",
+                                                    "created": 1734139736538,
+                                                    "text": "Broken",
+                                                    "note": "If link in Local or Remote but not in MainDir",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b19r18sw80",
+                                                            "created": 1734139845348,
+                                                            "text": "Show red unlink icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1a3ed97c0",
+                                                            "created": 1734139872263,
+                                                            "text": "Hover to show gray link icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1a9jok940",
+                                                            "created": 1734139885645,
+                                                            "text": "Click to trigger Link",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6azqpq8p600",
+                                            "created": 1734135532477,
+                                            "text": "DB",
+                                            "expandState": "expand"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "d6b015ld9q00",
+                                                    "created": 1734136350653,
+                                                    "text": "Valid",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b3cqccuxc0",
+                                                            "created": 1734145721156,
+                                                            "text": "Show green DB normal icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b01y9iyn40",
+                                                            "created": 1734136413064,
+                                                            "text": "Click to trigger DBRemove",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "d6b00p6gi680",
+                                                    "created": 1734136314923,
+                                                    "text": "Broken",
+                                                    "note": "If game not in DB",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b3ew1wchc0",
+                                                            "created": 1734145890313,
+                                                            "text": "Show red db broken icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6azy5s5cw00",
+                                                            "created": 1734136115970,
+                                                            "text": "Click to trigger DBRemove then DBAdd",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6azzyj71c00",
+                                                            "created": 1734136256920,
+                                                            "text": "Not clickable for unlinked game",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6azy0wgr600",
+                                                            "created": 1734136105347,
+                                                            "text": "Hover to show DB add icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6azqr5yd9c0",
+                                            "created": 1734135535604,
+                                            "text": "Assets",
+                                            "expandState": "expand"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "d6b1f23h5co0",
+                                                    "created": 1734140261249,
+                                                    "text": "Valid",
+                                                    "note": "All image assets present",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1fmjjut40",
+                                                            "created": 1734140305756,
+                                                            "text": "Show green image icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "d6b1e732h0w0",
+                                                    "created": 1734140193744,
+                                                    "text": "Incomplete",
+                                                    "note": "Some image assets missing.\n\nCheck locations:\n- Remote (2)\n- Local (2)",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1eloyyjc0",
+                                                            "created": 1734140225543,
+                                                            "text": "Show orange image warning icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1g0hllm80",
+                                                            "created": 1734140336113,
+                                                            "text": "Click to open incomplete assets folder(s)",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "d6b1e8xe0w80",
+                                                    "created": 1734140197754,
+                                                    "text": "Missing",
+                                                    "note": "`CustomLibraryAssets` doesn't exist in all locations, usually means I haven't create assets for this game yet.",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1ioiwndc0",
+                                                            "created": 1734140545164,
+                                                            "text": "Show red image broken icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6azr1kal1k0",
+                                            "created": 1734135558239,
+                                            "text": "RemoteIndicator",
+                                            "expandState": "expand"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "d6b1jjzyjuw0",
+                                                    "created": 1734140613675,
+                                                    "text": "CloudOnly",
+                                                    "expandState": "expand",
+                                                    "note": "Game not exist in Local"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1j8i5znk0",
+                                                            "created": 1734140588654,
+                                                            "text": "Show blue cloud icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1kmk15cw0",
+                                                            "created": 1734140697606,
+                                                            "text": "Hover to show gray cloud-download icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1kyykp3k0",
+                                                            "created": 1734140724607,
+                                                            "text": "Click to trigger KeepOnDevice",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1vx4om3k0",
+                                                            "created": 1734141582629,
+                                                            "text": "Ask where to download",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "d6b1lhxe4fk0",
+                                                    "created": 1734140765894,
+                                                    "text": "Downloading",
+                                                    "note": "(TODO) KeepOnDevice triggered but not fully downloaded.",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1nk9ogu00",
+                                                            "created": 1734140927719,
+                                                            "text": "Downloading",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "data": {
+                                                                    "id": "d6b1m0jl8s80",
+                                                                    "created": 1734140806419,
+                                                                    "text": "Show cloud-with-spin icon",
+                                                                    "expandState": "expand"
+                                                                },
+                                                                "children": []
+                                                            },
+                                                            {
+                                                                "data": {
+                                                                    "id": "d6b1mltdysg0",
+                                                                    "created": 1734140852724,
+                                                                    "text": "Hover to show progress bar, pause, cancel",
+                                                                    "expandState": "expand"
+                                                                },
+                                                                "children": []
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1mswc65k0",
+                                                            "created": 1734140868139,
+                                                            "text": "Paused",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "data": {
+                                                                    "id": "d6b1nusuwq00",
+                                                                    "created": 1734140950647,
+                                                                    "text": "Show cloud-with-pause icon",
+                                                                    "expandState": "expand"
+                                                                },
+                                                                "children": []
+                                                            },
+                                                            {
+                                                                "data": {
+                                                                    "id": "d6b1nzuuho80",
+                                                                    "created": 1734140961651,
+                                                                    "text": "Hover to show progress bar, resume, cancel",
+                                                                    "expandState": "expand"
+                                                                },
+                                                                "children": []
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1ojtnu480",
+                                                            "created": 1734141005115,
+                                                            "text": "Cancel",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "data": {
+                                                                    "id": "d6b1oq5gzfk0",
+                                                                    "created": 1734141018890,
+                                                                    "text": "Trigger FreeUpSpace",
+                                                                    "expandState": "expand"
+                                                                },
+                                                                "children": []
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "d6b1jrnpu0o0",
+                                                    "created": 1734140630349,
+                                                    "text": "OnDevice",
+                                                    "note": "Game exist on local",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1p7ggiso0",
+                                                            "created": 1734141056559,
+                                                            "text": "Show green cloud-download icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1pxrcuhs0",
+                                                            "created": 1734141113815,
+                                                            "text": "Hover to show trash icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1q4sho5c0",
+                                                            "created": 1734141129121,
+                                                            "text": "Click to trigger FreeUpSpace",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6azs3uxsxc0",
+                                            "created": 1734135641600,
+                                            "text": "LinkSwitcher",
+                                            "expandState": "expand"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "d6b1qm2ovio0",
+                                                    "created": 1734141166743,
+                                                    "text": "CloudOnly",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1rdx6a9k0",
+                                                            "created": 1734141227359,
+                                                            "text": "Switch to Cloud",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1s2d9cwo0",
+                                                            "created": 1734141280575,
+                                                            "text": "Not interactable",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "d6b1r8w0vy80",
+                                                    "created": 1734141216406,
+                                                    "text": "OnDevice",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1saxmths0",
+                                                            "created": 1734141299221,
+                                                            "text": "Toggle to trigger LinkSwitch",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6azs8phoso0",
+                                            "created": 1734135652155,
+                                            "text": "Local",
+                                            "expandState": "expand"
+                                        },
+                                        "children": [
+                                            {
+                                                "data": {
+                                                    "id": "d6b1t18de0o0",
+                                                    "created": 1734141356466,
+                                                    "text": "CloudOnly",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1tg9s7ko0",
+                                                            "created": 1734141389203,
+                                                            "text": "Shwo light gray SDCard icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1ulxxp0g0",
+                                                            "created": 1734141479912,
+                                                            "text": "Not interactable",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "data": {
+                                                    "id": "d6b1t53w0740",
+                                                    "created": 1734141364902,
+                                                    "text": "OnDevice",
+                                                    "expandState": "expand"
+                                                },
+                                                "children": [
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1wt9yunk0",
+                                                            "created": 1734141652605,
+                                                            "text": "Show dark gray SDCard/Data icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1xgesu000",
+                                                            "created": 1734141702963,
+                                                            "text": "Hover to show the other icon",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "data": {
+                                                            "id": "d6b1xm5d1g80",
+                                                            "created": 1734141715453,
+                                                            "text": "Click to move game files to the other local location",
+                                                            "expandState": "expand"
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d6b7tg6askw0",
+                            "created": 1734158315652,
+                            "text": "GameContainer",
+                            "expandState": "expand"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d6b82oltba00",
+                                    "created": 1734159039282,
+                                    "text": "Games: [Game]",
+                                    "resource": [
+                                        "Arr"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b84gx5dmw0",
+                                    "created": 1734159179282,
+                                    "text": "Selected: [Game]",
+                                    "resource": [
+                                        "Arr"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b8deez1gg0",
+                                    "created": 1734159879106,
+                                    "text": "Filtered: [Game]",
+                                    "resource": [
+                                        "Arr"
+                                    ]
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b831a266o0",
+                                    "created": 1734159066870,
+                                    "text": "TotalGames",
+                                    "resource": [
+                                        "Get"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b8esagol40",
+                                    "created": 1734159987673,
+                                    "text": "TotalSize([Game])",
+                                    "resource": [
+                                        "Get"
+                                    ],
+                                    "note": "Formatted Size"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b8c81hc9s0",
+                                    "created": 1734159786866,
+                                    "text": "Select",
+                                    "resource": [
+                                        "Fun"
+                                    ],
+                                    "note": "Set Game.Info.Selected to 1\n\nAdd Game to Selected"
+                                },
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "d6b2qngv7y80",
+                    "created": 1734143990887,
+                    "text": "Game",
+                    "expandState": "expand",
+                    "resource": [
+                        "Obj"
+                    ]
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "d6b4ydryc5s0",
+                            "created": 1734150238922,
+                            "text": "Info",
+                            "expandState": "expand",
+                            "resource": [
+                                "Obj"
+                            ]
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d6b317xeycg0",
+                                    "created": 1734144819065,
+                                    "text": "Title",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Var"
+                                    ]
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b4z5zw24w0",
+                                    "created": 1734150300352,
+                                    "text": "TitleEN",
+                                    "resource": [
+                                        "Var"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b4ypr8ikg0",
+                                    "created": 1734150265000,
+                                    "text": "Brand",
+                                    "resource": [
+                                        "Var"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b4z8pd4480",
+                                    "created": 1734150306246,
+                                    "text": "BrandEN",
+                                    "resource": [
+                                        "Var"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b4ytdwmts0",
+                                    "created": 1734150272901,
+                                    "text": "UpdateTime",
+                                    "resource": [
+                                        "Var"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b4ywe4x800",
+                                    "created": 1734150279446,
+                                    "text": "Size",
+                                    "resource": [
+                                        "Var"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b88io37wo0",
+                                    "created": 1734159496544,
+                                    "text": "Selected",
+                                    "resource": [
+                                        "Var"
+                                    ]
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b4zkqi9880",
+                                    "created": 1734150332437,
+                                    "text": "Query",
+                                    "resource": [
+                                        "Fun"
+                                    ],
+                                    "note": "Query VNDB for TitleEN and BrandEN",
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d6b48wtabf40",
+                            "created": 1734148242894,
+                            "text": "Path",
+                            "expandState": "collapse",
+                            "resource": [
+                                "Obj"
+                            ]
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d6b4p8d2ubk0",
+                                    "created": 1734149521862,
+                                    "text": "SDCard",
+                                    "resource": [
+                                        "Var"
+                                    ],
+                                    "note": "value = ~/Mount/SDCard/Games/Gal/<GameName>",
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b4paz7vmw0",
+                                    "created": 1734149527554,
+                                    "text": "Data",
+                                    "resource": [
+                                        "Var"
+                                    ],
+                                    "note": "value = ~/Mount/Data/Games/Gal/<GameNam>",
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b58q0icio0",
+                                    "created": 1734151049203,
+                                    "text": "NetDisk",
+                                    "resource": [
+                                        "Var"
+                                    ],
+                                    "note": "value = ~/Mount/NetDisk/Games/Gal/<GameName>",
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b4pl4a83c0",
+                                    "created": 1734149549628,
+                                    "text": "Thumbnails",
+                                    "resource": [
+                                        "Var"
+                                    ],
+                                    "note": "value = ~/Pictures/GalArtAssets/<GameName>\n\nFallback of NetDisk\n",
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b2tpxblog0",
+                                    "created": 1734144231328,
+                                    "text": "Remote",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Ref"
+                                    ],
+                                    "note": "value = ~/Games/External/Gal/\n\nA symbolic link points to either NetDisk or ImageThumbs\n\nDon't update the link target in this program, it's handled by system service.\n\nIts value is a link target."
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b3165c3ag0",
+                                    "created": 1734144815190,
+                                    "text": "Local",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Ref"
+                                    ],
+                                    "note": "value = SDCard or Data or NULL\n\nIts value is a link target.\n\n"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b32xgbt200",
+                                    "created": 1734144952992,
+                                    "text": "Main",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Ref"
+                                    ],
+                                    "note": "value = ~/Games/Gal/<GameName>\n\nA symbolic link points to either Local or Remote or NULL.\n\nValue not changed, but its target can change."
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b5ieqgb540",
+                                    "created": 1734151808292,
+                                    "text": "Init",
+                                    "resource": [
+                                        "Ref"
+                                    ],
+                                    "note": "1. Generate values of 4 actual folders\n\n2. Get value of remote link\n\n3. Calculate value for local link (Local = SDCard if Data==NULL else Data)\n\n4. Get calue of Main link",
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d6b47fr6ylk0",
+                            "created": 1734148127397,
+                            "text": "DB",
+                            "expandState": "collapse",
+                            "resource": [
+                                "Obj"
+                            ]
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d6b47i3mz800",
+                                    "created": 1734148132504,
+                                    "text": "Game",
+                                    "resource": [
+                                        "Ref"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b39c496000",
+                                    "created": 1734145455099,
+                                    "text": "Status",
+                                    "note": "LutrisEntry.Status && SteamEntry.Statu",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Get"
+                                    ]
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b0bkc726o0",
+                                    "created": 1734137166392,
+                                    "text": "DBAdd",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Fun"
+                                    ],
+                                    "note": "Send Game to GalAdder\n\nTODO implement GalAdder here"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6azgigkd0g0",
+                                    "created": 1734134733013,
+                                    "text": "DBRemove",
+                                    "progress": null,
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Fun"
+                                    ],
+                                    "note": "Remove LutrisEntry and SteamEntry."
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6azgvxeec80",
+                                    "created": 1734134762329,
+                                    "text": "LutrisEntry",
+                                    "progress": null,
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Obj"
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6b3mj2ii3k0",
+                                            "created": 1734146488965,
+                                            "text": "Status",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Get"
+                                            ]
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6azik77cyo0",
+                                            "created": 1734134893530,
+                                            "text": "cover, banner, icon",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Var"
+                                            ]
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6azj8gluig0",
+                                            "created": 1734134946340,
+                                            "text": "LutrisDBFile",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Var"
+                                            ]
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6azjb4klzs0",
+                                            "created": 1734134952143,
+                                            "text": "config",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Var"
+                                            ]
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6azjd7dva00",
+                                            "created": 1734134956667,
+                                            "text": "game_path.json",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Var"
+                                            ]
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b3hnn2kpc0",
+                                    "created": 1734146107094,
+                                    "text": "SteamEntry",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Obj"
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6b3iiyrlag0",
+                                            "created": 1734146175282,
+                                            "text": "Status",
+                                            "note": "ShortcutStatus && AssetsStatus",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Get"
+                                            ]
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b3jvqz0f40",
+                                            "created": 1734146281473,
+                                            "text": "ShortcutFile",
+                                            "note": "Entry found in ShortCutPath binary",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Var"
+                                            ]
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b3k5kgeg80",
+                                            "created": 1734146302846,
+                                            "text": "Grid",
+                                            "note": "All assets present in steam drid dir",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Var"
+                                            ]
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d6b4ob6najc0",
+                            "created": 1734149449639,
+                            "text": "Assets",
+                            "resource": [
+                                "Obj"
+                            ],
+                            "expandState": "collapse"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d6b4uoilh5k0",
+                                    "created": 1734149948844,
+                                    "text": "GamePath",
+                                    "resource": [
+                                        "Ref"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b0rgwq5140",
+                                    "created": 1734138412753,
+                                    "text": "ThumbnailCreate",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Fun"
+                                    ],
+                                    "note": "1. Copy necessary image assets from GamePath.NetDisk to GamePath.Thumbnails"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b0dhs2h3s0",
+                                    "created": 1734137317549,
+                                    "text": "CheckAssets(specify or all)",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Fun"
+                                    ],
+                                    "note": "Check the assets status of Local, NetDisk, Thumbnails "
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b6l82uc9k0",
+                                    "created": 1734154850006,
+                                    "text": "getStatus",
+                                    "resource": [
+                                        "Get"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b50z8aeww0",
+                                    "created": 1734150442351,
+                                    "text": "Local",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Obj"
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6b514jkkbs0",
+                                            "created": 1734150453917,
+                                            "text": "getStatus",
+                                            "resource": [
+                                                "Get"
+                                            ],
+                                            "note": "1: valid\n\n2: incomplete",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b6fq6nm0g0",
+                                            "created": 1734154419233,
+                                            "text": "Header, ...",
+                                            "resource": [
+                                                "Var"
+                                            ],
+                                            "note": "<GamePath.Local>/_CustomLibraryAssets/...\nEmpty string if not exist",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b6hhrxr0g0",
+                                    "created": 1734154557658,
+                                    "text": "NetDisk",
+                                    "resource": [
+                                        "Obj"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6b6hk0a5qg0",
+                                            "created": 1734154562516,
+                                            "text": "getStatus",
+                                            "resource": [
+                                                "Fun"
+                                            ],
+                                            "note": "1: valid\n\n2: incomplete",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b6hlqu21k0",
+                                            "created": 1734154566298,
+                                            "text": "Header, ...",
+                                            "resource": [
+                                                "Var"
+                                            ],
+                                            "note": "<GamePath.NetDisk>/_CustomLibraryAssets/...",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b6hpmqexk0",
+                                    "created": 1734154574757,
+                                    "text": "Thumbnails",
+                                    "resource": [
+                                        "Obj"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6b6hvg7y6w0",
+                                            "created": 1734154587424,
+                                            "text": "getStatus",
+                                            "resource": [
+                                                "Get"
+                                            ],
+                                            "note": "1: valid\n\n2: incomplete",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b6i0xkko80",
+                                            "created": 1734154599357,
+                                            "text": "Header, ...",
+                                            "resource": [
+                                                "Var"
+                                            ],
+                                            "note": "<GamePath.Thumbnails>/_CustomLibraryAssets/...",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d6b75x6i9ls0",
+                            "created": 1734156471930,
+                            "text": "Content",
+                            "expandState": "collapse",
+                            "resource": [
+                                "Obj"
+                            ]
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "d6b7d97xx2w0",
+                                    "created": 1734157046687,
+                                    "text": "GamePath",
+                                    "resource": [
+                                        "Ref"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b3z8dssqg0",
+                                    "created": 1734147484437,
+                                    "text": "Downloader",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Obj"
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6b472utjx40",
+                                            "created": 1734148099319,
+                                            "text": "GamePath",
+                                            "resource": [
+                                                "Ref"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b7rf5akrk0",
+                                            "created": 1734158156686,
+                                            "text": "Linker",
+                                            "resource": [
+                                                "Ref"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b3rv8rrgo0",
+                                            "created": 1734146907285,
+                                            "text": "Status",
+                                            "expandState": "expand",
+                                            "note": "0: inactive\n\n1: downloading\n\n2: paused",
+                                            "resource": [
+                                                "Var"
+                                            ]
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b0b56lwww0",
+                                            "created": 1734137133402,
+                                            "text": "Download",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Fun"
+                                            ],
+                                            "note": "1. Copy Content from GamePath.NetDisk to either GamePath.SDCard or GamePath.Data\n\n2. Update GamePath.Local\n\n3. Call Linker.Link"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b3zrug57c0",
+                                            "created": 1734147526802,
+                                            "text": "Progress",
+                                            "resource": [
+                                                "Get"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b3zyji6s00",
+                                            "created": 1734147541378,
+                                            "text": "Speed",
+                                            "resource": [
+                                                "Get"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b400blh080",
+                                            "created": 1734147545254,
+                                            "text": "CurrentTransferingFile",
+                                            "resource": [
+                                                "Get"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b6v9ciga00",
+                                    "created": 1734155636409,
+                                    "text": "LocalMover",
+                                    "resource": [
+                                        "Obj"
+                                    ],
+                                    "note": "```\nif GamePath.Local != NULL:\n\tif GamePath.Local == GamePath.SDCard:\n    \tMove to GamePath.Data\n        Update GamePath.Local\n        Points GamePath.Main to new Local\n \telse:\n    \tMove to GamePath.SDCard\n        Update GamePath.Local\n     \tPoints GamePath.Main to new Local\n```",
+                                    "expandState": "expand"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6b472utjx40",
+                                            "created": 1734148099319,
+                                            "text": "GamePath",
+                                            "resource": [
+                                                "Ref"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b7rf5akrk0",
+                                            "created": 1734158156686,
+                                            "text": "Linker",
+                                            "resource": [
+                                                "Ref"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b3rv8rrgo0",
+                                            "created": 1734146907285,
+                                            "text": "Status",
+                                            "expandState": "expand",
+                                            "note": "0: inactive\n\n1: downloading\n\n2: paused",
+                                            "resource": [
+                                                "Var"
+                                            ]
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b0b56lwww0",
+                                            "created": 1734137133402,
+                                            "text": "Move",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Fun"
+                                            ],
+                                            "note": "1. Move Content GamePath.SDCard <==> GamePath.Data\n\n2. Update GamePath.Local\n\n3. Call Linke.Link"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b3zrug57c0",
+                                            "created": 1734147526802,
+                                            "text": "getProgress",
+                                            "resource": [
+                                                "Get"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b3zyji6s00",
+                                            "created": 1734147541378,
+                                            "text": "getSpeed",
+                                            "resource": [
+                                                "Get"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b400blh080",
+                                            "created": 1734147545254,
+                                            "text": "CurrentTransferingFile",
+                                            "resource": [
+                                                "Get"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b0daydt8w0",
+                                    "created": 1734137302694,
+                                    "text": "FreeUpSpace",
+                                    "expandState": "expand",
+                                    "resource": [
+                                        "Fun"
+                                    ],
+                                    "note": "```\nif GamePath.Local != NULL:\n\tDel loccal content\n    Update GamePath.Local to NULL\n    Points GamePath.Main to GamePath.Remote\n```\n"
+                                },
+                                "children": []
+                            },
+                            {
+                                "data": {
+                                    "id": "d6b40zd31680",
+                                    "created": 1734147621531,
+                                    "text": "Linker",
+                                    "resource": [
+                                        "Obj"
+                                    ],
+                                    "expandState": "expand"
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "d6b4apq83mg0",
+                                            "created": 1734148384199,
+                                            "text": "GamePath",
+                                            "resource": [
+                                                "Ref"
+                                            ],
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b4a9pslk00",
+                                            "created": 1734148349345,
+                                            "text": "Status",
+                                            "resource": [
+                                                "Get"
+                                            ],
+                                            "note": "0: if Main --> Remote\n\n1: if Main --> Local\n\n2: if Main --> NULL (Unlinked)",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b4abmmme80",
+                                            "created": 1734148353507,
+                                            "text": "SwitchLink",
+                                            "resource": [
+                                                "Fun"
+                                            ],
+                                            "note": "Update link (Can't update if Local is NULL):\n\nMain --> Local\n\nor\n\nMain --> Remot\n\nUpdate status",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b0bafmcxc0",
+                                            "created": 1734137144831,
+                                            "text": "Link",
+                                            "expandState": "expand",
+                                            "layout_left_offset": {
+                                                "x": -16.99999949336052,
+                                                "y": 1.9999999403953552
+                                            },
+                                            "resource": [
+                                                "Fun"
+                                            ],
+                                            "note": "Create link\n\nMain --> Local\n\nor\n\nMain --> Remot\n\nLocal has priority if it's not NULL\n\nUpdate status"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b0bgodpuo0",
+                                            "created": 1734137158421,
+                                            "text": "Unlink",
+                                            "expandState": "expand",
+                                            "resource": [
+                                                "Fun"
+                                            ],
+                                            "note": "Delet link\n\nMain -x-> Local\n\nand\n\nMain -x-> Remot\n\nUpdate status"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "d6b6dc41r1c0",
+                                            "created": 1734154231872,
+                                            "text": "TargetOf",
+                                            "resource": [
+                                                "Fun"
+                                            ],
+                                            "note": "Get the link target of the link",
+                                            "expandState": "expand"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "data": {
+                            "id": "d6b7z9zc5j40",
+                            "created": 1734158772356,
+                            "text": "UpdateName",
+                            "resource": [
+                                "Fun"
+                            ],
+                            "note": "Update\n\n1. info variable\n2. Path object\n3. LutrisEntry & SteamEntry\n4. Update FolderName (mv content)\n5. Update links",
+                            "expandState": "expand"
+                        },
+                        "children": []
+                    }
+                ]
+            }
+        ]
+    },
+    "template": "default",
+    "theme": "fresh-blue",
+    "version": "1.4.43"
+}

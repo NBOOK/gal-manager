@@ -66,3 +66,27 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(createWindow)
+
+// import path from 'node:path';
+import fs from 'node:fs';
+
+
+const basePath = '/run/media/deck/Data/Games/Gal/';
+
+async function listSubdirectories(dirPath: string): Promise<void> {
+  try {
+      // Read all entries in the directory
+      const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+
+      // Filter only directories
+      const subdirs: string[] = entries
+          .filter((entry) => entry.isDirectory())
+          .map((entry) => path.join(dirPath, entry.name));
+
+      console.log('Subdirectories:', subdirs);
+  } catch (err) {
+      console.error('Error reading directory:', (err as Error).message);
+  }
+}
+
+listSubdirectories(basePath);
