@@ -80,6 +80,7 @@ watch(() => gameListStore.loading,
         <div class="loading-content">
             <p>{{ processedGames }}/{{ totalGames }}</p>
             <p>Processing: {{ currentGame }}</p>
+            <progress :value="processedGames" :max="totalGames"></progress>
         </div>
     </div>
 </template>
