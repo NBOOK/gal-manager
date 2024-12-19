@@ -67,8 +67,6 @@ watch(() => gameListStore.loading,
             // clear the games list
             gameListStore.games = {}
             processedGames.value = 0
-            // fetchSubdirectories('/run/media/deck/NetDisk/Games/Gal') // 开始加载
-            // fetchSubdirectories('/home/deck/Games/Gal') // 开始加载
             scanGames()
         }
     }
