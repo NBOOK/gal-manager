@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useGameListStore } from '../store/global'
-import GameEntry from '../modules/GameEntry'
+import { useGameListStore } from '@store/global'
+import GameEntry from '@modules/GameEntry'
 
 const gameListStore = useGameListStore()
 const currentGame = ref<string>('')
