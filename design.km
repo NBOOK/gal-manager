@@ -217,7 +217,7 @@
                             "id": "d6b23oreq6o0",
                             "created": 1734142191325,
                             "text": "GameCard",
-                            "expandState": "collapse",
+                            "expandState": "expand",
                             "resource": [
                                 "Obj"
                             ]
@@ -1511,7 +1511,7 @@
                             "id": "d6b75x6i9ls0",
                             "created": 1734156471930,
                             "text": "Content",
-                            "expandState": "collapse",
+                            "expandState": "expand",
                             "resource": [
                                 "Obj"
                             ]

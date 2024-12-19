@@ -1,47 +1,75 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useGameListStore, useGameStore } from '../store/store'
+import { useGameListStore } from '../store/global'
+import GameEntry from '../modules/GameEntry'
 
 const gameListStore = useGameListStore()
 const currentGame = ref<string>('')
 const processedGames = ref<number>(0)
-const gameList = ref<string[]>([])
+const totalGames = ref<number>(0)
 
 
+async function scanGames() {
+    const paths = {
+        main: '/home/deck/Games/Gal',
+        netDisk: '/run/media/deck/NetDisk/Games/Gal',
+        sdCard: '/run/media/deck/SDCard/Games/Gal',
+        deck: '/run/media/deck/Data/Games/Gal',
+    };
 
-async function fetchSubdirectories(dirPath: string) {
-    try {
-        gameList.value = await window.ipcRenderer.invoke('listSubdirectories', dirPath);
-    } catch (err) {
-        console.error('Error reading directory:', err)
-    } finally {
-        await processSubdirectories()
-    }
-}
+    const entries = await Promise.all(
+        Object.values(paths).map((path) =>
+            window.ipcRenderer.invoke('scanDir', path)
+        )
+    );
 
+    const [mainEntries, netDiskEntries, sdCardEntries, deckEntries] = entries.map((dirEntries) =>
+        dirEntries.filter((entry: DirEntry) => entry.isDirectory)
+    );
 
-async function processSubdirectories() {
-    let cnt = 0
-    for (const subdir of gameList.value) {
-        const gameStore = useGameStore()
-        gameStore.folderName = subdir
-        gameListStore.games.push(gameStore)
-        currentGame.value = subdir
-        processedGames.value++
-        await new Promise(resolve => setTimeout(resolve, 25)) // sleep for 0.5s
-        cnt += 1
-        if (cnt === 100) {
-            break
+    const uniqueNames = new Set(
+        [...mainEntries, ...netDiskEntries, ...sdCardEntries, ...deckEntries]
+            .map((entry) => entry.name)
+    );
+    totalGames.value = uniqueNames.size;
+
+    async function processEntries(
+        entries: DirEntry[],
+        pathKey: keyof typeof paths,
+        flag: 'linked' | 'inNetDisk' | 'inSDCard' | 'inDeck'
+    ) {
+        const basePath = paths[pathKey];
+        for (const entry of entries) {
+            // console.log('Processing:', entry);
+            if (!gameListStore.games[entry.name]) {
+                currentGame.value = entry.name;
+                gameListStore.games[entry.name] = await GameEntry.create(entry, basePath);
+                processedGames.value++;
+            }
+            gameListStore.games[entry.name][flag] = true;
         }
     }
+
+    await processEntries(mainEntries, 'main', 'linked')
+    await processEntries(netDiskEntries, 'netDisk', 'inNetDisk')
+    await processEntries(sdCardEntries, 'sdCard', 'inSDCard')
+    await processEntries(deckEntries, 'deck', 'inDeck')
+
+    console.log('Game list:', gameListStore.games);
     gameListStore.loading = false;
-    console.log('Loading set to:', gameListStore.loading); // 调试输出
 }
+
+
 
 watch(() => gameListStore.loading,
     (newValue) => {
         if (newValue) {
-            fetchSubdirectories('/run/media/deck/NetDisk/Games/Gal') // 开始加载
+            // clear the games list
+            gameListStore.games = {}
+            processedGames.value = 0
+            // fetchSubdirectories('/run/media/deck/NetDisk/Games/Gal') // 开始加载
+            // fetchSubdirectories('/home/deck/Games/Gal') // 开始加载
+            scanGames()
         }
     }
 )
@@ -52,7 +80,7 @@ watch(() => gameListStore.loading,
 <template>
     <div v-if="gameListStore.loading" class="overlay">
         <div class="loading-content">
-            <p>{{ processedGames }}/{{ gameList.length }}</p>
+            <p>{{ processedGames }}/{{ totalGames }}</p>
             <p>Processing: {{ currentGame }}</p>
         </div>
     </div>

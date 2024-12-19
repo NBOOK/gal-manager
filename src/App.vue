@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import HelloWorld from './components/HelloWorld.vue'
 // import { ref, onMounted } from 'vue'
-import { useGameListStore } from './store/store'
+import { useGameListStore } from './store/global'
 import LoadingOverlay from './components/Loading.vue'
 
 const gameListStore = useGameListStore()
