@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useGameListStore } from '@store/global'
+import { useGameListStore } from '@store/global-store'
 import GameEntry from '@modules/GameEntry'
 
 const gameListStore = useGameListStore()
@@ -39,7 +39,7 @@ async function scanGames() {
         flag: 'linked' | 'inNetDisk' | 'inSDCard' | 'inDeck'
     ) {
         const basePath = paths[pathKey];
-        for (const entry of entries) {
+        for (const entry of entries.slice(0, 50)) {
             // console.log('Processing:', entry);
             if (!gameListStore.games[entry.name]) {
                 currentGame.value = entry.name;
@@ -65,7 +65,9 @@ watch(() => gameListStore.loading,
     (newValue) => {
         if (newValue) {
             // clear the games list
-            gameListStore.games = {}
+            for (const key in gameListStore.games) {
+                delete gameListStore.games[key];
+            }
             processedGames.value = 0
             scanGames()
         }

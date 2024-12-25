@@ -74,11 +74,14 @@ app.whenReady().then(() => {
 })
 
 function registerIpcMain() {
-  ipcMain.handle('scanDir', (event, dirPath: string) => {
+  ipcMain.handle('scanDir', (_event, dirPath: string) => {
     return scanDir(dirPath)
   });
-  ipcMain.handle('getDiskUsage', (event, dirPath: string) => {
+  ipcMain.handle('getDiskUsage', (_event, dirPath: string) => {
     return getDiskUsage(dirPath)
+  });
+  ipcMain.handle('checkImageAssets', (_event, dirPath: string) => {
+    return checkImageAssets(dirPath)
   });
 }
 
@@ -212,6 +215,11 @@ async function getDiskUsage(dirPath: string): Promise<number> {
       });
     });
   }
+}
+
+async function checkImageAssets(dirPath: string): Promise<number> {
+
+  return 0;
 }
 
 

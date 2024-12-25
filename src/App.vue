@@ -1,27 +1,37 @@
 <script setup lang="ts">
-import HelloWorld from '@components/HelloWorld.vue'
+// import HelloWorld from '@components/HelloWorld.vue'
 // import { ref, onMounted } from 'vue'
-import { useGameListStore } from '@store/global'
+import { useGameListStore } from '@store/global-store'
 import LoadingOverlay from '@components/Loading.vue'
+import GameList from '@components/GameList.vue'
 
 const gameListStore = useGameListStore()
 </script>
 
 <template>
-  <div>
+  <!-- <div>
     <a href="https://electron-vite.github.io" target="_blank">
       <img src="/electron-vite.svg" class="logo" alt="Vite logo" />
     </a>
     <a href="https://vuejs.org/" target="_blank">
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
-  </div>
-  <HelloWorld msg="Vite + Vue + Test" />
+  </div> -->
+  <!-- <HelloWorld msg="Vite + Vue + Test" /> -->
   <button @click="gameListStore.loading = true">Load Games</button>
   <LoadingOverlay />
+  <GameList />
 </template>
 
 <style scoped>
+button {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
