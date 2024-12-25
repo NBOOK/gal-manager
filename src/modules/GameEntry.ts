@@ -12,6 +12,9 @@ class GameEntry {
     inNetDisk: boolean = false;
     inSDCard: boolean = false;
     inDeck: boolean = false;
+    inLutrisDB: boolean = false;
+    inSteamDB: boolean = false;
+
 
     static async create(entry: DirEntry, basePath: string): Promise<GameEntry> {
         const gameEntry = new GameEntry(entry);

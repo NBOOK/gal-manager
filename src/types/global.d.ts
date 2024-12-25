@@ -11,6 +11,7 @@ declare global {
         modifiedTime: number;
     }
 
+
     var GameEntry: typeof GameEntry;
 }
 export { }
