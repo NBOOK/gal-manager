@@ -18,7 +18,6 @@ export const useGameListStore = defineStore('gameList', () => {
   return {
     games,
     loading,
-    // loaded,
     totalGames,
     totalDiskUsage,
   }

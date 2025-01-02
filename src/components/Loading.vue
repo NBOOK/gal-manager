@@ -14,46 +14,55 @@ async function scanGames() {
         main: '/home/deck/Games/Gal',
         netDisk: '/run/media/deck/NetDisk/Games/Gal',
         sdCard: '/run/media/deck/SDCard/Games/Gal',
-        deck: '/run/media/deck/Data/Games/Gal',
+        deck: '/run/media/deck/Data/Games/Gal'
     };
 
+    // scan all game directories in multiple paths
     const entries = await Promise.all(
         Object.values(paths).map((path) =>
             window.ipcRenderer.invoke('scanDir', path)
         )
     );
-
     const [mainEntries, netDiskEntries, sdCardEntries, deckEntries] = entries.map((dirEntries) =>
         dirEntries.filter((entry: DirEntry) => entry.isDirectory)
     );
 
+    // get unique game names
     const uniqueNames = new Set(
         [...mainEntries, ...netDiskEntries, ...sdCardEntries, ...deckEntries]
             .map((entry) => entry.name)
     );
     totalGames.value = uniqueNames.size;
 
+    // process each unique game entry and assign flags
+
+    let updateLock = Promise.resolve();
     async function processEntries(
         entries: DirEntry[],
         pathKey: keyof typeof paths,
         flag: 'linked' | 'inNetDisk' | 'inSDCard' | 'inDeck'
     ) {
         const basePath = paths[pathKey];
-        for (const entry of entries.slice(0, 50)) {
-            // console.log('Processing:', entry);
+        // use first 50 entries for demo
+        const batchTasks = entries.map(async (entry) => {
             if (!gameListStore.games[entry.name]) {
-                currentGame.value = entry.name;
                 gameListStore.games[entry.name] = await GameEntry.create(entry, basePath);
-                processedGames.value++;
+                await (updateLock = updateLock.then(() => {
+                    currentGame.value = entry.name;
+                    processedGames.value++;
+                }));
             }
             gameListStore.games[entry.name][flag] = true;
-        }
-    }
+        });
 
+        await Promise.all(batchTasks);
+    }
     await processEntries(mainEntries, 'main', 'linked')
-    await processEntries(netDiskEntries, 'netDisk', 'inNetDisk')
-    await processEntries(sdCardEntries, 'sdCard', 'inSDCard')
     await processEntries(deckEntries, 'deck', 'inDeck')
+    await processEntries(sdCardEntries, 'sdCard', 'inSDCard')
+    await processEntries(netDiskEntries, 'netDisk', 'inNetDisk')
+
+
 
     console.log('Game list:', gameListStore.games);
     gameListStore.loading = false;

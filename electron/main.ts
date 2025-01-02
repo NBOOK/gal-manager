@@ -5,6 +5,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import os from 'node:os'
 import { spawn } from 'node:child_process'
+import sharp from 'sharp';
 
 // const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -80,8 +81,11 @@ function registerIpcMain() {
   ipcMain.handle('getDiskUsage', (_event, dirPath: string) => {
     return getDiskUsage(dirPath)
   });
-  ipcMain.handle('checkImageAssets', (_event, dirPath: string) => {
-    return checkImageAssets(dirPath)
+  ipcMain.handle('fileExists', (_event, filePath: string) => {
+    return fileExists(filePath)
+  });
+  ipcMain.handle('resizeImage', (_event, dirPath: string, sourceName: string, targetWidth: number, format: 'jpg' | 'webp', compression: number) => {
+    return resizeImage(dirPath, sourceName, targetWidth, format, compression)
   });
 }
 
@@ -217,9 +221,46 @@ async function getDiskUsage(dirPath: string): Promise<number> {
   }
 }
 
-async function checkImageAssets(dirPath: string): Promise<number> {
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.promises.access(filePath, fs.constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-  return 0;
+async function resizeImage(
+  dirPath: string,
+  sourceName: string,
+  targetWidth: number,
+  format: 'jpg' | 'webp' = 'jpg',
+  compression: number = 9
+): Promise<string> {
+  const sourcePath = path.join(dirPath, sourceName);
+  const ext = path.extname(sourceName);
+  const baseName = path.basename(sourceName, ext);
+  const targetName = `${baseName}_sd.${format}`;
+  const targetPath = path.join(dirPath, targetName);
+
+  try {
+    const image = sharp(sourcePath);
+    const metadata = await image.metadata();
+
+    if (metadata.format === 'png' || metadata.format === 'webp') {
+      image.flatten({ background: { r: 255, g: 255, b: 255 } }); // Remove alpha channel with white background
+    }
+
+    await image
+      .resize({ width: targetWidth })
+      .toFormat(format, { quality: compression })
+      .toFile(targetPath);
+
+    return targetPath;
+  } catch (error) {
+    console.error('Error resizing image:', error);
+    throw error;
+  }
 }
 
 

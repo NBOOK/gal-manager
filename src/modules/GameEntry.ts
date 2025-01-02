@@ -12,14 +12,29 @@ class GameEntry {
     inNetDisk: boolean = false;
     inSDCard: boolean = false;
     inDeck: boolean = false;
+    inAssets: boolean = false;
     inLutrisDB: boolean = false;
     inSteamDB: boolean = false;
+    imageAssets?: ImageAssets;
 
 
     static async create(entry: DirEntry, basePath: string): Promise<GameEntry> {
         const gameEntry = new GameEntry(entry);
-        gameEntry.diskUsage = await window.ipcRenderer.invoke('getDiskUsage', `${basePath}/${entry.name}`);
+
+        // 调用并行执行的任务函数
+        const [diskUsage, imageAssets] = await GameEntry.executeInParallel(entry, basePath);
+
+        gameEntry.diskUsage = diskUsage;
+        gameEntry.imageAssets = imageAssets;
+
         return gameEntry;
+    }
+
+    private static async executeInParallel(entry: DirEntry, basePath: string): Promise<[number, ImageAssets | undefined]> {
+        const diskUsagePromise = window.ipcRenderer.invoke('getDiskUsage', `${basePath}/${entry.name}`);
+        const imageAssetsPromise = ImageAssets.create(entry, basePath);
+
+        return Promise.all([diskUsagePromise, imageAssetsPromise]);
     }
 
     constructor(entry: DirEntry) {
@@ -29,6 +44,7 @@ class GameEntry {
         this.createdTime = entry.createdTime;
         this.modifiedTime = entry.modifiedTime;
     }
+
 }
 
 export default GameEntry;
