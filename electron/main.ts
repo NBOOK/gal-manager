@@ -35,6 +35,7 @@ function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
+      // nodeIntegration: true, // Enable Node.js integration
     },
   })
 
@@ -84,8 +85,8 @@ function registerIpcMain() {
   ipcMain.handle('fileExists', (_event, filePath: string) => {
     return fileExists(filePath)
   });
-  ipcMain.handle('resizeImage', (_event, dirPath: string, sourceName: string, targetWidth: number, format: 'jpg' | 'webp', compression: number) => {
-    return resizeImage(dirPath, sourceName, targetWidth, format, compression)
+  ipcMain.handle('resizeImage', (_event, sourcePath: string, targetWidth: number, format: 'jpg' | 'webp', compression: number) => {
+    return resizeImage(sourcePath, targetWidth, format, compression)
   });
 }
 
@@ -101,12 +102,13 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
 
         // 初始化返回对象
         const result: DirEntry = {
+          basePath: dirPath,
           name: entry.name,
           isDirectory: entry.isDirectory(),
           isFile: entry.isFile(),
           isSymbolicLink,
-          symbolicTarget: null,
-          diskUsage: 0,
+          symbolicTarget: "",
+          // diskUsage: 0,
           createdTime: 0,
           modifiedTime: 0,
         };
@@ -122,19 +124,19 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
 
           // 如果是目录（或符号链接指向目录），计算磁盘占用和时间戳
           if (result.isDirectory) {
-            let totalSize = 0;
-            const calculateDiskUsage = async (dir: string) => {
-              const subEntries = await fs.promises.readdir(dir, { withFileTypes: true });
-              for (const subEntry of subEntries) {
-                const subEntryPath = path.join(dir, subEntry.name);
-                const subStats = await fs.promises.stat(subEntryPath);
-                if (subEntry.isDirectory()) {
-                  await calculateDiskUsage(subEntryPath); // 递归子目录
-                } else {
-                  totalSize += subStats.size; // 文件大小
-                }
-              }
-            };
+            // let totalSize = 0;
+            // const calculateDiskUsage = async (dir: string) => {
+            //   const subEntries = await fs.promises.readdir(dir, { withFileTypes: true });
+            //   for (const subEntry of subEntries) {
+            //     const subEntryPath = path.join(dir, subEntry.name);
+            //     const subStats = await fs.promises.stat(subEntryPath);
+            //     if (subEntry.isDirectory()) {
+            //       await calculateDiskUsage(subEntryPath); // 递归子目录
+            //     } else {
+            //       totalSize += subStats.size; // 文件大小
+            //     }
+            //   }
+            // };
 
             // await calculateDiskUsage(entryPath); // 开始计算磁盘占用
             // result.diskUsage = totalSize;
@@ -163,6 +165,9 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
 
 async function getDiskUsage(dirPath: string): Promise<number> {
   const platform = os.platform();
+
+  // console.log('platform:', platform);
+  // console.log('dirPath:', dirPath);
 
   if (platform === 'win32') {
     // Windows: 使用 PowerShell 的 Get-ChildItem 命令计算目录大小
@@ -231,17 +236,17 @@ async function fileExists(filePath: string): Promise<boolean> {
 }
 
 async function resizeImage(
-  dirPath: string,
-  sourceName: string,
+  sourcePath: string,
   targetWidth: number,
   format: 'jpg' | 'webp' = 'jpg',
   compression: number = 9
 ): Promise<string> {
-  const sourcePath = path.join(dirPath, sourceName);
-  const ext = path.extname(sourceName);
-  const baseName = path.basename(sourceName, ext);
+  const ext = path.extname(sourcePath);
+  const baseName = path.basename(sourcePath, ext);
   const targetName = `${baseName}_sd.${format}`;
-  const targetPath = path.join(dirPath, targetName);
+  const targetPath = path.join(path.dirname(sourcePath), targetName);
+
+  // return targetPath;
 
   try {
     const image = sharp(sourcePath);

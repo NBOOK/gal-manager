@@ -12,9 +12,9 @@ const totalGames = ref<number>(0)
 async function scanGames() {
     const paths = {
         main: '/home/deck/Games/Gal',
-        netDisk: '/run/media/deck/NetDisk/Games/Gal',
+        deck: '/run/media/deck/Data/Games/Gal',
         sdCard: '/run/media/deck/SDCard/Games/Gal',
-        deck: '/run/media/deck/Data/Games/Gal'
+        netDisk: '/run/media/deck/NetDisk/Games/Gal',
     };
 
     // scan all game directories in multiple paths
@@ -23,13 +23,13 @@ async function scanGames() {
             window.ipcRenderer.invoke('scanDir', path)
         )
     );
-    const [mainEntries, netDiskEntries, sdCardEntries, deckEntries] = entries.map((dirEntries) =>
+    const [mainEntries, deckEntries, sdCardEntries, netDiskEntries] = entries.map((dirEntries) =>
         dirEntries.filter((entry: DirEntry) => entry.isDirectory)
     );
 
     // get unique game names
     const uniqueNames = new Set(
-        [...mainEntries, ...netDiskEntries, ...sdCardEntries, ...deckEntries]
+        [...mainEntries, ...deckEntries, ...sdCardEntries, ...netDiskEntries]
             .map((entry) => entry.name)
     );
     totalGames.value = uniqueNames.size;
@@ -40,19 +40,24 @@ async function scanGames() {
     async function processEntries(
         entries: DirEntry[],
         pathKey: keyof typeof paths,
-        flag: 'linked' | 'inNetDisk' | 'inSDCard' | 'inDeck'
+        flag: 'linked' | 'inDeck' | 'inSDCard' | 'inNetDisk'
     ) {
         const basePath = paths[pathKey];
         // use first 50 entries for demo
         const batchTasks = entries.map(async (entry) => {
             if (!gameListStore.games[entry.name]) {
+                // console.log('Game entry:', entry.name, 'processing');
                 gameListStore.games[entry.name] = await GameEntry.create(entry, basePath);
+                // console.log('Game entry:', entry.name, 'done');
                 await (updateLock = updateLock.then(() => {
                     currentGame.value = entry.name;
                     processedGames.value++;
                 }));
             }
             gameListStore.games[entry.name][flag] = true;
+            if (flag === 'linked') {
+                gameListStore.games[entry.name].linkedPath = entry.symbolicTarget;
+            }
         });
 
         await Promise.all(batchTasks);
