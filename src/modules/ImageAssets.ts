@@ -2,6 +2,7 @@ class ImageAssets {
     basePath: string = "";
     gameBrand: string = "";
     gameName: string = "";
+    splitter: string = ' - ';
     iconPath: string = "";
     logoPath: string = "";
     headerPath: string = "";
@@ -11,22 +12,23 @@ class ImageAssets {
     capsuleSDPath: string = "";
     heroSDPath: string = "";
 
-    static async create(basePath: string, gameBrand: string, gameName: string): Promise<ImageAssets> {
-        const imageAssets = new ImageAssets(basePath, gameBrand, gameName);
+    static async create(basePath: string, gameBrand: string, gameName: string, splitter: string): Promise<ImageAssets> {
+        const imageAssets = new ImageAssets(basePath, gameBrand, gameName, splitter);
         await imageAssets.setGamePath(basePath, gameBrand, gameName);
         return imageAssets;
     }
 
-    constructor(basePath: string, gameBrand: string, gameName: string) {
+    constructor(basePath: string, gameBrand: string, gameName: string, splitter: string) {
         this.basePath = basePath;
         this.gameBrand = gameBrand;
         this.gameName = gameName;
+        this.splitter = splitter;
     }
 
     async setGamePath(basePath: string, gameBrand: string, gameName: string) {
-        if (basePath === this.basePath && gameBrand === this.gameBrand && gameName === this.gameName) {
-            return;
-        }
+        // if (basePath === this.basePath && gameBrand === this.gameBrand && gameName === this.gameName) {
+        //     return;
+        // }
         [this.basePath, this.gameBrand, this.gameName] = [basePath, gameBrand, gameName];
         await this.scanImageAssets();
     }
@@ -56,7 +58,7 @@ class ImageAssets {
 
         await Promise.all(Object.entries(assetNames).map(async ([key, assetName]) => {
             for (const format of formats[key]) {
-                const filePath = `${this.basePath}/${this.gameBrand} - ${this.gameName}/_CustomLibraryAssets/${assetName}.${format}`;
+                const filePath = `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}/_CustomLibraryAssets/${assetName}.${format}`;
                 const exists = await window.ipcRenderer.invoke('fileExists', filePath);
                 if (exists) {
                     (this as any)[key] = filePath;
@@ -65,23 +67,23 @@ class ImageAssets {
             }
         }));
 
-        // await Promise.all([
-        //     (async () => {
-        //     if (this.capsulePath && !this.capsuleSDPath) {
-        //         this.capsuleSDPath = await window.ipcRenderer.invoke('resizeImage', this.capsulePath, 300);
-        //     }
-        //     })(),
-        //     (async () => {
-        //     if (this.headerPath && !this.headerSDPath) {
-        //         this.headerSDPath = await window.ipcRenderer.invoke('resizeImage', this.headerPath, 460);
-        //     }
-        //     })(),
-        //     (async () => {
-        //     if (this.heroPath && !this.heroSDPath) {
-        //         this.heroSDPath = await window.ipcRenderer.invoke('resizeImage', this.heroPath, 1280);
-        //     }
-        //     })()
-        // ]);
+        await Promise.all([
+            (async () => {
+                if (this.capsulePath && !this.capsuleSDPath) {
+                    this.capsuleSDPath = await window.ipcRenderer.invoke('resizeImage', this.capsulePath, 300);
+                }
+            })(),
+            (async () => {
+                if (this.headerPath && !this.headerSDPath) {
+                    this.headerSDPath = await window.ipcRenderer.invoke('resizeImage', this.headerPath, 460);
+                }
+            })(),
+            (async () => {
+                if (this.heroPath && !this.heroSDPath) {
+                    this.heroSDPath = await window.ipcRenderer.invoke('resizeImage', this.heroPath, 1280);
+                }
+            })()
+        ]);
     }
 
 

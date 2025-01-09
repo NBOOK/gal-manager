@@ -35,7 +35,7 @@ class GameEntry {
     constructor(entry: DirEntry) {
         this.basePath = entry.basePath;
         this.folderName = entry.name;
-        if(entry.name.indexOf(' ‐ ') > 0) this.splitter = ' ‐ ';
+        if (entry.name.indexOf(' ‐ ') > 0) this.splitter = ' ‐ ';
         this.gameBrand = entry.name.split(this.splitter)[0];
         this.gameName = entry.name.split(this.splitter).slice(1).join(this.splitter);
         this.createdTime = entry.createdTime;
@@ -51,7 +51,7 @@ class GameEntry {
 
         const [diskUsage, imageAssets]: [number, ImageAssets] = await Promise.all([
             window.ipcRenderer.invoke('getDiskUsage', `${basePath}/${gameBrand}${this.splitter}${gameName}`),
-            ImageAssets.create(basePath, gameBrand, gameName)
+            ImageAssets.create(basePath, gameBrand, gameName, this.splitter)
         ]);
 
         this.diskUsage = diskUsage;

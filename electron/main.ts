@@ -239,7 +239,7 @@ async function resizeImage(
   sourcePath: string,
   targetWidth: number,
   format: 'jpg' | 'webp' = 'jpg',
-  compression: number = 9
+  quality: number = 95
 ): Promise<string> {
   const ext = path.extname(sourcePath);
   const baseName = path.basename(sourcePath, ext);
@@ -250,15 +250,19 @@ async function resizeImage(
 
   try {
     const image = sharp(sourcePath);
-    const metadata = await image.metadata();
-
-    if (metadata.format === 'png' || metadata.format === 'webp') {
-      image.flatten({ background: { r: 255, g: 255, b: 255 } }); // Remove alpha channel with white background
-    }
 
     await image
-      .resize({ width: targetWidth })
-      .toFormat(format, { quality: compression })
+      .resize({ width: targetWidth, background: { r: 255, g: 255, b: 255 } })
+      .toFormat(format, {
+        quality: quality,
+        chromaSubsampling: '4:4:4',
+        progressive: true,
+        optimiseCoding: true,
+        mozjpeg: true,
+        trellisQuantisation: true,
+        overshootDeringing: true,
+        optimiseScans: true,
+      })
       .toFile(targetPath);
 
     return targetPath;
