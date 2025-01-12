@@ -36,6 +36,7 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       // nodeIntegration: true, // Enable Node.js integration
+      // webSecurity: false, // Disable same-origin policy
     },
   })
 

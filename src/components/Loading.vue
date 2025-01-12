@@ -39,7 +39,7 @@ async function scanGames() {
     let updateLock = Promise.resolve();
     async function processEntries(
         entries: DirEntry[],
-        pathKey: keyof typeof paths,
+        // pathKey: keyof typeof paths,
         flag: 'linked' | 'inDeck' | 'inSDCard' | 'inNetDisk'
     ) {
         // use first 50 entries for demo
@@ -61,10 +61,10 @@ async function scanGames() {
 
         await Promise.all(batchTasks);
     }
-    await processEntries(mainEntries, 'main', 'linked')
-    await processEntries(deckEntries, 'deck', 'inDeck')
-    await processEntries(sdCardEntries, 'sdCard', 'inSDCard')
-    await processEntries(netDiskEntries, 'netDisk', 'inNetDisk')
+    await processEntries(mainEntries, 'linked')
+    await processEntries(deckEntries, 'inDeck')
+    await processEntries(sdCardEntries, 'inSDCard')
+    await processEntries(netDiskEntries, 'inNetDisk')
 
 
 
