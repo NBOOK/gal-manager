@@ -7,7 +7,7 @@
       "**/node_modules/sharp/**/*",
       "**/node_modules/@img/**/*"
   ],
-  "productName": "YourAppName",
+  "productName": "GalManager",
   "directories": {
     "output": "release/${version}"
   },

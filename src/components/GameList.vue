@@ -1,10 +1,58 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref, nextTick, reactive, onUnmounted, onUpdated } from 'vue'
 import { useGameListStore } from '@store/global-store'
 
 const gameListStore = useGameListStore()
 const games = computed(() => gameListStore.games)
 const totalGames = computed(() => gameListStore.totalGames)
+const gameNameOverflows = reactive<Record<string, boolean>>({})
+
+function formatTime(unixTime: number): string {
+    const date = new Date(unixTime); // 转换为毫秒
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function formatSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} Bytes`;
+    const units = ['KB', 'MB', 'GB', 'TB'];
+    let size = bytes / 1024; // 转换为 KB
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex++;
+    }
+    return `${size.toFixed(2)} ${units[unitIndex]}`;
+}
+
+function isOverflow(element: HTMLElement): boolean {
+    return element.scrollWidth > element.clientWidth;
+}
+
+function checkOverflows() {
+    nextTick(() => {
+        const elements = document.querySelectorAll('.game-name-container')
+        elements.forEach((el) => {
+            const gameName = el.getAttribute('data-game-name') // 从 DOM 属性获取 gameName
+            if (gameName)
+                gameNameOverflows[gameName] = isOverflow(el as HTMLElement)
+        })
+    })
+}
+
+// 生命周期钩子
+onMounted(() => {
+    checkOverflows()
+    window.addEventListener('resize', checkOverflows)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', checkOverflows)
+})
+
+onUpdated(checkOverflows)
 </script>
 
 
@@ -19,18 +67,19 @@ const totalGames = computed(() => gameListStore.totalGames)
 
                 <!-- 中间内容 -->
                 <div class="game-details">
-                    <div class="game-name marquee">
-                        <strong>{{ game.gameName }}</strong>
+                    <div class="game-name-container" :data-game-name="game.gameName">
+                        <div class="game-name" :class="{ scrolled: gameNameOverflows[game.gameName] }">
+                            {{ game.gameName }}
+                        </div>
                     </div>
                     <div class="game-brand">{{ game.gameBrand }}</div>
                     <div class="game-name-en">{{ game.gameNameEN }}</div>
-                    <div class="game-time">{{ game.modifiedTime }}</div>
-                    <div class="game-size">{{ game.diskUsage }}</div>
+                    <div class="game-time">{{ formatTime(game.modifiedTime) }}</div>
+                    <div class="game-size">{{ formatSize(game.diskUsage) }}</div>
                 </div>
 
                 <!-- 右侧按钮 -->
                 <div class="game-controls">
-                    <!-- 替代状态按钮 -->
                     <button class="placeholder-btn">Button 1</button>
                     <button class="placeholder-btn">Button 2</button>
                     <button class="placeholder-btn">Button 3</button>
@@ -58,14 +107,9 @@ const totalGames = computed(() => gameListStore.totalGames)
     flex-direction: column;
 }
 
-/* .game-item {
-    padding: 5px;
-    border-bottom: 1px solid #eee;
-} */
-
 .game-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     border: 1px solid #ccc;
     border-radius: 5px;
     margin: 10px 0;
@@ -84,22 +128,10 @@ const totalGames = computed(() => gameListStore.totalGames)
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    align-items: flex-start;
+    max-width: calc(100% - 335px);
 }
 
-.game-name {
-    font-size: 16px;
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.marquee {
-    overflow: hidden;
-    position: relative;
-    animation: marquee 5s linear infinite;
-}
 
 .game-brand,
 .game-name-en,
@@ -109,9 +141,6 @@ const totalGames = computed(() => gameListStore.totalGames)
     color: #666;
 }
 
-.game-item:last-child {
-    border-bottom: none;
-}
 
 /* 右侧按钮样式 */
 .game-controls {
@@ -119,6 +148,7 @@ const totalGames = computed(() => gameListStore.totalGames)
     flex-direction: column;
     gap: 5px;
     margin-left: 10px;
+    width: 100px;
 }
 
 .placeholder-btn {
@@ -127,9 +157,43 @@ const totalGames = computed(() => gameListStore.totalGames)
     padding: 5px;
     border-radius: 5px;
     cursor: pointer;
+    width: 100px;
 }
 
 .placeholder-btn:hover {
     background-color: #e0e0e0;
+}
+
+
+.game-name-container {
+    max-width: 100%;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.game-name {
+    display: inline-block;
+    position: relative;
+    text-overflow: clip;
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+.scrolled:hover {
+    animation: scroll-rtl 10s linear infinite;
+}
+
+@keyframes scroll-rtl {
+    from {
+        transform: translate(0%);
+    }
+
+    to {
+        transform: translate(-100%);
+    }
 }
 </style>
