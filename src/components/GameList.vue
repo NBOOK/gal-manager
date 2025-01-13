@@ -6,9 +6,10 @@ const gameListStore = useGameListStore()
 const games = computed(() => gameListStore.games)
 const totalGames = computed(() => gameListStore.totalGames)
 const gameNameOverflows = reactive<Record<string, boolean>>({})
+const gameNameRefs = reactive<Record<string, HTMLElement | null>>({}) // 用 ref 存储 DOM 引用
 
 function formatTime(unixTime: number): string {
-    const date = new Date(unixTime); // 转换为毫秒
+    const date = new Date(unixTime);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -26,33 +27,33 @@ function formatSize(bytes: number): string {
     }
     return `${size.toFixed(2)} ${units[unitIndex]}`;
 }
-
 function isOverflow(element: HTMLElement): boolean {
     return element.scrollWidth > element.clientWidth;
 }
 
-function checkOverflows() {
+function checkNameOverflows() {
     nextTick(() => {
-        const elements = document.querySelectorAll('.game-name-container')
-        elements.forEach((el) => {
-            const gameName = el.getAttribute('data-game-name') // 从 DOM 属性获取 gameName
-            if (gameName)
-                gameNameOverflows[gameName] = isOverflow(el as HTMLElement)
-        })
+        for (const gameName in gameNameRefs) {
+            const element = gameNameRefs[gameName]
+            if (element) {
+                gameNameOverflows[gameName] = isOverflow(element);
+            }
+        }
     })
 }
 
+
 // 生命周期钩子
 onMounted(() => {
-    checkOverflows()
-    window.addEventListener('resize', checkOverflows)
+    checkNameOverflows()
+    window.addEventListener('resize', checkNameOverflows)
 })
 
 onUnmounted(() => {
-    window.removeEventListener('resize', checkOverflows)
+    window.removeEventListener('resize', checkNameOverflows)
 })
 
-onUpdated(checkOverflows)
+onUpdated(checkNameOverflows)
 </script>
 
 
@@ -67,7 +68,7 @@ onUpdated(checkOverflows)
 
                 <!-- 中间内容 -->
                 <div class="game-details">
-                    <div class="game-name-container" :data-game-name="game.gameName">
+                    <div class="game-name-container" :ref="(el) => (gameNameRefs[game.gameName] = el as HTMLElement)">
                         <div class="game-name" :class="{ scrolled: gameNameOverflows[game.gameName] }">
                             {{ game.gameName }}
                         </div>
