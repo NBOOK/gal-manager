@@ -58,6 +58,15 @@ class GameEntry {
         this.imageAssets = imageAssets;
     }
 
+    async link() {
+        console.log(`Linking ${this.folderName}...`);
+        this.linked = true;
+    }
+
+    async unlink() {
+        console.log(`Unlinking ${this.folderName}...`);
+        this.linked = false;
+    }
 }
 
 export default GameEntry;

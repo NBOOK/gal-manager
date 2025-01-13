@@ -75,15 +75,42 @@ onUpdated(checkNameOverflows)
                     </div>
                     <div class="game-brand">{{ game.gameBrand }}</div>
                     <div class="game-name-en">{{ game.gameNameEN }}</div>
-                    <div class="game-time">{{ formatTime(game.modifiedTime) }}</div>
-                    <div class="game-size">{{ formatSize(game.diskUsage) }}</div>
+                    <div class="game-meta">{{ formatTime(game.modifiedTime) }}&nbsp&nbsp&nbsp&nbsp{{
+                        formatSize(game.diskUsage) }}</div>
+                    <!-- <div class="game-size">{{ formatSize(game.diskUsage) }}</div> -->
                 </div>
 
                 <!-- 右侧按钮 -->
                 <div class="game-controls">
-                    <button class="placeholder-btn">Button 1</button>
-                    <button class="placeholder-btn">Button 2</button>
-                    <button class="placeholder-btn">Button 3</button>
+                    <button class="func-btns" v-if="game.linked" :style="{ backgroundColor: '#47D45A' }"
+                        @click="game.unlink()">
+                        <img src="/link2.svg" alt="Unlink" />
+                    </button>
+                    <button v-else class="func-btns" :style="{ backgroundColor: '#FF0000' }" @click="game.link()">
+                        <img src="/link-unlink2.svg" alt="Link" />
+                    </button>
+                    <button class="func-btns" v-if="game.linked" :style="{ backgroundColor: '#47D45A' }"
+                        @click="game.unlink()">
+                        <img src="/link2.svg" alt="Unlink" />
+                    </button>
+                    <button v-else class="func-btns" :style="{ backgroundColor: '#FF0000' }" @click="game.link()">
+                        <img src="/link-unlink2.svg" alt="Link" />
+                    </button>
+                    <button class="func-btns" v-if="game.linked" :style="{ backgroundColor: '#47D45A' }"
+                        @click="game.unlink()">
+                        <img src="/link2.svg" alt="Unlink" />
+                    </button>
+                    <button v-else class="func-btns" :style="{ backgroundColor: '#FF0000' }" @click="game.link()">
+                        <img src="/link-unlink2.svg" alt="Link" />
+                    </button>
+                    <div class="break"></div>
+                    <button class="func-btns" v-if="game.linked" :style="{ backgroundColor: '#47D45A' }"
+                        @click="game.unlink()">
+                        <img src="/link2.svg" alt="Unlink" />
+                    </button>
+                    <button v-else class="func-btns" :style="{ backgroundColor: '#FF0000' }" @click="game.link()">
+                        <img src="/link-unlink2.svg" alt="Link" />
+                    </button>
                 </div>
             </div>
         </div>
@@ -113,12 +140,15 @@ onUpdated(checkNameOverflows)
     align-items: flex-start;
     border: 1px solid #ccc;
     border-radius: 5px;
-    margin: 10px 0;
+    margin: 10px;
     padding: 10px;
 }
 
+.game-image {
+    height: 100px;
+}
+
 .game-image img {
-    /* width: 100px; */
     height: 100px;
     object-fit: cover;
     border-radius: 5px;
@@ -136,8 +166,7 @@ onUpdated(checkNameOverflows)
 
 .game-brand,
 .game-name-en,
-.game-time,
-.game-size {
+.game-meta {
     font-size: 14px;
     color: #666;
 }
@@ -146,25 +175,39 @@ onUpdated(checkNameOverflows)
 /* 右侧按钮样式 */
 .game-controls {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-self: flex-end;
+    justify-content: space-evenly;
     gap: 5px;
     margin-left: 10px;
     width: 100px;
+    margin-bottom: 10px;
 }
 
-.placeholder-btn {
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    padding: 5px;
-    border-radius: 5px;
+.func-btns {
+    width: 20px;
+    height: 20px;
+    /* border: none; */
+    /* border-radius: 5px; */
     cursor: pointer;
-    width: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    margin: 0;
 }
 
-.placeholder-btn:hover {
-    background-color: #e0e0e0;
+.func-btns img {
+    height: 100%;
 }
 
+.break {
+    flex-basis: 100%;
+    /* 强制当前行结束 */
+    height: 0;
+    /* 没有高度 */
+}
 
 .game-name-container {
     max-width: 100%;
