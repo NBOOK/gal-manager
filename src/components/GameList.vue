@@ -142,6 +142,8 @@ onUpdated(checkNameOverflows)
     border-radius: 5px;
     margin: 10px;
     padding: 10px;
+    max-width: 100%;
+    /* background-color: white; */
 }
 
 .game-image {
@@ -161,6 +163,7 @@ onUpdated(checkNameOverflows)
     flex-direction: column;
     align-items: flex-start;
     max-width: calc(100% - 335px);
+    /* max-width: 100%; */
 }
 
 
@@ -168,7 +171,7 @@ onUpdated(checkNameOverflows)
 .game-name-en,
 .game-meta {
     font-size: 14px;
-    color: #666;
+    color: #8a8a8a;
 }
 
 
