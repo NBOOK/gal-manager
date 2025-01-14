@@ -11,9 +11,11 @@ declare global {
         createdTime: number;
         modifiedTime: number;
     }
-
-
     var GameEntry: typeof GameEntry;
     var ImageAssets: typeof ImageAssets;
+
+    interface HTMLElement {
+        __resizeObserver__?: ResizeObserver;
+    }
 }
 export { }

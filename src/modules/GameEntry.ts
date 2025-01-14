@@ -19,7 +19,7 @@ class GameEntry {
     inAssets: boolean = false;
     inLutrisDB: boolean = false;
     inSteamDB: boolean = false;
-    imageAssets?: ImageAssets;
+    imageAssets!: ImageAssets;
     splitter: string = ' - ';
 
 
