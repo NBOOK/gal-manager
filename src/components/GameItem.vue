@@ -96,7 +96,7 @@ const vOverflowDetector = {
       <!-- Link Button -->
       <v-btn
         v-if="game.linked"
-        icon="mdi-link"
+        icon
         size="x-small"
         variant="text"
         :readonly="game.inLutrisDB || game.inSteamDB"
@@ -117,7 +117,7 @@ const vOverflowDetector = {
       <!-- Database Button -->
       <v-btn
         v-if="!game.linked"
-        icon="mdi-database-alert"
+        icon
         size="x-small"
         variant="text"
         readonly
@@ -127,7 +127,7 @@ const vOverflowDetector = {
       </v-btn>
       <v-btn
         v-else-if="game.inLutrisDB && game.inSteamDB"
-        icon="mdi-database-check"
+        icon
         size="x-small"
         variant="text"
         @click="game.removeDB()"
@@ -136,27 +136,21 @@ const vOverflowDetector = {
       </v-btn>
       <v-btn
         v-else-if="game.inLutrisDB !== game.inSteamDB"
-        icon="mdi-database-alert"
+        icon
         size="x-small"
         variant="text"
         @click="game.addDB()"
       >
         <v-icon icon="mdi-database-alert" color="orange" size="large"></v-icon>
       </v-btn>
-      <v-btn
-        v-else
-        icon="mdi-database-remove"
-        size="x-small"
-        variant="text"
-        @click="game.addDB()"
-      >
+      <v-btn v-else icon size="x-small" variant="text" @click="game.addDB()">
         <v-icon icon="mdi-database-remove" color="red" size="large"></v-icon>
       </v-btn>
 
       <!-- Image Button -->
       <v-btn
         v-if="game.imageAssets.assetsCount == 5"
-        icon="mdi-image-check"
+        icon
         size="x-small"
         variant="text"
         readonly
@@ -172,20 +166,14 @@ const vOverflowDetector = {
       >
         <v-icon icon="mdi-image" color="orange" size="large"></v-icon>
       </v-btn>
-      <v-btn
-        v-else
-        icon="mdi-image-remove"
-        size="x-small"
-        variant="text"
-        readonly
-      >
+      <v-btn v-else icon size="x-small" variant="text" readonly>
         <v-icon icon="mdi-image-remove" color="red" size="large"></v-icon>
       </v-btn>
 
       <!-- Cloud Button -->
       <v-btn
         v-if="game.inNetDisk && (game.inDeck || game.inSDCard)"
-        icon="mdi-cloud"
+        icon
         size="x-small"
         variant="text"
         readonly
@@ -194,7 +182,7 @@ const vOverflowDetector = {
       </v-btn>
       <v-btn
         v-else-if="game.inNetDisk && !(game.inDeck || game.inSDCard)"
-        icon="mdi-cloud-download"
+        icon
         size="x-small"
         variant="text"
         @click="game.inDeck = true"
@@ -203,7 +191,7 @@ const vOverflowDetector = {
       </v-btn>
       <v-btn
         v-else-if="!game.inNetDisk && (game.inDeck || game.inSDCard)"
-        icon="mdi-cloud-download"
+        icon
         size="x-small"
         variant="text"
       >
@@ -216,7 +204,7 @@ const vOverflowDetector = {
           <v-btn
             v-if="game.inSDCard"
             v-bind="props"
-            icon="mdi-micro-sd"
+            icon
             size="x-small"
             variant="text"
           >
@@ -229,7 +217,7 @@ const vOverflowDetector = {
           <v-btn
             v-if="game.inDeck"
             v-bind="props"
-            icon="mdi-monitor"
+            icon
             size="x-small"
             variant="text"
           >
