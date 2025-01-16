@@ -68,6 +68,20 @@ class GameEntry {
         console.log(`Unlinking ${this.folderName}...`);
         this.linked = false;
     }
+
+    async addDB() { //placeholder, maybe should create a new DB class?
+        if (!this.inLutrisDB)
+            console.log(`Adding ${this.folderName} to LutrisDB...`);
+        if (!this.inSteamDB)
+            console.log(`Adding ${this.folderName} to SteamDB...`);
+    }
+
+    async removeDB() { //placeholder, maybe should create a new DB class?
+        if (this.inLutrisDB)
+            console.log(`Removing ${this.folderName} from LutrisDB...`);
+        if (this.inSteamDB)
+            console.log(`Removing ${this.folderName} from SteamDB...`);
+    }
 }
 
 export default GameEntry;
