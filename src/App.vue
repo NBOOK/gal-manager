@@ -18,6 +18,7 @@ const gameListStore = useGameListStore()
     </a>
   </div> -->
   <!-- <HelloWorld msg="Vite + Vue + Test" /> -->
+  <!-- <v-icon icon="mdi-home" color="teal" /> -->
   <button @click="gameListStore.loading = true">Load Games</button>
   <LoadingOverlay />
   <GameList />

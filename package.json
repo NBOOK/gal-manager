@@ -11,9 +11,12 @@
   "dependencies": {
     "pinia": "^2.3.0",
     "sharp": "^0.33.5",
-    "vue": "^3.4.21"
+    "vite-plugin-vuetify": "^2.0.4",
+    "vue": "^3.4.21",
+    "vuetify": "^3.7.6"
   },
   "devDependencies": {
+    "@mdi/font": "^7.4.47",
     "@vitejs/plugin-vue": "^5.0.4",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",

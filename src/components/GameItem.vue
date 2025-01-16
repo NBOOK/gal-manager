@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 // import { useGameListStore } from '@store/global-store'
 import GameEntry from '@modules/GameEntry'
 
-const props = defineProps<{ game: GameEntry }>();
+defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 
 const overflowStates = reactive<Record<string, boolean>>({});
 
@@ -89,12 +89,17 @@ const vOverflowDetector = {
 
         <!-- 右侧按钮 -->
         <div class="game-controls">
-            <button class="func-btns" v-if="game.linked" :style="{ backgroundColor: '#47D45A' }" @click="game.unlink()">
+            <!-- <v-btn icon="mdi-link" size="x-large" color="primary"></v-btn> -->
+            <!-- <button class="func-btns" v-if="game.linked" :style="{ backgroundColor: '#47D45A' }" @click="game.unlink()">
                 <img src="/link2.svg" alt="Unlink" />
-            </button>
+            </button> -->
+            <v-btn v-if="game.linked" icon="mdi-link" size="xsmall" @click="game.unlink()">
+                <v-icon icon="mdi-link" color="success" size="large"></v-icon>
+            </v-btn>
             <button v-else class="func-btns" :style="{ backgroundColor: '#FF0000' }" @click="game.link()">
                 <img src="/link-unlink2.svg" alt="Link" />
             </button>
+
             <button class="func-btns" v-if="game.linked" :style="{ backgroundColor: '#47D45A' }" @click="game.unlink()">
                 <img src="/link2.svg" alt="Unlink" />
             </button>

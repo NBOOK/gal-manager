@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, nextTick, reactive, onUnmounted, onUpdated } from 'vue'
+import { computed } from 'vue'
 import { useGameListStore } from '@store/global-store'
 import GameItem from '@components/GameItem.vue'
 
