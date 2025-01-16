@@ -46,7 +46,7 @@ class ImageAssets {
         };
 
         const formats: { [key: string]: string[] } = {
-            iconPath: ['ico', 'png', 'bmp'],
+            iconPath: ['ico', 'png', 'bmp', 'webp', 'jpg'],
             logoPath: ['png', 'webp'],
             capsulePath: ['png', 'webp', 'jpg'],
             headerPath: ['png', 'webp', 'jpg'],
