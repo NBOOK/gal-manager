@@ -38,6 +38,7 @@ class GameEntry {
         if (entry.name.indexOf(' ‐ ') > 0) this.splitter = ' ‐ ';
         this.gameBrand = entry.name.split(this.splitter)[0];
         this.gameName = entry.name.split(this.splitter).slice(1).join(this.splitter);
+        this.gameNameEN = this.gameName;
         this.createdTime = entry.createdTime;
         this.modifiedTime = entry.modifiedTime;
     }

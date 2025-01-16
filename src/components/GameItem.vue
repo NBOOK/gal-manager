@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef, reactive, onUnmounted, onUpdated } from 'vue'
+import { reactive } from 'vue'
 // import { useGameListStore } from '@store/global-store'
 import GameEntry from '@modules/GameEntry'
 
@@ -71,13 +71,18 @@ const vOverflowDetector = {
 
         <!-- 中间内容 -->
         <div class="game-details">
-            <div v-overflow-detector="'game-name'" class="game-name-container">
+            <div v-overflow-detector="'game-name'" class="scroll-container">
                 <div class="game-name" :class="{ scrolled: overflowStates['game-name'] }">
                     {{ game.gameName }}
                 </div>
             </div>
+            <div v-overflow-detector="'game-name-en'" class="scroll-container">
+                <div class="game-name-en" :class="{ scrolled: overflowStates['game-name-en'] }">
+                    {{ game.gameNameEN }}
+                </div>
+            </div>
+            <!-- <div class="game-name-en">{{ game.gameNameEN }}</div> -->
             <div class="game-brand">{{ game.gameBrand }}</div>
-            <div class="game-name-en">{{ game.gameNameEN }}</div>
             <div class="game-meta">{{ formatTime(game.modifiedTime) }}&nbsp&nbsp&nbsp&nbsp{{
                 formatSize(game.diskUsage) }}</div>
         </div>
@@ -146,14 +151,45 @@ const vOverflowDetector = {
     /* max-width: 100%; */
 }
 
+.game-name {
+    display: inline-block;
+    position: relative;
+    text-overflow: clip;
+    margin-right: 5px;
+    margin-left: 5px;
+    /* height: 32px; */
+    font-size: 16px;
+}
 
 .game-brand,
 .game-name-en,
 .game-meta {
     font-size: 14px;
     color: #8a8a8a;
+    max-width: 100%;
 }
 
+.scroll-container {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.scrolled:hover {
+    animation: scroll-rtl 10s linear infinite;
+}
+
+@keyframes scroll-rtl {
+    from {
+        transform: translate(0%);
+    }
+
+    to {
+        transform: translate(-100%);
+    }
+}
 
 /* 右侧按钮样式 */
 .game-controls {
@@ -190,37 +226,5 @@ const vOverflowDetector = {
     /* 强制当前行结束 */
     height: 0;
     /* 没有高度 */
-}
-
-.game-name-container {
-    max-width: 100%;
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    font-size: 16px;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.game-name {
-    display: inline-block;
-    position: relative;
-    text-overflow: clip;
-    margin-right: 5px;
-    margin-left: 5px;
-}
-
-.scrolled:hover {
-    animation: scroll-rtl 10s linear infinite;
-}
-
-@keyframes scroll-rtl {
-    from {
-        transform: translate(0%);
-    }
-
-    to {
-        transform: translate(-100%);
-    }
 }
 </style>
