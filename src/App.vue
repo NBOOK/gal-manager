@@ -4,6 +4,8 @@
 import { useGameListStore } from "@store/global-store";
 import LoadingOverlay from "@components/Loading.vue";
 import GameList from "@components/GameList.vue";
+import AppBar from "@components/AppBar.vue";
+import StatusBar from "@components/StatusBar.vue";
 
 const gameListStore = useGameListStore();
 </script>
@@ -19,9 +21,13 @@ const gameListStore = useGameListStore();
   </div> -->
   <!-- <HelloWorld msg="Vite + Vue + Test" /> -->
   <!-- <v-icon icon="mdi-home" color="teal" /> -->
-  <button @click="gameListStore.loading = true">Load Games</button>
-  <LoadingOverlay />
-  <GameList />
+  <v-app>
+    <AppBar />
+    <button @click="gameListStore.loading = true">Load Games</button>
+    <LoadingOverlay />
+    <GameList />
+    <StatusBar />
+  </v-app>
 </template>
 
 <style scoped>

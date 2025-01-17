@@ -59,7 +59,7 @@ const vOverflowDetector = {
 
 <template>
   <!-- <div class="game-item"> -->
-  <v-sheet rounded="lg" elevation="5" style="margin: 10px 0" min-width="550px">
+  <v-sheet rounded="lg" elevation="3" style="margin: 5px 0" min-width="550px">
     <div class="item">
       <!-- <v-container>
         <v-row> -->

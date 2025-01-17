@@ -8,6 +8,7 @@ export const useGameListStore = defineStore('gameList', () => {
   const games = reactive<Record<string, typeof GameEntry>>({});
   const loading = ref<boolean>(false);
   // const loaded = ref<boolean>(false);
+  const searchQuery = ref<string>('');
 
   const totalGames = computed(() => Object.keys(games).length);
   const totalDiskUsage = computed(() => {
@@ -20,5 +21,6 @@ export const useGameListStore = defineStore('gameList', () => {
     loading,
     totalGames,
     totalDiskUsage,
+    searchQuery
   }
 })
