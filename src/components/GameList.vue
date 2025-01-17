@@ -42,7 +42,13 @@ const games = computed(() => {
   <!-- <div style="overflow-y: scroll"> -->
   <!-- <div class="game-list" v-if="totalGames > 0"> -->
   <!-- <v-container v-if="totalGames > 0"> -->
-  <GameItem v-for="(game, key) in games" :key="key" :game="game"> </GameItem>
+  <GameItem
+    v-if="!gameListStore.loading"
+    v-for="(game, key) in games"
+    :key="key"
+    :game="game"
+  >
+  </GameItem>
   <!-- </v-container> -->
   <!-- </div> -->
   <!-- <div v-else>No games available.</div> -->

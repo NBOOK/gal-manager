@@ -10,16 +10,17 @@ const filter = ref<boolean>(false);
 
 <template>
   <v-container>
-    <v-app-bar :elevation="3" rounded="lg" density="compact">
+    <v-app-bar :elevation="3" rounded="lg" scroll-behavior="fully-hide">
       <!-- <template v-slot:prepend>
         <v-icon>mdi-magnify</v-icon>
       </template> -->
 
       <v-text-field
+        id="searchbox-no-border"
+        variant="outlined"
         hide-details
         clearable
         clear-icon="mdi-backspace-outline"
-        color="success"
         :placeholder="`Search ${totalGames} games (JP/EN)`"
         prepend-inner-icon="mdi-magnify"
         single-line
@@ -90,5 +91,10 @@ const filter = ref<boolean>(false);
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2 列 */
   height: 96px !important;
+}
+
+.v-field__field:has(> #searchbox-no-border) ~ .v-field__outline {
+  /* border: red solid; */
+  visibility: hidden;
 }
 </style>

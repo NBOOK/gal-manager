@@ -43,7 +43,8 @@ async function scanGames() {
     flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk"
   ) {
     // use first 50 entries for demo
-    const batchTasks = entries.slice(0, 10).map(async (entry) => {
+    const batchTasks = entries.map(async (entry) => {
+      //.slice(0, 10)
       if (!gameListStore.games[entry.name]) {
         // console.log('Game entry:', entry.name, 'processing');
         gameListStore.games[entry.name] = await GameEntry.create(entry);
