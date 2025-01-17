@@ -6,6 +6,7 @@ import GameEntry from "@modules/GameEntry";
 
 const gameListStore = useGameListStore();
 const games = computed(() => {
+  // let games = gameListStore.games; // filtered out games should be de-selected
   let filteredGames = gameListStore.games;
   if (gameListStore.searchQuery) {
     const searchQuery = gameListStore.searchQuery.toLowerCase();
@@ -20,9 +21,20 @@ const games = computed(() => {
       )
     );
   }
+  if (gameListStore.sort.by) {
+    const sortBy = gameListStore.sort.by;
+    const ascending = gameListStore.sort.ascending;
+    filteredGames = Object.fromEntries(
+      Object.entries(filteredGames).sort(([_, gameA], [__, gameB]) => {
+        if (gameA[sortBy] < gameB[sortBy]) return ascending ? -1 : 1;
+        if (gameA[sortBy] > gameB[sortBy]) return ascending ? 1 : -1;
+        return 0;
+      })
+    );
+  }
   return filteredGames;
 });
-const totalGames = computed(() => gameListStore.totalGames);
+// const totalGames = computed(() => gameListStore.totalGames);
 </script>
 
 <template>

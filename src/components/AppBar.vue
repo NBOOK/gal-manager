@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { ref, reactive, computed } from "vue";
 import { useGameListStore } from "@store/global-store";
 
 const gameListStore = useGameListStore();
-const games = computed(() => gameListStore.games);
+// const games = computed(() => gameListStore.games);
 const totalGames = computed(() => gameListStore.totalGames);
+const filter = ref<boolean>(false);
 </script>
 
 <template>
@@ -14,19 +15,65 @@ const totalGames = computed(() => gameListStore.totalGames);
         <v-icon>mdi-magnify</v-icon>
       </template> -->
 
-      <!-- <v-app-bar-title>Application Bar</v-app-bar-title> -->
       <v-text-field
         hide-details
         clearable
         clear-icon="mdi-backspace-outline"
         color="success"
-        placeholder="Search games (JP/EN)"
+        :placeholder="`Search ${totalGames} games (JP/EN)`"
         prepend-inner-icon="mdi-magnify"
         single-line
-        max-width="50%"
+        max-width="70%"
         rounded="lg"
         v-model="gameListStore.searchQuery"
       ></v-text-field>
+
+      <v-btn icon>
+        <v-icon icon="mdi-sort"></v-icon>
+        <v-menu
+          activator="parent"
+          :close-on-content-click="false"
+          transition="slide-y-transition"
+        >
+          <v-sheet rounded="lg">
+            <v-btn-toggle mandatory v-model="gameListStore.sort.ascending">
+              <v-btn :value="true">
+                <v-icon>mdi-sort-ascending</v-icon>
+              </v-btn>
+
+              <v-btn :value="false">
+                <v-icon>mdi-sort-descending</v-icon>
+              </v-btn>
+            </v-btn-toggle>
+
+            <v-divider></v-divider>
+
+            <v-btn-toggle
+              mandatory
+              class="sort-btn-toggle-grid"
+              v-model="gameListStore.sort.by"
+            >
+              <v-btn value="gameName">
+                <v-icon>mdi-ideogram-cjk-variant</v-icon>
+              </v-btn>
+
+              <v-btn value="gameNameEN">
+                <v-icon>mdi-alphabetical-variant</v-icon>
+              </v-btn>
+
+              <v-btn value="modifiedTime">
+                <v-icon>mdi-calendar-month-outline</v-icon>
+              </v-btn>
+
+              <v-btn value="diskUsage">
+                <v-icon>mdi-chart-pie-outline</v-icon>
+              </v-btn>
+            </v-btn-toggle>
+          </v-sheet>
+        </v-menu>
+      </v-btn>
+      <v-btn icon="mdi-filter-outline"></v-btn>
+
       <template v-slot:append>
         <v-btn icon="mdi-heart"></v-btn>
 
@@ -37,3 +84,11 @@ const totalGames = computed(() => gameListStore.totalGames);
     </v-app-bar>
   </v-container>
 </template>
+
+<style>
+.sort-btn-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 列 */
+  height: 96px !important;
+}
+</style>
