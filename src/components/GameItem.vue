@@ -58,182 +58,246 @@ const vOverflowDetector = {
 </script>
 
 <template>
-  <div class="game-item">
-    <!-- 左侧图片 -->
-    <div class="game-image">
-      <img :src="`file://${game.imageAssets.headerSDPath}`" alt="Game Image" />
-    </div>
+  <!-- <div class="game-item"> -->
+  <v-sheet rounded="lg" elevation="5" style="margin: 10px 0" min-width="550px">
+    <div class="item">
+      <!-- <v-container>
+        <v-row> -->
+      <!-- 左侧图片 -->
+      <v-col class="flex-grow-0 pa-0">
+        <div class="game-image">
+          <img
+            :src="`file://${game.imageAssets.headerSDPath}`"
+            alt="Game Image"
+          />
+        </div>
+      </v-col>
 
-    <!-- 中间内容 -->
-    <div class="game-details">
-      <div v-overflow-detector="'game-name'" class="scroll-container">
-        <div
-          class="game-name"
-          :class="{ scrolled: overflowStates['game-name'] }"
-        >
-          {{ game.gameName }}
+      <!-- 中间内容 -->
+      <div class="game-details">
+        <div v-overflow-detector="'game-name'" class="scroll-container">
+          <div
+            class="game-name"
+            :class="{ scrolled: overflowStates['game-name'] }"
+          >
+            {{ game.gameName }}
+          </div>
+        </div>
+        <div v-overflow-detector="'game-name-en'" class="scroll-container">
+          <div
+            class="game-name-en"
+            :class="{ scrolled: overflowStates['game-name-en'] }"
+          >
+            {{ game.gameNameEN }}
+          </div>
+        </div>
+        <div class="game-brand">{{ game.gameBrand }}</div>
+        <div class="game-meta">
+          {{ formatTime(game.modifiedTime) }}&nbsp&nbsp&nbsp&nbsp{{
+            formatSize(game.diskUsage)
+          }}
         </div>
       </div>
-      <div v-overflow-detector="'game-name-en'" class="scroll-container">
-        <div
-          class="game-name-en"
-          :class="{ scrolled: overflowStates['game-name-en'] }"
+
+      <!-- 右侧按钮 -->
+      <div class="game-controls">
+        <!-- Link Button -->
+        <v-btn
+          v-if="game.linked"
+          icon
+          size="x-small"
+          variant="text"
+          :readonly="game.inLutrisDB || game.inSteamDB"
+          @click="game.unlink()"
         >
-          {{ game.gameNameEN }}
-        </div>
+          <v-icon icon="mdi-link" color="green" size="x-large"></v-icon>
+        </v-btn>
+        <v-btn
+          v-else
+          icon="mdi-link-off"
+          size="x-small"
+          variant="text"
+          @click="game.link()"
+        >
+          <v-icon icon="mdi-link-off" color="red" size="x-large"></v-icon>
+        </v-btn>
+
+        <!-- Database Button -->
+        <v-btn
+          v-if="!game.linked"
+          icon
+          size="x-small"
+          variant="text"
+          readonly
+          @click="game.removeDB()"
+        >
+          <v-icon
+            icon="mdi-database-alert"
+            color="orange"
+            size="large"
+          ></v-icon>
+        </v-btn>
+        <v-btn
+          v-else-if="game.inLutrisDB && game.inSteamDB"
+          icon
+          size="x-small"
+          variant="text"
+          @click="game.removeDB()"
+        >
+          <v-icon
+            icon="mdi-database-check"
+            color="green"
+            size="x-large"
+          ></v-icon>
+        </v-btn>
+        <v-btn
+          v-else-if="game.inLutrisDB !== game.inSteamDB"
+          icon
+          size="x-small"
+          variant="text"
+          @click="game.addDB()"
+        >
+          <v-icon
+            icon="mdi-database-alert"
+            color="orange"
+            size="large"
+          ></v-icon>
+        </v-btn>
+        <v-btn v-else icon size="x-small" variant="text" @click="game.addDB()">
+          <v-icon icon="mdi-database-remove" color="red" size="large"></v-icon>
+        </v-btn>
+
+        <!-- Image Button -->
+        <v-btn
+          v-if="game.imageAssets.assetsCount == 5"
+          icon
+          size="x-small"
+          variant="text"
+          readonly
+        >
+          <v-icon icon="mdi-image-check" color="green" size="x-large"></v-icon>
+        </v-btn>
+        <v-btn
+          v-else-if="game.imageAssets.assetsCount > 0"
+          icon="mdi-image"
+          size="x-small"
+          variant="text"
+          readonly
+        >
+          <v-icon icon="mdi-image" color="orange" size="large"></v-icon>
+        </v-btn>
+        <v-btn v-else icon size="x-small" variant="text" readonly>
+          <v-icon icon="mdi-image-remove" color="red" size="large"></v-icon>
+        </v-btn>
+
+        <!-- Cloud Button -->
+        <v-btn
+          v-if="game.inNetDisk && (game.inDeck || game.inSDCard)"
+          icon
+          size="x-small"
+          variant="text"
+          readonly
+        >
+          <v-icon icon="mdi-cloud" color="green" size="x-large"></v-icon>
+        </v-btn>
+        <v-btn
+          v-else-if="game.inNetDisk && !(game.inDeck || game.inSDCard)"
+          icon
+          size="x-small"
+          variant="text"
+          @click="game.inDeck = true"
+        >
+          <v-icon
+            icon="mdi-cloud-download"
+            color="green"
+            size="x-large"
+          ></v-icon>
+        </v-btn>
+        <v-btn
+          v-else-if="!game.inNetDisk && (game.inDeck || game.inSDCard)"
+          icon
+          size="x-small"
+          variant="text"
+        >
+          <v-icon
+            icon="mdi-cloud-upload"
+            color="orange"
+            size="x-large"
+          ></v-icon>
+        </v-btn>
+        <v-btn v-else icon size="x-small" variant="text">
+          <v-icon icon="mdi-cloud" color="blue-grey" size="x-large"></v-icon>
+        </v-btn>
+
+        <!-- Storage Button -->
+        <v-hover>
+          <template v-slot:default="{ isHovering, props }">
+            <v-btn
+              v-if="game.inSDCard"
+              v-bind="props"
+              icon
+              size="x-small"
+              variant="text"
+            >
+              <v-icon
+                :icon="isHovering ? 'mdi-delete-empty' : 'mdi-micro-sd'"
+                :color="isHovering ? 'red' : 'green'"
+                size="x-large"
+              ></v-icon>
+            </v-btn>
+            <v-btn
+              v-else-if="game.inDeck"
+              v-bind="props"
+              icon
+              size="x-small"
+              variant="text"
+            >
+              <v-icon
+                :icon="isHovering ? 'mdi-delete-empty' : 'mdi-monitor'"
+                :color="isHovering ? 'red' : 'green'"
+                size="x-large"
+              ></v-icon>
+            </v-btn>
+            <v-btn v-else v-bind="props" icon size="x-small" variant="text">
+              <v-icon
+                icon="mdi-monitor"
+                color="blue-grey"
+                size="x-large"
+              ></v-icon>
+            </v-btn>
+          </template>
+        </v-hover>
+
+        <!-- Move Button -->
+        <v-btn
+          v-if="game.inDeck || game.inSDCard"
+          icon
+          size="x-small"
+          variant="text"
+          :readonly="game.inDeck && game.inSDCard"
+          @click="game.move()"
+        >
+          <v-icon
+            icon="mdi-folder-move"
+            color="blue-grey"
+            size="x-large"
+          ></v-icon>
+        </v-btn>
       </div>
-      <!-- <div class="game-name-en">{{ game.gameNameEN }}</div> -->
-      <div class="game-brand">{{ game.gameBrand }}</div>
-      <div class="game-meta">
-        {{ formatTime(game.modifiedTime) }}&nbsp&nbsp&nbsp&nbsp{{
-          formatSize(game.diskUsage)
-        }}
-      </div>
+      <!-- </v-row>
+      </v-container> -->
     </div>
-
-    <!-- 右侧按钮 -->
-    <div class="game-controls">
-      <!-- Link Button -->
-      <v-btn
-        v-if="game.linked"
-        icon
-        size="x-small"
-        variant="text"
-        :readonly="game.inLutrisDB || game.inSteamDB"
-        @click="game.unlink()"
-      >
-        <v-icon icon="mdi-link" color="green" size="x-large"></v-icon>
-      </v-btn>
-      <v-btn
-        v-else
-        icon="mdi-link-off"
-        size="x-small"
-        variant="text"
-        @click="game.link()"
-      >
-        <v-icon icon="mdi-link-off" color="red" size="x-large"></v-icon>
-      </v-btn>
-
-      <!-- Database Button -->
-      <v-btn
-        v-if="!game.linked"
-        icon
-        size="x-small"
-        variant="text"
-        readonly
-        @click="game.removeDB()"
-      >
-        <v-icon icon="mdi-database-alert" color="orange" size="large"></v-icon>
-      </v-btn>
-      <v-btn
-        v-else-if="game.inLutrisDB && game.inSteamDB"
-        icon
-        size="x-small"
-        variant="text"
-        @click="game.removeDB()"
-      >
-        <v-icon icon="mdi-database-check" color="green" size="x-large"></v-icon>
-      </v-btn>
-      <v-btn
-        v-else-if="game.inLutrisDB !== game.inSteamDB"
-        icon
-        size="x-small"
-        variant="text"
-        @click="game.addDB()"
-      >
-        <v-icon icon="mdi-database-alert" color="orange" size="large"></v-icon>
-      </v-btn>
-      <v-btn v-else icon size="x-small" variant="text" @click="game.addDB()">
-        <v-icon icon="mdi-database-remove" color="red" size="large"></v-icon>
-      </v-btn>
-
-      <!-- Image Button -->
-      <v-btn
-        v-if="game.imageAssets.assetsCount == 5"
-        icon
-        size="x-small"
-        variant="text"
-        readonly
-      >
-        <v-icon icon="mdi-image-check" color="green" size="x-large"></v-icon>
-      </v-btn>
-      <v-btn
-        v-else-if="game.imageAssets.assetsCount > 0"
-        icon="mdi-image"
-        size="x-small"
-        variant="text"
-        readonly
-      >
-        <v-icon icon="mdi-image" color="orange" size="large"></v-icon>
-      </v-btn>
-      <v-btn v-else icon size="x-small" variant="text" readonly>
-        <v-icon icon="mdi-image-remove" color="red" size="large"></v-icon>
-      </v-btn>
-
-      <!-- Cloud Button -->
-      <v-btn
-        v-if="game.inNetDisk && (game.inDeck || game.inSDCard)"
-        icon
-        size="x-small"
-        variant="text"
-        readonly
-      >
-        <v-icon icon="mdi-cloud" color="green" size="x-large"></v-icon>
-      </v-btn>
-      <v-btn
-        v-else-if="game.inNetDisk && !(game.inDeck || game.inSDCard)"
-        icon
-        size="x-small"
-        variant="text"
-        @click="game.inDeck = true"
-      >
-        <v-icon icon="mdi-cloud-download" color="green" size="x-large"></v-icon>
-      </v-btn>
-      <v-btn
-        v-else-if="!game.inNetDisk && (game.inDeck || game.inSDCard)"
-        icon
-        size="x-small"
-        variant="text"
-      >
-        <v-icon icon="mdi-cloud-upload" color="orange" size="x-large"></v-icon>
-      </v-btn>
-
-      <!-- Storage Button -->
-      <v-hover>
-        <template v-slot:default="{ isHovering, props }">
-          <v-btn
-            v-if="game.inSDCard"
-            v-bind="props"
-            icon
-            size="x-small"
-            variant="text"
-          >
-            <v-icon
-              :icon="isHovering ? 'mdi-delete-empty' : 'mdi-micro-sd'"
-              :color="isHovering ? 'red' : 'green'"
-              size="x-large"
-            ></v-icon>
-          </v-btn>
-          <v-btn
-            v-if="game.inDeck"
-            v-bind="props"
-            icon
-            size="x-small"
-            variant="text"
-          >
-            <v-icon
-              :icon="isHovering ? 'mdi-delete-empty' : 'mdi-monitor'"
-              :color="isHovering ? 'red' : 'green'"
-              size="x-large"
-            ></v-icon>
-          </v-btn>
-        </template>
-      </v-hover>
-    </div>
-  </div>
+  </v-sheet>
 </template>
 
 <style scoped>
+.item {
+  display: flex;
+  align-items: flex-start;
+  max-width: 100%;
+  flex-wrap: nowrap;
+}
+
 .game-item {
   display: flex;
   align-items: flex-start;
@@ -262,15 +326,16 @@ const vOverflowDetector = {
   flex-direction: column;
   align-items: flex-start;
   max-width: calc(100% - 335px);
+  min-width: 180px;
   /* max-width: 100%; */
 }
 
 .game-name {
-  display: inline-block;
-  position: relative;
+  /* display: inline-block; */
+  /* position: relative;
   text-overflow: clip;
   margin-right: 5px;
-  margin-left: 5px;
+  margin-left: 5px; */
   /* height: 32px; */
   font-size: 16px;
 }
@@ -315,11 +380,13 @@ const vOverflowDetector = {
   /* gap: 5px; */
   margin-left: 10px;
   width: 100px;
+  min-width: 100px;
   margin-bottom: 10px;
 }
 
 .func-btns {
   width: 20px;
+  min-width: 20px;
   height: 20px;
   /* border: none; */
   /* border-radius: 5px; */

@@ -82,6 +82,10 @@ class GameEntry {
         if (this.inSteamDB)
             console.log(`Removing ${this.folderName} from SteamDB...`);
     }
+
+    async move() {
+        console.log(`Moving ${this.folderName}...`);
+    }
 }
 
 export default GameEntry;
