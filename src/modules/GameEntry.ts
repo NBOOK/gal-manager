@@ -37,6 +37,7 @@ class GameEntry {
         this.folderName = entry.name;
         if (entry.name.indexOf(' ‐ ') > 0) this.splitter = ' ‐ ';
         this.gameBrand = entry.name.split(this.splitter)[0];
+        this.gameBrandEN = this.gameBrand;
         this.gameName = entry.name.split(this.splitter).slice(1).join(this.splitter);
         this.gameNameEN = this.gameName;
         this.createdTime = entry.createdTime;

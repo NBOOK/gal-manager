@@ -61,11 +61,11 @@ const totalGames = computed(() => gameListStore.totalGames);
               v-model="gameListStore.sort.by"
             >
               <v-btn value="gameName">
-                <v-icon>mdi-ideogram-cjk-variant</v-icon>
+                <v-icon>mdi-alphabetical-variant</v-icon>
               </v-btn>
 
-              <v-btn value="gameNameEN">
-                <v-icon>mdi-alphabetical-variant</v-icon>
+              <v-btn value="gameBrand">
+                <v-icon>mdi-domain</v-icon>
               </v-btn>
 
               <v-btn value="modifiedTime">

@@ -6,10 +6,12 @@ import GameItem from "@components/GameItem.vue";
 
 const gameListStore = useGameListStore();
 
-const contentHeight = ref(window.innerHeight - 36 - 20);
+const collator = new Intl.Collator("ja");
+
+const contentHeight = ref(window.innerHeight - 36 - 16);
 
 const updateContentHeight = () => {
-  contentHeight.value = window.innerHeight - 36 - 20;
+  contentHeight.value = window.innerHeight - 36 - 16;
 };
 
 onMounted(() => {
@@ -27,16 +29,27 @@ const games = computed(() => {
     filteredGames = filteredGames.filter(
       (game) =>
         game.gameName.toLowerCase().includes(searchQuery) ||
-        game.gameNameEN.toLowerCase().includes(searchQuery)
+        game.gameNameEN.toLowerCase().includes(searchQuery) ||
+        game.gameBrand.toLowerCase().includes(searchQuery) ||
+        game.gameBrandEN.toLowerCase().includes(searchQuery)
     );
   }
   if (gameListStore.sort.by) {
     const sortBy = gameListStore.sort.by;
     const ascending = gameListStore.sort.ascending;
+
     filteredGames = filteredGames.sort((gameA, gameB) => {
-      if (gameA[sortBy] < gameB[sortBy]) return ascending ? -1 : 1;
-      if (gameA[sortBy] > gameB[sortBy]) return ascending ? 1 : -1;
-      return 0;
+      if (sortBy === "gameName" || sortBy === "gameBrand") {
+        // 使用日语排序
+        return ascending
+          ? collator.compare(gameA[sortBy], gameB[sortBy])
+          : collator.compare(gameB[sortBy], gameA[sortBy]);
+      } else {
+        // 其他字段使用默认排序逻辑
+        if (gameA[sortBy] < gameB[sortBy]) return ascending ? -1 : 1;
+        if (gameA[sortBy] > gameB[sortBy]) return ascending ? 1 : -1;
+        return 0;
+      }
     });
   }
   return filteredGames;
@@ -50,7 +63,6 @@ const games = computed(() => {
     :height="contentHeight"
     :items="games"
     item-height="100"
-    style="padding-top: 6px"
   >
     <template v-slot:default="{ item, index }">
       <GameItem :game="item" :index="index" :key="item.gameName" />
@@ -59,20 +71,28 @@ const games = computed(() => {
 </template>
 
 <style scoped>
+.v-virtual-scroll {
+  padding-top: 6px;
+  padding-right: calc(1em - 8px);
+}
 .v-virtual-scroll::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 .v-virtual-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
+.v-virtual-scroll::-webkit-scrollbar-track:hover {
+  background: #f0f0f0;
+}
 
 .v-virtual-scroll::-webkit-scrollbar-thumb {
-  background-color: #888;
+  background-color: #c0c0c0;
   border-radius: 10px;
 }
 
 .v-virtual-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #555;
+  background-color: #808080;
 }
 </style>

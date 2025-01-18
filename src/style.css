@@ -70,7 +70,7 @@ button:focus-visible {
   width: 100%;
   max-height: 100vh;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 0 0 1rem;
   text-align: center;
   display: flex;
   flex-direction: column;
