@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -6,6 +6,9 @@ import fs from 'node:fs'
 import os from 'node:os'
 import { spawn } from 'node:child_process'
 import sharp from 'sharp';
+
+// check if we are running in development mode
+const isDev = process.env.NODE_ENV === 'development';
 
 // const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -36,8 +39,9 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       // nodeIntegration: true, // Enable Node.js integration
-      webSecurity: false, // Disable same-origin policy during development
+      webSecurity: !isDev, // Disable same-origin policy during development
     },
+    autoHideMenuBar: true,
   })
 
   // Test active push message to Renderer-process.
@@ -74,6 +78,7 @@ app.on('activate', () => {
 app.whenReady().then(() => {
   registerIpcMain()
   createWindow()
+  // Menu.setApplicationMenu(null)
 })
 
 function registerIpcMain() {

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from "vue";
+import { computed, ref, onMounted, onUnmounted, useTemplateRef } from "vue";
 import { useGameListStore } from "@store/global-store";
 import GameItem from "@components/GameItem.vue";
+
 // import GameEntry from "@modules/GameEntry";
 
 const gameListStore = useGameListStore();
@@ -14,8 +15,21 @@ const updateContentHeight = () => {
   contentHeight.value = window.innerHeight - 36 - 16;
 };
 
+const scrollCoverRef = useTemplateRef("scrollCoverRef");
+
+let hideTimeout: ReturnType<typeof setTimeout>;
+function hideScrollCover() {
+  scrollCoverRef.value?.classList.add("hidden");
+  clearTimeout(hideTimeout);
+  hideTimeout = setTimeout(() => {
+    scrollCoverRef.value?.classList.remove("hidden");
+  }, 1500);
+}
+
 onMounted(() => {
   window.addEventListener("resize", updateContentHeight);
+  // virtualScrollRef.value?.$el.addEventListener("wheel", hideScrollCover);
+  // virtualScrollRef.value?.$el.addEventListener("touchmove", hideScrollCover);
 });
 
 onUnmounted(() => {
@@ -54,6 +68,7 @@ const games = computed(() => {
   }
   return filteredGames;
 });
+
 // const totalGames = computed(() => gameListStore.totalGames);
 </script>
 
@@ -63,36 +78,68 @@ const games = computed(() => {
     :height="contentHeight"
     :items="games"
     item-height="100"
+    @scroll="hideScrollCover"
   >
     <template v-slot:default="{ item, index }">
       <GameItem :game="item" :index="index" :key="item.gameName" />
     </template>
   </v-virtual-scroll>
+  <div
+    class="cover-bar"
+    ref="scrollCoverRef"
+    @mouseover="hideScrollCover"
+  ></div>
 </template>
 
 <style scoped>
+.scroller {
+  height: 100%;
+}
 .v-virtual-scroll {
   padding-top: 6px;
-  padding-right: calc(1em - 8px);
+  padding-right: calc(1em - 10px);
+  /* position: relative; */
 }
+
 .v-virtual-scroll::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 .v-virtual-scroll::-webkit-scrollbar-track {
-  background: transparent;
+  /* background: transparent; */
+  background: #f0f0f0;
 }
 .v-virtual-scroll::-webkit-scrollbar-track:hover {
   background: #f0f0f0;
 }
 
 .v-virtual-scroll::-webkit-scrollbar-thumb {
-  background-color: #c0c0c0;
+  background-color: #cccccc;
   border-radius: 10px;
 }
 
 .v-virtual-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: #808080;
+  background-color: #888888;
+}
+
+.cover-bar {
+  position: absolute;
+  background: #fff;
+  /* pointer-events: none; */
+  height: 100%;
+  top: 0;
+  right: 0;
+  width: 10px;
+  transition: all 0.5s;
+  opacity: 1;
+}
+
+/* .cover-bar:hover {
+  opacity: 0;
+} */
+.cover-bar.hidden {
+  pointer-events: none;
+  opacity: 0;
 }
 </style>

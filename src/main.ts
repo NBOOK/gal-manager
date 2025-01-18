@@ -10,11 +10,4 @@ const app = createApp(App)
 
 app.use(pinia)
 app.use(vuetify)
-app.mount('#app').$nextTick(() => {
-  // Use contextBridge
-  window.ipcRenderer.on('main-process-message', (_event, message) => {
-    console.log(message)
-  })
-})
-
-console.log(`This app is using Chrome (v${window.versions.chrome()}), Node.js (v${window.versions.node()}), and Electron (v${window.versions.electron()})`)
+app.mount('#app')
