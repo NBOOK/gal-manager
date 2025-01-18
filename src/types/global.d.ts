@@ -16,6 +16,7 @@ declare global {
 
     interface HTMLElement {
         __resizeObserver__?: ResizeObserver;
+        __intersectionObserver__?: IntersectionObserver;
     }
 }
 export { }

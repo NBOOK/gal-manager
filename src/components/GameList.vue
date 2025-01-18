@@ -1,36 +1,43 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useGameListStore } from "@store/global-store";
 import GameItem from "@components/GameItem.vue";
-import GameEntry from "@modules/GameEntry";
+// import GameEntry from "@modules/GameEntry";
 
 const gameListStore = useGameListStore();
+
+const contentHeight = ref(window.innerHeight - 36 - 20);
+
+const updateContentHeight = () => {
+  contentHeight.value = window.innerHeight - 36 - 20;
+};
+
+onMounted(() => {
+  window.addEventListener("resize", updateContentHeight);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", updateContentHeight);
+});
+
 const games = computed(() => {
-  // let games = gameListStore.games; // filtered out games should be de-selected
-  let filteredGames = gameListStore.games;
+  let filteredGames = Object.values(gameListStore.games); // 转换为数组一次即可
   if (gameListStore.searchQuery) {
     const searchQuery = gameListStore.searchQuery.toLowerCase();
-    filteredGames = Object.fromEntries(
-      Object.entries(gameListStore.games).filter(
-        ([_, game]: [string, GameEntry]) => {
-          return (
-            game.gameName.toLowerCase().includes(searchQuery) ||
-            game.gameNameEN.toLowerCase().includes(searchQuery)
-          );
-        }
-      )
+    filteredGames = filteredGames.filter(
+      (game) =>
+        game.gameName.toLowerCase().includes(searchQuery) ||
+        game.gameNameEN.toLowerCase().includes(searchQuery)
     );
   }
   if (gameListStore.sort.by) {
     const sortBy = gameListStore.sort.by;
     const ascending = gameListStore.sort.ascending;
-    filteredGames = Object.fromEntries(
-      Object.entries(filteredGames).sort(([_, gameA], [__, gameB]) => {
-        if (gameA[sortBy] < gameB[sortBy]) return ascending ? -1 : 1;
-        if (gameA[sortBy] > gameB[sortBy]) return ascending ? 1 : -1;
-        return 0;
-      })
-    );
+    filteredGames = filteredGames.sort((gameA, gameB) => {
+      if (gameA[sortBy] < gameB[sortBy]) return ascending ? -1 : 1;
+      if (gameA[sortBy] > gameB[sortBy]) return ascending ? 1 : -1;
+      return 0;
+    });
   }
   return filteredGames;
 });
@@ -38,36 +45,34 @@ const games = computed(() => {
 </script>
 
 <template>
-  <!-- <div class="game-list-container"> -->
-  <!-- <div style="overflow-y: scroll"> -->
-  <!-- <div class="game-list" v-if="totalGames > 0"> -->
-  <!-- <v-container v-if="totalGames > 0"> -->
-  <GameItem
+  <v-virtual-scroll
     v-if="!gameListStore.loading"
-    v-for="(game, key) in games"
-    :key="key"
-    :game="game"
+    :height="contentHeight"
+    :items="games"
+    item-height="100"
+    style="padding-top: 6px"
   >
-  </GameItem>
-  <!-- </v-container> -->
-  <!-- </div> -->
-  <!-- <div v-else>No games available.</div> -->
-  <!-- </div> -->
-  <!-- </div> -->
+    <template v-slot:default="{ item, index }">
+      <GameItem :game="item" :index="index" :key="item.gameName" />
+    </template>
+  </v-virtual-scroll>
 </template>
 
 <style scoped>
-.game-list-container {
-  width: 100%;
-  overflow-y: scroll;
-  border: 1px solid #ccc;
-  padding: 10px;
-  border-radius: 5px;
-  box-sizing: border-box;
+.v-virtual-scroll::-webkit-scrollbar {
+  width: 8px;
 }
 
-.game-list {
-  display: flex;
-  flex-direction: column;
+.v-virtual-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.v-virtual-scroll::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+}
+
+.v-virtual-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
 }
 </style>

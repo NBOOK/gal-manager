@@ -40,26 +40,52 @@ const vOverflowDetector = {
       overflowStates[key] = isOverflow(el as HTMLElement);
     };
 
-    // 创建 ResizeObserver
-    const observer = new ResizeObserver(updateState);
-    observer.observe(el as HTMLElement);
+    // 动态注册 ResizeObserver
+    const resizeObserver = new ResizeObserver(updateState);
 
-    // 初始化时检测
-    updateState();
+    // 使用 IntersectionObserver 监测元素是否进入视窗
+    const intersectionObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // 元素进入视窗，开始观察
+          resizeObserver.observe(el as HTMLElement);
+          updateState(); // 初始化状态
+        } else {
+          // 元素离开视窗，停止观察
+          resizeObserver.disconnect();
+        }
+      },
+      { threshold: 0.1 } // 可以根据需要调整阈值
+    );
 
-    // 在元素被销毁时取消观察
-    el.__resizeObserver__ = observer;
+    // 观察当前元素的可见性
+    intersectionObserver.observe(el as HTMLElement);
+
+    // 在元素上存储观察器以便清理
+    el.__resizeObserver__ = resizeObserver;
+    el.__intersectionObserver__ = intersectionObserver;
   },
   unmounted(el: HTMLElement) {
+    // 清理 ResizeObserver
     el.__resizeObserver__?.disconnect();
     delete el.__resizeObserver__;
+
+    // 清理 IntersectionObserver
+    el.__intersectionObserver__?.disconnect();
+    delete el.__intersectionObserver__;
   },
 };
 </script>
 
 <template>
   <!-- <div class="game-item"> -->
-  <v-sheet rounded="lg" elevation="3" style="margin: 5px 0" min-width="550px">
+  <v-sheet
+    rounded="lg"
+    elevation="3"
+    height="100"
+    style="margin: 5px 0"
+    min-width="550px"
+  >
     <div class="item">
       <!-- <v-container>
         <v-row> -->
@@ -67,9 +93,10 @@ const vOverflowDetector = {
       <v-col class="flex-grow-0 pa-0">
         <div class="game-image">
           <img
+            v-if="game.imageAssets.headerSDPath"
             :src="`file://${game.imageAssets.headerSDPath}`"
-            alt="Game Image"
           />
+          <div v-else class="game-image-placeholder"></div>
         </div>
       </v-col>
 
@@ -311,6 +338,9 @@ const vOverflowDetector = {
 
 .game-image {
   height: 100px;
+  border-radius: 5px;
+  margin-right: 10px;
+  aspect-ratio: 92 / 43;
 }
 
 .game-image img {
@@ -318,6 +348,15 @@ const vOverflowDetector = {
   object-fit: cover;
   border-radius: 5px;
   margin-right: 10px;
+  aspect-ratio: 92 / 43;
+}
+
+.game-image-placeholder {
+  height: 100px;
+  border-radius: 5px;
+  background-color: #f0f0f0;
+  margin-right: 10px;
+  aspect-ratio: 92 / 43;
 }
 
 .game-details {

@@ -29,12 +29,12 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  /* overflow: hidden; */
+  overflow: hidden;
 }
 
-/* body::-webkit-scrollbar {
+body::-webkit-scrollbar {
   display: none;
-} */
+}
 
 h1 {
   font-size: 3.2em;
@@ -70,7 +70,7 @@ button:focus-visible {
   width: 100%;
   max-height: 100vh;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 0 1rem;
   text-align: center;
   display: flex;
   flex-direction: column;

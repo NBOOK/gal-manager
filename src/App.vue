@@ -23,7 +23,6 @@ const gameListStore = useGameListStore();
   <!-- <v-icon icon="mdi-home" color="teal" /> -->
   <v-app>
     <AppBar />
-    <button @click="gameListStore.loading = true">Load Games</button>
     <LoadingOverlay />
     <GameList />
     <StatusBar />

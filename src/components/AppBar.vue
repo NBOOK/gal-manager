@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from "vue";
+import { computed } from "vue";
 import { useGameListStore } from "@store/global-store";
 
 const gameListStore = useGameListStore();
 // const games = computed(() => gameListStore.games);
 const totalGames = computed(() => gameListStore.totalGames);
-const filter = ref<boolean>(false);
 </script>
 
 <template>
   <v-container>
-    <v-app-bar :elevation="3" rounded="lg" scroll-behavior="fully-hide">
-      <!-- <template v-slot:prepend>
-        <v-icon>mdi-magnify</v-icon>
-      </template> -->
+    <v-app-bar
+      :elevation="3"
+      rounded="lg"
+      scroll-behavior="fully-hide"
+      height="36"
+    >
+      <template v-slot:prepend>
+        <!-- <v-icon>mdi-magnify</v-icon> -->
+        <v-spacer></v-spacer>
+      </template>
 
       <v-text-field
         id="searchbox-no-border"
@@ -24,7 +29,7 @@ const filter = ref<boolean>(false);
         :placeholder="`Search ${totalGames} games (JP/EN)`"
         prepend-inner-icon="mdi-magnify"
         single-line
-        max-width="70%"
+        max-width="51%"
         rounded="lg"
         v-model="gameListStore.searchQuery"
       ></v-text-field>
@@ -34,6 +39,7 @@ const filter = ref<boolean>(false);
         <v-menu
           activator="parent"
           :close-on-content-click="false"
+          scroll-strategy="close"
           transition="slide-y-transition"
         >
           <v-sheet rounded="lg">
@@ -80,7 +86,23 @@ const filter = ref<boolean>(false);
 
         <v-btn icon="mdi-magnify"></v-btn>
 
-        <v-btn icon="mdi-dots-vertical"></v-btn>
+        <v-btn
+          icon
+          :loading="gameListStore.loading"
+          @click="gameListStore.loading = true"
+        >
+          <v-icon
+            :icon="gameListStore.totalGames ? 'mdi-reload' : 'mdi-magnify-scan'"
+          />
+          <v-tooltip
+            activator="parent"
+            location="bottom"
+            open-delay="500"
+            close-on-content-click
+          >
+            {{ gameListStore.totalGames ? "Rescan games" : "Scan games" }}
+          </v-tooltip>
+        </v-btn>
       </template>
     </v-app-bar>
   </v-container>
@@ -89,7 +111,8 @@ const filter = ref<boolean>(false);
 <style>
 .sort-btn-toggle-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 列 */
+  grid-template-columns: repeat(2, 1fr);
+  /* 2 列 */
   height: 96px !important;
 }
 
