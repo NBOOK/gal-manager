@@ -4,7 +4,7 @@
       flat
       density="compact"
       location="bottom"
-      height="36"
+      height="46"
       style="border-top: #aaaaaa solid 1px"
     >
       <template v-slot:prepend>

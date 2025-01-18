@@ -13,7 +13,7 @@ const totalGames = computed(() => gameListStore.totalGames);
       :elevation="3"
       rounded="lg"
       scroll-behavior="fully-hide"
-      height="36"
+      density="compact"
     >
       <template v-slot:prepend>
         <!-- <v-icon>mdi-magnify</v-icon> -->

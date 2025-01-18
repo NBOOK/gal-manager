@@ -9,10 +9,10 @@ const gameListStore = useGameListStore();
 
 const collator = new Intl.Collator("ja");
 
-const contentHeight = ref(window.innerHeight - 36 - 16);
+const contentHeight = ref(window.innerHeight - 48 - 16);
 
 const updateContentHeight = () => {
-  contentHeight.value = window.innerHeight - 36 - 16;
+  contentHeight.value = window.innerHeight - 48 - 16;
 };
 
 const scrollCoverRef = useTemplateRef("scrollCoverRef");
@@ -96,7 +96,7 @@ const games = computed(() => {
   height: 100%;
 }
 .v-virtual-scroll {
-  padding-top: 6px;
+  padding-top: 18px;
   padding-right: calc(1em - 10px);
   /* position: relative; */
 }

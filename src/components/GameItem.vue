@@ -159,8 +159,8 @@ const vOverflowDetector = {
           @click="game.removeDB()"
         >
           <v-icon
-            icon="mdi-database-alert"
-            color="orange"
+            icon="mdi-database-off"
+            color="blue-grey"
             size="large"
           ></v-icon>
         </v-btn>
@@ -285,9 +285,16 @@ const vOverflowDetector = {
                 size="x-large"
               ></v-icon>
             </v-btn>
-            <v-btn v-else v-bind="props" icon size="x-small" variant="text">
+            <v-btn
+              v-else
+              v-bind="props"
+              icon
+              size="x-small"
+              variant="text"
+              readonly
+            >
               <v-icon
-                icon="mdi-monitor"
+                icon="mdi-content-save-off"
                 color="blue-grey"
                 size="x-large"
               ></v-icon>
@@ -301,9 +308,11 @@ const vOverflowDetector = {
           icon
           size="x-small"
           variant="text"
-          :readonly="game.inDeck && game.inSDCard"
           @click="game.move()"
         >
+          <v-icon icon="mdi-folder-move" color="green" size="x-large"></v-icon>
+        </v-btn>
+        <v-btn v-else icon size="x-small" variant="text" readonly>
           <v-icon
             icon="mdi-folder-move"
             color="blue-grey"
