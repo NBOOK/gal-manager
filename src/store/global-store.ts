@@ -9,10 +9,10 @@ export const useGameListStore = defineStore("gameList", () => {
   const searchQuery = ref<string>("");
   const sort = reactive({ by: "gameName", ascending: true });
   const filter = reactive({
+    linked: false,
     inNetDisk: false,
     inSDCard: false,
     inDeck: false,
-    inAssets: false,
     inLutrisDB: false,
     inSteamDB: false,
   });

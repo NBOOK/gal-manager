@@ -16,7 +16,6 @@ class GameEntry {
     inNetDisk: boolean = false;
     inSDCard: boolean = false;
     inDeck: boolean = false;
-    inAssets: boolean = false;
     inLutrisDB: boolean = false;
     inSteamDB: boolean = false;
     imageAssets!: ImageAssets;

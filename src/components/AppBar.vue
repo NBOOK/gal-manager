@@ -79,7 +79,48 @@ const totalGames = computed(() => gameListStore.totalGames);
           </v-sheet>
         </v-menu>
       </v-btn>
-      <v-btn icon="mdi-filter-outline"></v-btn>
+
+      <v-btn icon>
+        <v-icon>mdi-filter-outline</v-icon>
+        <v-menu
+          activator="parent"
+          :close-on-content-click="false"
+          scroll-strategy="close"
+          transition="slide-y-transition"
+        >
+          <v-sheet rounded="lg">
+            <v-btn-group>
+              <v-btn>
+                <v-icon>mdi-link</v-icon>
+              </v-btn>
+
+              <v-btn>
+                <v-icon>mdi-database</v-icon>
+              </v-btn>
+
+              <v-btn>
+                <v-icon>mdi-image</v-icon>
+              </v-btn>
+            </v-btn-group>
+
+            <v-divider></v-divider>
+
+            <v-btn-group>
+              <v-btn>
+                <v-icon>mdi-cloud</v-icon>
+              </v-btn>
+
+              <v-btn>
+                <v-icon>mdi-monitor</v-icon>
+              </v-btn>
+
+              <v-btn>
+                <v-icon>mdi-micro-sd</v-icon>
+              </v-btn>
+            </v-btn-group>
+          </v-sheet>
+        </v-menu>
+      </v-btn>
 
       <template v-slot:append>
         <v-btn icon="mdi-heart"></v-btn>
