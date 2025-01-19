@@ -99,7 +99,7 @@ const databaseBtn = computed(() => {
   if (props.game.linked) {
     if (props.game.inLutrisDB && props.game.inSteamDB) {
       return {
-        icon: "mdi-database-check",
+        icon: "mdi-database-edit",
         color: "green",
         readonly: false,
         action: () => props.game.removeDB(),
