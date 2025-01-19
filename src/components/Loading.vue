@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { useGameListStore } from "@store/global-store";
+import { useGameStore } from "@store/global-store";
 import GameEntry from "@modules/GameEntry";
 
-const gameListStore = useGameListStore();
+const gameStore = useGameStore();
 const currentGame = ref<string>("");
 const processedGames = ref<number>(0);
 const totalGames = ref<number>(0);
@@ -45,18 +45,18 @@ async function scanGames() {
     // use first 50 entries for demo
     const batchTasks = entries.map(async (entry) => {
       //.slice(0, 10)
-      if (!gameListStore.games[entry.name]) {
+      if (!gameStore.games[entry.name]) {
         // console.log('Game entry:', entry.name, 'processing');
-        gameListStore.games[entry.name] = await GameEntry.create(entry);
+        gameStore.games[entry.name] = await GameEntry.create(entry);
         // console.log('Game entry:', entry.name, 'done');
         await (updateLock = updateLock.then(() => {
           currentGame.value = entry.name;
           processedGames.value++;
         }));
       }
-      gameListStore.games[entry.name][flag] = true;
+      gameStore.games[entry.name][flag] = true;
       if (flag === "linked") {
-        gameListStore.games[entry.name].linkedPath = entry.symbolicTarget;
+        gameStore.games[entry.name].linkedPath = entry.symbolicTarget;
       }
     });
 
@@ -67,17 +67,17 @@ async function scanGames() {
   await processEntries(sdCardEntries, "inSDCard");
   await processEntries(netDiskEntries, "inNetDisk");
 
-  console.log("Game list:", gameListStore.games);
-  gameListStore.loading = false;
+  // console.log("Game list:", gameStore.games);
+  gameStore.loading = false;
 }
 
 watch(
-  () => gameListStore.loading,
+  () => gameStore.loading,
   (newValue) => {
     if (newValue) {
       // clear the games list
-      for (const key in gameListStore.games) {
-        delete gameListStore.games[key];
+      for (const key in gameStore.games) {
+        delete gameStore.games[key];
       }
       processedGames.value = 0;
       scanGames();
@@ -87,7 +87,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="gameListStore.loading" class="overlay">
+  <div v-if="gameStore.loading" class="overlay">
     <div class="loading-content">
       <p>{{ processedGames }}/{{ totalGames }}</p>
       <p>Processing: {{ currentGame }}</p>

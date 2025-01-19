@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, computed } from "vue";
-// import { useGameListStore } from '@store/global-store'
+// import { useGameStore } from '@store/global-store'
 import GameEntry from "@modules/GameEntry";
 // import { link } from "original-fs";
 
@@ -106,7 +106,7 @@ const databaseBtn = computed(() => {
       };
     } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
       return {
-        icon: "mdi-database-alert",
+        icon: "mdi-database-minus",
         color: "orange",
         readonly: false,
         action: () => props.game.addDB(),
@@ -138,7 +138,7 @@ const imageBtn = computed(() => {
     };
   } else if (props.game.imageAssets.assetsCount > 0) {
     return {
-      icon: "mdi-image",
+      icon: "mdi-image-minus",
       color: "orange",
       action: () => props.game.imageAssets.openImageOrGameFolder(),
     };
@@ -200,7 +200,7 @@ const storageBtn = computed(() => {
     };
   } else if (props.game.inDeck) {
     return {
-      icon: "mdi-monitor",
+      icon: "mdi-gamepad-square",
       hoverIcon: "mdi-delete-empty",
       color: "green",
       hoverColor: "red",
@@ -364,22 +364,6 @@ const moveBtn = computed(() => {
         </v-hover>
 
         <!-- Move Button -->
-        <!-- <v-btn
-          v-if="game.inDeck || game.inSDCard"
-          icon
-          size="x-small"
-          variant="text"
-          @click="game.localMove()"
-        >
-          <v-icon icon="mdi-folder-move" color="green" size="x-large"></v-icon>
-        </v-btn>
-        <v-btn v-else icon size="x-small" variant="text" readonly>
-          <v-icon
-            icon="mdi-folder-move"
-            color="blue-grey"
-            size="x-large"
-          ></v-icon>
-        </v-btn> -->
         <v-btn
           icon
           size="x-small"

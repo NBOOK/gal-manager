@@ -1,13 +1,13 @@
 <script setup lang="ts">
 // import HelloWorld from '@components/HelloWorld.vue'
 // import { ref, onMounted } from 'vue'
-import { useGameListStore } from "@store/global-store";
+// import { useGameStore } from "@store/global-store";
 import LoadingOverlay from "@components/Loading.vue";
 import GameList from "@components/GameList.vue";
 import AppBar from "@components/AppBar.vue";
 import StatusBar from "@components/StatusBar.vue";
 
-const gameListStore = useGameListStore();
+// const gameStore = useGameStore();
 </script>
 
 <template>

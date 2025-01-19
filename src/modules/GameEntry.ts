@@ -15,9 +15,11 @@ class GameEntry {
     linkedPath: string = "";
     inNetDisk: boolean = false;
     inSDCard: boolean = false;
+    inUSB: boolean = false; // @TODO : add USB support
     inDeck: boolean = false;
     inLutrisDB: boolean = false;
     inSteamDB: boolean = false;
+    starred: boolean = false;
     imageAssets!: ImageAssets;
     splitter: string = ' - ';
 
@@ -94,6 +96,18 @@ class GameEntry {
         console.log(`Moving ${this.folderName}...`);
         this.inDeck = !this.inDeck;
         this.inSDCard = !this.inSDCard;
+    }
+
+    get inDatabase(): number {
+        if (this.inLutrisDB && this.inSteamDB) return 1;
+        else if (this.inLutrisDB || this.inSteamDB) return 2;
+        else return 0;
+    }
+
+    get inAssets(): number {
+        if (this.imageAssets.assetsCount === 5) return 1;
+        else if (this.imageAssets.assetsCount > 0) return 2;
+        else return 0;
     }
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "gal-manager",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -28,5 +28,7 @@
     "vite-plugin-electron-renderer": "^0.14.5",
     "vue-tsc": "^2.0.26"
   },
-  "main": "dist-electron/main.js"
+  "main": "dist-electron/main.js",
+  "author": "nbook",
+  "description": "Sync Gals and add to Lutris & Steam"
 }

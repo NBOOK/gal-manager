@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, useTemplateRef } from "vue";
-import { useGameListStore } from "@store/global-store";
+import { useGameStore } from "@store/global-store";
 import GameItem from "@components/GameItem.vue";
 
 // import GameEntry from "@modules/GameEntry";
 
-const gameListStore = useGameListStore();
+const gameStore = useGameStore();
 
 const collator = new Intl.Collator("ja");
 
-const contentHeight = ref(window.innerHeight - 48 - 16);
+const contentHeight = ref(window.innerHeight - 48 - 18);
 
 const updateContentHeight = () => {
-  contentHeight.value = window.innerHeight - 48 - 16;
+  contentHeight.value = window.innerHeight - 48 - 18;
 };
 
 const scrollCoverRef = useTemplateRef("scrollCoverRef");
@@ -37,9 +37,11 @@ onUnmounted(() => {
 });
 
 const games = computed(() => {
-  let filteredGames = Object.values(gameListStore.games); // 转换为数组一次即可
-  if (gameListStore.searchQuery) {
-    const searchQuery = gameListStore.searchQuery.toLowerCase();
+  let filteredGames = Object.values(gameStore.games); // 转换为数组一次即可
+
+  // filter by name
+  if (gameStore.searchQuery) {
+    const searchQuery = gameStore.searchQuery.toLowerCase();
     filteredGames = filteredGames.filter(
       (game) =>
         game.gameName.toLowerCase().includes(searchQuery) ||
@@ -48,9 +50,54 @@ const games = computed(() => {
         game.gameBrandEN.toLowerCase().includes(searchQuery)
     );
   }
-  if (gameListStore.sort.by) {
-    const sortBy = gameListStore.sort.by;
-    const ascending = gameListStore.sort.ascending;
+
+  const filterConfig = gameStore.filter;
+  // for (const filterKey of [
+  //   "linked",
+  //   "inDatabase",
+  //   "inAssets",
+  //   "starred",
+  // ] as const) {
+  //   const filter = filterConfig[filterKey];
+
+  //   if (filter.toggled) {
+  //     filteredGames = filteredGames.filter(
+  //       (game) => game[filterKey] === filter.value
+  //     );
+  //   }
+  // }
+  let toggledKeys = Object.entries(filterConfig)
+    .filter(
+      ([key, value]) =>
+        ["linked", "inDatabase", "inAssets", "starred"].includes(key) &&
+        value.toggled
+    )
+    .map(([key]) => key as keyof typeof filterConfig);
+  if (toggledKeys.length) {
+    filteredGames = filteredGames.filter((game) =>
+      toggledKeys.every((key) => game[key] === filterConfig[key].value)
+    );
+  }
+
+  const operator = gameStore.filterOperator
+    ? (list: boolean[]) => list.every(Boolean)
+    : (list: boolean[]) => list.some(Boolean);
+  toggledKeys = Object.entries(filterConfig)
+    .filter(
+      ([key, value]) =>
+        ["inNetDisk", "inSDCard", "inDeck", "inUSB"].includes(key) &&
+        value.toggled
+    )
+    .map(([key]) => key as keyof typeof filterConfig);
+  if (toggledKeys.length) {
+    filteredGames = filteredGames.filter((game) =>
+      operator(toggledKeys.map((key) => game[key] === filterConfig[key].value))
+    );
+  }
+
+  if (gameStore.sort.by) {
+    const sortBy = gameStore.sort.by;
+    const ascending = gameStore.sort.ascending;
 
     filteredGames = filteredGames.sort((gameA, gameB) => {
       if (sortBy === "gameName" || sortBy === "gameBrand") {
@@ -69,12 +116,12 @@ const games = computed(() => {
   return filteredGames;
 });
 
-// const totalGames = computed(() => gameListStore.totalGames);
+// const totalGames = computed(() => gameStore.totalGames);
 </script>
 
 <template>
   <v-virtual-scroll
-    v-if="!gameListStore.loading"
+    v-if="!gameStore.loading"
     :height="contentHeight"
     :items="games"
     item-height="100"
