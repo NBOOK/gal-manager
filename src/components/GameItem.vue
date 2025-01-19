@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { reactive } from "vue";
+import { reactive, computed } from "vue";
 // import { useGameListStore } from '@store/global-store'
 import GameEntry from "@modules/GameEntry";
+// import { link } from "original-fs";
 
-defineProps<{ game: GameEntry }>(); // use props.game to access the game object
+const props = defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 
 const overflowStates = reactive<Record<string, boolean>>({});
 
@@ -75,6 +76,166 @@ const vOverflowDetector = {
     delete el.__intersectionObserver__;
   },
 };
+
+const linkBtn = computed(() => {
+  if (props.game.linked) {
+    return {
+      icon: "mdi-link",
+      color: "green",
+      readonly: props.game.inLutrisDB || props.game.inSteamDB,
+      action: () => props.game.unlink(),
+    };
+  } else {
+    return {
+      icon: "mdi-link-off",
+      color: "red",
+      readonly: false,
+      action: () => props.game.link(),
+    };
+  }
+});
+
+const databaseBtn = computed(() => {
+  if (props.game.linked) {
+    if (props.game.inLutrisDB && props.game.inSteamDB) {
+      return {
+        icon: "mdi-database-check",
+        color: "green",
+        readonly: false,
+        action: () => props.game.removeDB(),
+      };
+    } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
+      return {
+        icon: "mdi-database-alert",
+        color: "orange",
+        readonly: false,
+        action: () => props.game.addDB(),
+      };
+    } else {
+      return {
+        icon: "mdi-database-remove",
+        color: "red",
+        readonly: false,
+        action: () => props.game.addDB(),
+      };
+    }
+  } else {
+    return {
+      icon: "mdi-database-off",
+      color: "blue-grey",
+      readonly: true,
+      action: () => {},
+    };
+  }
+});
+
+const imageBtn = computed(() => {
+  if (props.game.imageAssets.assetsCount == 5) {
+    return {
+      icon: "mdi-image-check",
+      color: "green",
+      action: () => {},
+    };
+  } else if (props.game.imageAssets.assetsCount > 0) {
+    return {
+      icon: "mdi-image",
+      color: "orange",
+      action: () => props.game.imageAssets.openImageOrGameFolder(),
+    };
+  } else {
+    return {
+      icon: "mdi-image-remove",
+      color: "red",
+      action: () => props.game.imageAssets.openImageOrGameFolder(),
+    };
+  }
+});
+
+const cloudBtn = computed(() => {
+  if (props.game.inNetDisk) {
+    if (props.game.inDeck || props.game.inSDCard) {
+      return {
+        icon: "mdi-cloud",
+        color: "green",
+        readonly: true,
+        action: () => {},
+      };
+    } else {
+      return {
+        icon: "mdi-cloud-download",
+        color: "green",
+        readonly: false,
+        action: () => (props.game.inDeck = true), //@TODO: 下载到本地
+      };
+    }
+  } else {
+    if (props.game.inDeck || props.game.inSDCard) {
+      return {
+        icon: "mdi-cloud-upload",
+        color: "orange",
+        readonly: false,
+        action: () => (props.game.inNetDisk = true), // @TODO: 上传到云端
+      };
+    } else {
+      // not in cloud or local storage, means the link is broken or name is changed
+      return {
+        icon: "mdi-cloud",
+        color: "blue-grey",
+        readonly: true,
+        action: () => {},
+      };
+    }
+  }
+});
+
+const storageBtn = computed(() => {
+  if (props.game.inSDCard) {
+    return {
+      icon: "mdi-micro-sd",
+      hoverIcon: "mdi-delete-empty",
+      color: "green",
+      hoverColor: "red",
+      readonly: false,
+      action: () => (props.game.inSDCard = false), // @TODO: 移除本地存储
+    };
+  } else if (props.game.inDeck) {
+    return {
+      icon: "mdi-monitor",
+      hoverIcon: "mdi-delete-empty",
+      color: "green",
+      hoverColor: "red",
+      readonly: false,
+      action: () => (props.game.inDeck = false), // @TODO: 移除本地存储
+    };
+  } else {
+    return {
+      icon: "mdi-content-save-off",
+      hoverIcon: "mdi-content-save-off",
+      color: "blue-grey",
+      hoverColor: "blue-grey",
+      readonly: true,
+      action: () => {},
+    };
+  }
+});
+
+const moveBtn = computed(() => {
+  if (props.game.inDeck || props.game.inSDCard) {
+    return {
+      icon: "mdi-folder-move",
+      color: "green",
+      readonly: false,
+      action: () => props.game.localMove(),
+    };
+  } else {
+    return {
+      icon: "mdi-folder-move",
+      color: "blue-grey",
+      readonly: true,
+      action: () => {},
+    };
+  }
+});
 </script>
 
 <template>
@@ -130,172 +291,72 @@ const vOverflowDetector = {
       <div class="game-controls">
         <!-- Link Button -->
         <v-btn
-          v-if="game.linked"
           icon
           size="x-small"
           variant="text"
-          :readonly="game.inLutrisDB || game.inSteamDB"
-          @click="game.unlink()"
+          :readonly="linkBtn.readonly"
+          @click="linkBtn.action"
         >
-          <v-icon icon="mdi-link" color="green" size="x-large"></v-icon>
-        </v-btn>
-        <v-btn
-          v-else
-          icon="mdi-link-off"
-          size="x-small"
-          variant="text"
-          @click="game.link()"
-        >
-          <v-icon icon="mdi-link-off" color="red" size="x-large"></v-icon>
+          <v-icon
+            :icon="linkBtn.icon"
+            :color="linkBtn.color"
+            size="x-large"
+          ></v-icon>
         </v-btn>
 
         <!-- Database Button -->
         <v-btn
-          v-if="!game.linked"
           icon
           size="x-small"
           variant="text"
-          readonly
-          @click="game.removeDB()"
+          :readonly="databaseBtn.readonly"
+          @click="databaseBtn.action"
         >
           <v-icon
-            icon="mdi-database-off"
-            color="blue-grey"
-            size="large"
-          ></v-icon>
-        </v-btn>
-        <v-btn
-          v-else-if="game.inLutrisDB && game.inSteamDB"
-          icon
-          size="x-small"
-          variant="text"
-          @click="game.removeDB()"
-        >
-          <v-icon
-            icon="mdi-database-check"
-            color="green"
+            :icon="databaseBtn.icon"
+            :color="databaseBtn.color"
             size="x-large"
           ></v-icon>
         </v-btn>
-        <v-btn
-          v-else-if="game.inLutrisDB !== game.inSteamDB"
-          icon
-          size="x-small"
-          variant="text"
-          @click="game.addDB()"
-        >
-          <v-icon
-            icon="mdi-database-alert"
-            color="orange"
-            size="large"
-          ></v-icon>
-        </v-btn>
-        <v-btn v-else icon size="x-small" variant="text" @click="game.addDB()">
-          <v-icon icon="mdi-database-remove" color="red" size="large"></v-icon>
-        </v-btn>
 
         <!-- Image Button -->
-        <v-btn
-          v-if="game.imageAssets.assetsCount == 5"
-          icon
-          size="x-small"
-          variant="text"
-          readonly
-        >
-          <v-icon icon="mdi-image-check" color="green" size="x-large"></v-icon>
-        </v-btn>
-        <v-btn
-          v-else-if="game.imageAssets.assetsCount > 0"
-          icon="mdi-image"
-          size="x-small"
-          variant="text"
-          readonly
-        >
-          <v-icon icon="mdi-image" color="orange" size="large"></v-icon>
-        </v-btn>
-        <v-btn v-else icon size="x-small" variant="text" readonly>
-          <v-icon icon="mdi-image-remove" color="red" size="large"></v-icon>
+        <v-btn icon size="x-small" variant="text" @click="imageBtn.action">
+          <v-icon
+            :icon="imageBtn.icon"
+            :color="imageBtn.color"
+            size="x-large"
+          ></v-icon>
         </v-btn>
 
         <!-- Cloud Button -->
         <v-btn
-          v-if="game.inNetDisk && (game.inDeck || game.inSDCard)"
           icon
           size="x-small"
           variant="text"
-          readonly
-        >
-          <v-icon icon="mdi-cloud" color="green" size="x-large"></v-icon>
-        </v-btn>
-        <v-btn
-          v-else-if="game.inNetDisk && !(game.inDeck || game.inSDCard)"
-          icon
-          size="x-small"
-          variant="text"
-          @click="game.inDeck = true"
+          :readonly="cloudBtn.readonly"
+          @click="cloudBtn.action"
         >
           <v-icon
-            icon="mdi-cloud-download"
-            color="green"
+            :icon="cloudBtn.icon"
+            :color="cloudBtn.color"
             size="x-large"
           ></v-icon>
-        </v-btn>
-        <v-btn
-          v-else-if="!game.inNetDisk && (game.inDeck || game.inSDCard)"
-          icon
-          size="x-small"
-          variant="text"
-        >
-          <v-icon
-            icon="mdi-cloud-upload"
-            color="orange"
-            size="x-large"
-          ></v-icon>
-        </v-btn>
-        <v-btn v-else icon size="x-small" variant="text">
-          <v-icon icon="mdi-cloud" color="blue-grey" size="x-large"></v-icon>
         </v-btn>
 
         <!-- Storage Button -->
         <v-hover>
           <template v-slot:default="{ isHovering, props }">
             <v-btn
-              v-if="game.inSDCard"
               v-bind="props"
               icon
               size="x-small"
               variant="text"
+              :readonly="storageBtn.readonly"
+              @click="storageBtn.action"
             >
               <v-icon
-                :icon="isHovering ? 'mdi-delete-empty' : 'mdi-micro-sd'"
-                :color="isHovering ? 'red' : 'green'"
-                size="x-large"
-              ></v-icon>
-            </v-btn>
-            <v-btn
-              v-else-if="game.inDeck"
-              v-bind="props"
-              icon
-              size="x-small"
-              variant="text"
-            >
-              <v-icon
-                :icon="isHovering ? 'mdi-delete-empty' : 'mdi-monitor'"
-                :color="isHovering ? 'red' : 'green'"
-                size="x-large"
-              ></v-icon>
-            </v-btn>
-            <v-btn
-              v-else
-              v-bind="props"
-              icon
-              size="x-small"
-              variant="text"
-              readonly
-            >
-              <v-icon
-                icon="mdi-content-save-off"
-                color="blue-grey"
+                :icon="isHovering ? storageBtn.hoverIcon : storageBtn.icon"
+                :color="isHovering ? storageBtn.hoverColor : storageBtn.color"
                 size="x-large"
               ></v-icon>
             </v-btn>
@@ -303,12 +364,12 @@ const vOverflowDetector = {
         </v-hover>
 
         <!-- Move Button -->
-        <v-btn
+        <!-- <v-btn
           v-if="game.inDeck || game.inSDCard"
           icon
           size="x-small"
           variant="text"
-          @click="game.move()"
+          @click="game.localMove()"
         >
           <v-icon icon="mdi-folder-move" color="green" size="x-large"></v-icon>
         </v-btn>
@@ -316,6 +377,19 @@ const vOverflowDetector = {
           <v-icon
             icon="mdi-folder-move"
             color="blue-grey"
+            size="x-large"
+          ></v-icon>
+        </v-btn> -->
+        <v-btn
+          icon
+          size="x-small"
+          variant="text"
+          :readonly="moveBtn.readonly"
+          @click="moveBtn.action"
+        >
+          <v-icon
+            :icon="moveBtn.icon"
+            :color="moveBtn.color"
             size="x-large"
           ></v-icon>
         </v-btn>

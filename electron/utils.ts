@@ -34,6 +34,7 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
                         result.isDirectory = stats.isDirectory();
                         result.isFile = stats.isFile();
                     }
+                    // @TODO: check if the link is broken
 
                     // 如果是目录（或符号链接指向目录），计算磁盘占用和时间戳
                     if (result.isDirectory) {

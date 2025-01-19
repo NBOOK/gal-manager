@@ -86,6 +86,13 @@ class ImageAssets {
         ]);
     }
 
+    openImageOrGameFolder() {
+        //@TODO
+        // open image assets folder in file manager if exists
+        // else open game folder
+        console.log('openImageOrGameFolder', this.basePath, this.gameBrand, this.gameName);
+    }
+
 
     get assetsCount(): number {
         let count = 0;
