@@ -33,9 +33,10 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win: BrowserWindow | null
 
 function createWindow() {
-  console.log("icon path:", path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'))
+  console.log("icon path:", path.join(process.env.VITE_PUBLIC, 'favicon.ico'))
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    // icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    icon: path.join(process.env.VITE_PUBLIC, 'favicon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       // nodeIntegration: true, // Enable Node.js integration

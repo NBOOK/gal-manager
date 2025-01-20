@@ -29,7 +29,7 @@ function toggleOverlay() {
     style="backdrop-filter: blur(1rem)"
     @click="toggleOverlay"
   >
-    <v-container width="85vw">
+    <v-container width="85vw" max-height="100vh">
       <v-carousel v-model="page" :show-arrows="false" hide-delimiters>
         <v-carousel-item
           :draggable="false"
