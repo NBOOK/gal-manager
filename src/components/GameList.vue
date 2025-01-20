@@ -18,9 +18,17 @@ const updateContentHeight = () => {
 const scrollCoverRef = useTemplateRef("scrollCoverRef");
 
 let hideTimeout: ReturnType<typeof setTimeout>;
+function tmpHideScrollCover() {
+  hideScrollCover();
+  showScrollCover();
+}
+
 function hideScrollCover() {
   scrollCoverRef.value?.classList.add("hidden");
   clearTimeout(hideTimeout);
+}
+
+function showScrollCover() {
   hideTimeout = setTimeout(() => {
     scrollCoverRef.value?.classList.remove("hidden");
   }, 1500);
@@ -39,33 +47,42 @@ onUnmounted(() => {
 const games = computed(() => {
   let filteredGames = Object.values(gameStore.games); // 转换为数组一次即可
 
-  // filter by name
+  // filter by query
   if (gameStore.searchQuery) {
     const searchQuery = gameStore.searchQuery.toLowerCase();
-    filteredGames = filteredGames.filter(
-      (game) =>
-        game.gameName.toLowerCase().includes(searchQuery) ||
-        game.gameNameEN.toLowerCase().includes(searchQuery) ||
-        game.gameBrand.toLowerCase().includes(searchQuery) ||
-        game.gameBrandEN.toLowerCase().includes(searchQuery)
-    );
+
+    if (searchQuery.includes("@name=")) {
+      const nameQuery = searchQuery
+        .split("@name=")[1]
+        .split("@brand=")[0]
+        .trim();
+      filteredGames = filteredGames.filter(
+        (game) =>
+          game.gameName.toLowerCase().includes(nameQuery) ||
+          game.gameNameEN.toLowerCase().includes(nameQuery)
+      );
+    } else if (searchQuery.includes("@brand=")) {
+      const brandQuery = searchQuery
+        .split("@brand=")[1]
+        .split("@name=")[0]
+        .trim();
+      filteredGames = filteredGames.filter(
+        (game) =>
+          game.gameBrand.toLowerCase().includes(brandQuery) ||
+          game.gameBrandEN.toLowerCase().includes(brandQuery)
+      );
+    } else {
+      filteredGames = filteredGames.filter(
+        (game) =>
+          game.gameName.toLowerCase().includes(searchQuery) ||
+          game.gameNameEN.toLowerCase().includes(searchQuery) ||
+          game.gameBrand.toLowerCase().includes(searchQuery) ||
+          game.gameBrandEN.toLowerCase().includes(searchQuery)
+      );
+    }
   }
 
   const filterConfig = gameStore.filter;
-  // for (const filterKey of [
-  //   "linked",
-  //   "inDatabase",
-  //   "inAssets",
-  //   "starred",
-  // ] as const) {
-  //   const filter = filterConfig[filterKey];
-
-  //   if (filter.toggled) {
-  //     filteredGames = filteredGames.filter(
-  //       (game) => game[filterKey] === filter.value
-  //     );
-  //   }
-  // }
   let toggledKeys = Object.entries(filterConfig)
     .filter(
       ([key, value]) =>
@@ -125,16 +142,16 @@ const games = computed(() => {
     :height="contentHeight"
     :items="games"
     item-height="100"
-    @scroll="hideScrollCover"
+    @scroll="tmpHideScrollCover"
   >
     <template v-slot:default="{ item, index }">
       <GameItem :game="item" :index="index" :key="item.gameName" />
     </template>
   </v-virtual-scroll>
   <div
-    class="cover-bar"
+    class="cover-mask"
     ref="scrollCoverRef"
-    @mouseover="hideScrollCover"
+    @mouseover="tmpHideScrollCover"
   ></div>
 </template>
 
@@ -170,7 +187,7 @@ const games = computed(() => {
   background-color: #888888;
 }
 
-.cover-bar {
+.cover-mask {
   position: absolute;
   background: #fff;
   /* pointer-events: none; */
@@ -182,10 +199,7 @@ const games = computed(() => {
   opacity: 1;
 }
 
-/* .cover-bar:hover {
-  opacity: 0;
-} */
-.cover-bar.hidden {
+.cover-mask.hidden {
   pointer-events: none;
   opacity: 0;
 }
