@@ -3,10 +3,10 @@ import { computed } from "vue";
 import { useGameStore } from "@store/global-store";
 
 const gameStore = useGameStore();
-// const games = computed(() => gameStore.games);
+const games = computed(() => gameStore.games);
 const sortConfig = gameStore.sort;
 const filterConfig = gameStore.filter;
-const totalGames = computed(() => gameStore.totalGames);
+const totalGames = computed(() => Object.keys(games).length);
 
 const filterLinked = computed(() => {
   const linked = filterConfig.linked;
@@ -347,16 +347,14 @@ const filterUSB = computed(() => {
           :loading="gameStore.loading"
           @click="gameStore.loading = true"
         >
-          <v-icon
-            :icon="gameStore.totalGames ? 'mdi-reload' : 'mdi-magnify-scan'"
-          />
+          <v-icon :icon="totalGames ? 'mdi-reload' : 'mdi-magnify-scan'" />
           <v-tooltip
             activator="parent"
             location="bottom"
             open-delay="500"
             close-on-content-click
           >
-            {{ gameStore.totalGames ? "Rescan games" : "Scan games" }}
+            {{ totalGames ? "Rescan games" : "Scan games" }}
           </v-tooltip>
         </v-btn>
       </template>

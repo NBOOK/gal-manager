@@ -24,3 +24,7 @@ release
 *.njsproj
 *.sln
 *.sw?
+
+# config and dbs
+public/GalManager/*
+!public/GalManager/config_template.json

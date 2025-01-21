@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-import { scanDir, getDiskUsage, fileExists, resizeImage } from './utils.js'
+import * as utils from './utils';
 
 
 // check if we are running in development mode
@@ -33,9 +33,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win: BrowserWindow | null
 
 function createWindow() {
-  console.log("icon path:", path.join(process.env.VITE_PUBLIC, 'favicon.ico'))
   win = new BrowserWindow({
-    // icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     icon: path.join(process.env.VITE_PUBLIC, 'favicon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
@@ -84,15 +82,21 @@ app.whenReady().then(() => {
 
 function registerIpcMain() {
   ipcMain.handle('scanDir', (_event, dirPath: string) => {
-    return scanDir(dirPath)
+    return utils.scanDir(dirPath)
   });
   ipcMain.handle('getDiskUsage', (_event, dirPath: string) => {
-    return getDiskUsage(dirPath)
+    return utils.getDiskUsage(dirPath)
   });
   ipcMain.handle('fileExists', (_event, filePath: string) => {
-    return fileExists(filePath)
+    return utils.fileExists(filePath)
   });
   ipcMain.handle('resizeImage', (_event, sourcePath: string, targetWidth: number, format: 'jpg' | 'webp', compression: number) => {
-    return resizeImage(sourcePath, targetWidth, format, compression)
+    return utils.resizeImage(sourcePath, targetWidth, format, compression)
+  });
+  ipcMain.handle('fetchConfig', (_event, jsonPath?: string) => {
+    return utils.fetchConfig(jsonPath)
+  });
+  ipcMain.handle('saveConfig', (_event, config: any, jsonPath?: string) => {
+    return utils.saveConfig(config, jsonPath)
   });
 }

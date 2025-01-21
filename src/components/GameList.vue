@@ -132,8 +132,6 @@ const games = computed(() => {
   }
   return filteredGames;
 });
-
-// const totalGames = computed(() => gameStore.totalGames);
 </script>
 
 <template>

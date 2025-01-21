@@ -10,10 +10,10 @@ const totalGames = ref<number>(0);
 
 async function scanGames() {
   const paths = {
-    main: "/home/deck/Games/Gal",
-    deck: "/run/media/deck/Data/Games/Gal",
-    sdCard: "/run/media/deck/SDCard/Games/Gal",
-    netDisk: "/run/media/deck/NetDisk/Games/Gal",
+    main: gameStore.config.value.gamesMainPath,
+    deck: gameStore.config.value.gamesDataPath,
+    sdCard: gameStore.config.value.gamesSDPath,
+    netDisk: gameStore.config.value.gamesNetPath,
   };
 
   // scan all game directories in multiple paths

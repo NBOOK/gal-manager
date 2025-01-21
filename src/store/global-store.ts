@@ -1,11 +1,10 @@
-import { ref, computed, reactive } from "vue";
+import { ref, reactive } from "vue";
 import { defineStore } from "pinia";
 
 export const useGameStore = defineStore("gameList", () => {
   // const games = ref<Record<string, ReturnType<typeof useGameStore>>>({});
   const games = reactive({} as Record<string, typeof GameEntry>);
   const loading = ref<boolean>(false);
-  // const loaded = ref<boolean>(false);
   const searchQuery = ref<string>("");
   const sort = reactive({ by: "gameName", ascending: true });
   const filter = reactive({
@@ -22,19 +21,20 @@ export const useGameStore = defineStore("gameList", () => {
 
   const filterOperator = ref(true)
 
-  const totalGames = computed(() => Object.keys(games).length);
-  const totalDiskUsage = computed(() => {
-    return Object.values(games).reduce((sum, game) => sum + game.diskUsage, 0);
-  });
+  // const totalDiskUsage = computed(() => {
+  //   return Object.values(games).reduce((sum, game) => sum + game.diskUsage, 0);
+  // });
+
+  const config = ref({} as any);
 
   return {
     games,
     loading,
-    totalGames,
-    totalDiskUsage,
+    // totalDiskUsage,
     searchQuery,
     sort,
     filter,
-    filterOperator
+    filterOperator,
+    config
   };
 });

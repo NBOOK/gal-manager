@@ -148,6 +148,37 @@ async function fileExists(filePath: string): Promise<boolean> {
     }
 }
 
+async function fetchConfig(jsonPath?: string)
+    : Promise<any> {
+    if (!jsonPath) {
+        jsonPath = path.join(os.homedir(), '.local', 'share', 'GalManager', 'config.json');
+    }
+    try {
+        const exists = await fileExists(jsonPath);
+        if (!exists) {
+            return {};
+        }
+
+        const data = await fs.promises.readFile(jsonPath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Error fetching config:', error);
+        return {};
+    }
+}
+
+async function saveConfig(config: any, jsonPath?: string): Promise<void> {
+    if (!jsonPath) {
+        jsonPath = path.join(os.homedir(), '.local', 'share', 'GalManager', 'config.json');
+    }
+    try {
+        const data = JSON.stringify(config, null, 2);
+        await fs.promises.writeFile(jsonPath, data, 'utf-8');
+    } catch (error) {
+        console.error('Error saving config:', error);
+    }
+}
+
 async function resizeImage(
     sourcePath: string,
     targetWidth: number,
@@ -185,4 +216,11 @@ async function resizeImage(
     }
 }
 
-export { scanDir, getDiskUsage, fileExists, resizeImage };
+export {
+    scanDir,
+    getDiskUsage,
+    fileExists,
+    resizeImage,
+    fetchConfig,
+    saveConfig
+};

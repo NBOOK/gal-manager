@@ -1,4 +1,12 @@
 import ImageAssets from '@modules/ImageAssets';
+import { useGameStore } from "@store/global-store";
+let gameStore: ReturnType<typeof useGameStore>;
+
+export function gameEntrySetConfig() {
+    if (!gameStore) {
+        gameStore = useGameStore();
+    }
+}
 
 class GameEntry {
     basePath: string = "";

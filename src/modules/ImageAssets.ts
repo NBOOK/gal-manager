@@ -1,3 +1,12 @@
+import { useGameStore } from "@store/global-store";
+let gameStore: ReturnType<typeof useGameStore>;
+
+export function imageAssetsSetConfig() {
+    if (!gameStore) {
+        gameStore = useGameStore();
+    }
+}
+
 class ImageAssets {
     basePath: string = "";
     gameBrand: string = "";
@@ -35,14 +44,14 @@ class ImageAssets {
 
     async scanImageAssets() {
         const assetNames: { [key: string]: string } = {
-            iconPath: '_icon',
-            logoPath: '_logo',
-            capsulePath: '_capsule',
-            headerPath: '_header',
-            heroPath: '_hero',
-            capsuleSDPath: '_capsule_sd',
-            headerSDPath: '_header_sd',
-            heroSDPath: '_hero_sd'
+            iconPath: gameStore.config.value.assetsIconName,
+            logoPath: gameStore.config.value.assetsIconName,
+            capsulePath: gameStore.config.value.assetsCapsuleName,
+            headerPath: gameStore.config.value.assetsHeaderName,
+            heroPath: gameStore.config.value.assetsHeroName,
+            capsuleSDPath: gameStore.config.value.assetsCapsuleName + gameStore.config.value.assetsLowResSuffix,
+            headerSDPath: gameStore.config.value.assetsHeaderName + gameStore.config.value.assetsLowResSuffix,
+            heroSDPath: gameStore.config.value.assetsHeroName + gameStore.config.value.assetsLowResSuffix
         };
 
         const formats: { [key: string]: string[] } = {
@@ -58,7 +67,7 @@ class ImageAssets {
 
         await Promise.all(Object.entries(assetNames).map(async ([key, assetName]) => {
             for (const format of formats[key]) {
-                const filePath = `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}/_CustomLibraryAssets/${assetName}.${format}`;
+                const filePath = `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}/${gameStore.config.value.assetsFolderName}/${assetName}.${format}`;
                 const exists = await window.ipcRenderer.invoke('fileExists', filePath);
                 if (exists) {
                     (this as any)[key] = filePath;
