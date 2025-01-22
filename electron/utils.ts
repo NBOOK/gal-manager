@@ -3,6 +3,7 @@ import os from 'node:os'
 import { spawn } from 'node:child_process'
 import sharp from 'sharp';
 import path from 'node:path'
+import { readVdf, VdfMap, writeVdf, getShortcutHash } from "steam-binary-vdf";
 
 async function scanDir(dirPath: string): Promise<DirEntry[]> {
     try {
@@ -218,12 +219,31 @@ async function resizeImage(
 
 async function createSymbolicLink(source: string, target: string): Promise<void> {
     try {
+        await fs.promises.unlink(target); // 删除现有目标
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+            throw error; // 忽略 ENOENT 错误（目标不存在）
+        }
+    }
+    try {
         await fs.promises.symlink(source, target);
         // console.log(`Symbolic link created from ${source} to ${target}`);
     } catch (error) {
         // console.error('Error creating symbolic link:', error);
         throw error;
     }
+}
+
+async function readVdfFile(filePath: string): Promise<VdfMap> {
+    return readVdf(await fs.promises.readFile(filePath));
+}
+
+async function writeVdfFile(filePath: string, vdf: VdfMap): Promise<void> {
+    fs.promises.writeFile(filePath, writeVdf(vdf));
+}
+
+async function getGameID(name: string): Promise<string> {
+    return getShortcutHash(name);
 }
 
 export default {
@@ -233,5 +253,8 @@ export default {
     resizeImage,
     fetchConfig,
     saveConfig,
-    createSymbolicLink
+    createSymbolicLink,
+    readVdfFile,
+    writeVdfFile,
+    getGameID,
 };

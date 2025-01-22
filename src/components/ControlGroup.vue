@@ -10,7 +10,7 @@ const linkBtn = computed(() => {
     return {
       icon: "mdi-link",
       color: "green",
-      readonly: props.game.inLutrisDB || props.game.inSteamDB,
+      readonly: props.game.inLutrisDB || props.game.inSteamDB.value,
       action: () => props.game.unlink(),
     };
   } else {
@@ -25,14 +25,14 @@ const linkBtn = computed(() => {
 
 const databaseBtn = computed(() => {
   if (props.game.linked) {
-    if (props.game.inLutrisDB && props.game.inSteamDB) {
+    if (props.game.inLutrisDB && props.game.inSteamDB.value) {
       return {
         icon: "mdi-database-edit",
         color: "green",
         readonly: false,
         action: () => props.game.removeDB(),
       };
-    } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
+    } else if (props.game.inLutrisDB !== props.game.inSteamDB.value) {
       return {
         icon: "mdi-database-minus",
         color: "orange",

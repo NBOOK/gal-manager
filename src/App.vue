@@ -18,7 +18,8 @@ onMounted(async () => {
   if (Object.keys(gameStore.config.value).length === 0) {
     firstTime.value = true;
   } else {
-    gameStore.steamDB = new SteamDB(gameStore.config.value);
+    gameStore.steamDB = new SteamDB();
+    await gameStore.steamDB.setup(gameStore.config.value);
     console.log("SteamDB:", gameStore.steamDB);
   }
 });

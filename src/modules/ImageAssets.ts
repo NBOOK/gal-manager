@@ -45,7 +45,7 @@ class ImageAssets {
     async scanImageAssets() {
         const assetNames: { [key: string]: string } = {
             iconPath: gameStore.config.value.assetsIconName,
-            logoPath: gameStore.config.value.assetsIconName,
+            logoPath: gameStore.config.value.assetsLogoName,
             capsulePath: gameStore.config.value.assetsCapsuleName,
             headerPath: gameStore.config.value.assetsHeaderName,
             heroPath: gameStore.config.value.assetsHeroName,

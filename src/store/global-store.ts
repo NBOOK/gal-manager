@@ -1,7 +1,7 @@
 import { ref, computed, reactive } from "vue";
 import { defineStore } from "pinia";
 
-export const useGameStore = defineStore("gameList", () => {
+export const useGameStore = defineStore("globalStore", () => {
   // const games = ref<Record<string, ReturnType<typeof useGameStore>>>({});
   const games = reactive({} as Record<string, typeof GameEntry>);
   const loading = ref<boolean>(false);

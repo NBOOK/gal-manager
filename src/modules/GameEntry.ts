@@ -1,5 +1,6 @@
 import ImageAssets from '@modules/ImageAssets';
 import { useGameStore } from "@store/global-store";
+import { computed } from 'vue';
 let gameStore: ReturnType<typeof useGameStore>;
 
 export function gameEntrySetConfig() {
@@ -27,10 +28,12 @@ class GameEntry {
     inUSB: boolean = false; // @TODO : add USB support
     inDeck: boolean = false;
     inLutrisDB: boolean = false;
-    inSteamDB: boolean = false;
+    // inSteamDB: boolean = false;
     starred: boolean = false;
     imageAssets!: ImageAssets;
     splitter: string = ' - ';
+
+    inSteamDB = computed(() => gameStore.steamDB.inDB(this.gameNameSlug));
 
 
     static async create(entry: DirEntry): Promise<GameEntry> {
@@ -68,6 +71,8 @@ class GameEntry {
 
         this.diskUsage = diskUsage;
         this.imageAssets = imageAssets;
+
+        // this.inSteamDB = gameStore.steamDB.inDB(this.gameNameSlug);
     }
 
     async link() {
@@ -87,7 +92,7 @@ class GameEntry {
         //placeholder, maybe should create a new DB class?
         if (!this.inLutrisDB)
             console.log(`Adding ${this.folderName} to LutrisDB...`);
-        if (!this.inSteamDB)
+        if (!this.inSteamDB.value)
             console.log(`Adding ${this.folderName} to SteamDB...`);
     }
 
@@ -96,7 +101,7 @@ class GameEntry {
         //placeholder, maybe should create a new DB class?
         if (this.inLutrisDB)
             console.log(`Removing ${this.folderName} from LutrisDB...`);
-        if (this.inSteamDB)
+        if (this.inSteamDB.value)
             console.log(`Removing ${this.folderName} from SteamDB...`);
     }
 
@@ -108,8 +113,8 @@ class GameEntry {
     }
 
     get inDatabase(): number {
-        if (this.inLutrisDB && this.inSteamDB) return 1;
-        else if (this.inLutrisDB || this.inSteamDB) return 2;
+        if (this.inLutrisDB && this.inSteamDB.value) return 1;
+        else if (this.inLutrisDB || this.inSteamDB.value) return 2;
         else return 0;
     }
 

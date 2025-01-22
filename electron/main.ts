@@ -2,8 +2,10 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import fs from 'node:fs'
 
 import utils from './utils';
+// import { fstat } from 'node:fs';
 
 
 // check if we are running in development mode
@@ -101,5 +103,20 @@ function registerIpcMain() {
   });
   ipcMain.handle('createSymbolicLink', (_event, source: string, target: string) => {
     return utils.createSymbolicLink(source, target)
+  });
+  ipcMain.handle('readVdfFile', (_event, filePath: string) => {
+    return utils.readVdfFile(filePath)
+  });
+  ipcMain.handle('writeVdfFile', (_event, filePath: string, vdf: any) => {
+    return utils.writeVdfFile(filePath, vdf)
+  });
+  ipcMain.handle('getGameID', (_event, name: string) => {
+    return utils.getGameID(name)
+  });
+  ipcMain.handle('readFile', (_event, filePath: string, options?: { encoding?: BufferEncoding, flag?: string }) => {
+    return fs.promises.readFile(filePath, options || 'utf-8');
+  });
+  ipcMain.handle('writeFile', (_event, filePath: string, data: any, options?: { encoding?: BufferEncoding, flag?: string }) => {
+    return fs.promises.writeFile(filePath, data, options || 'utf-8');
   });
 }
