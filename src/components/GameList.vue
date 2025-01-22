@@ -2,7 +2,7 @@
 import { computed, ref, onMounted, onUnmounted, useTemplateRef } from "vue";
 import { useGameStore } from "@store/global-store";
 import GameItem from "@components/GameItem.vue";
-import GameEntry from "@modules/GameEntry";
+// import GameEntry from "@modules/GameEntry";
 
 // import GameEntry from "@modules/GameEntry";
 

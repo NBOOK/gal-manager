@@ -216,11 +216,22 @@ async function resizeImage(
     }
 }
 
-export {
+async function createSymbolicLink(source: string, target: string): Promise<void> {
+    try {
+        await fs.promises.symlink(source, target);
+        // console.log(`Symbolic link created from ${source} to ${target}`);
+    } catch (error) {
+        // console.error('Error creating symbolic link:', error);
+        throw error;
+    }
+}
+
+export default {
     scanDir,
     getDiskUsage,
     fileExists,
     resizeImage,
     fetchConfig,
-    saveConfig
+    saveConfig,
+    createSymbolicLink
 };

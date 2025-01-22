@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-import * as utils from './utils';
+import utils from './utils';
 
 
 // check if we are running in development mode
@@ -98,5 +98,8 @@ function registerIpcMain() {
   });
   ipcMain.handle('saveConfig', (_event, config: any, jsonPath?: string) => {
     return utils.saveConfig(config, jsonPath)
+  });
+  ipcMain.handle('createSymbolicLink', (_event, source: string, target: string) => {
+    return utils.createSymbolicLink(source, target)
   });
 }

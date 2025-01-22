@@ -1,9 +1,9 @@
-import { ref, reactive } from "vue";
+import { ref, computed, reactive } from "vue";
 import { defineStore } from "pinia";
 
 export const useGameStore = defineStore("gameList", () => {
   // const games = ref<Record<string, ReturnType<typeof useGameStore>>>({});
-  const games = reactive<Record<string, typeof GameEntry>>({})
+  const games = reactive({} as Record<string, typeof GameEntry>);
   const loading = ref<boolean>(false);
   const searchQuery = ref<string>("");
   const sort = reactive({ by: "gameName", ascending: true });
@@ -19,25 +19,27 @@ export const useGameStore = defineStore("gameList", () => {
     inUSB: { toggled: false, value: true },
   });
 
-  const filterOperator = ref<boolean>(true)
+  const filterOperator = ref(true)
 
-  // const totalDiskUsage = computed(() => {
-  //   return Object.values(games).reduce((sum, game) => sum + game.diskUsage, 0);
-  // });
+  const totalGames = computed(() => Object.keys(games).length);
+  const totalDiskUsage = computed(() => {
+    return Object.values(games).reduce((sum, game) => sum + game.diskUsage, 0);
+  });
 
   const config = ref({} as any);
 
-  const steamDB = ref<typeof SteamDB | null>(null);
+  const steamDB = ref<typeof SteamDB>();
 
   return {
     games,
     loading,
-    // totalDiskUsage,
+    totalGames,
+    totalDiskUsage,
     searchQuery,
     sort,
     filter,
     filterOperator,
     config,
-    steamDB,
+    steamDB
   };
 });
