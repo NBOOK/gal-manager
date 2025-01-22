@@ -15,6 +15,7 @@ class GameEntry {
     gameBrandEN: string = "";
     gameName: string = "";
     gameNameEN: string = "";
+    gameNameSlug: string = "";
     createdTime: number = 0;
     modifiedTime: number = 0;
     diskUsage: number = 0;

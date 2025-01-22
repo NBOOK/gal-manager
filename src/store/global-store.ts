@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 
 export const useGameStore = defineStore("gameList", () => {
   // const games = ref<Record<string, ReturnType<typeof useGameStore>>>({});
-  const games = reactive({} as Record<string, typeof GameEntry>);
+  const games = reactive<Record<string, typeof GameEntry>>({})
   const loading = ref<boolean>(false);
   const searchQuery = ref<string>("");
   const sort = reactive({ by: "gameName", ascending: true });
@@ -19,13 +19,15 @@ export const useGameStore = defineStore("gameList", () => {
     inUSB: { toggled: false, value: true },
   });
 
-  const filterOperator = ref(true)
+  const filterOperator = ref<boolean>(true)
 
   // const totalDiskUsage = computed(() => {
   //   return Object.values(games).reduce((sum, game) => sum + game.diskUsage, 0);
   // });
 
   const config = ref({} as any);
+
+  const steamDB = ref<typeof SteamDB | null>(null);
 
   return {
     games,
@@ -35,6 +37,7 @@ export const useGameStore = defineStore("gameList", () => {
     sort,
     filter,
     filterOperator,
-    config
+    config,
+    steamDB,
   };
 });

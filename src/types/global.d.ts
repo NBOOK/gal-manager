@@ -13,6 +13,7 @@ declare global {
     }
     var GameEntry: typeof GameEntry;
     var ImageAssets: typeof ImageAssets;
+    var SteamDB: typeof SteamDB;
 
     interface HTMLElement {
         __resizeObserver__?: ResizeObserver;

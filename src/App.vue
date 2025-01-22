@@ -6,7 +6,8 @@ import LoadingOverlay from "@components/Loading.vue";
 import GameList from "@components/GameList.vue";
 import AppBar from "@components/AppBar.vue";
 import StatusBar from "@components/StatusBar.vue";
-import FirstTime from "@components/FirstTime.vue";
+// import FirstTime from "@components/FirstTime.vue";
+import SteamDB from "@modules/SteamDB";
 
 const gameStore = useGameStore();
 const firstTime = ref(false);
@@ -15,8 +16,10 @@ onMounted(async () => {
   gameStore.config.value = await window.ipcRenderer.invoke("fetchConfig");
   console.log(gameStore.config.value);
   if (Object.keys(gameStore.config.value).length === 0) {
-    console.log("First time!");
     firstTime.value = true;
+  } else {
+    gameStore.steamDB = new SteamDB(gameStore.config.value);
+    console.log("SteamDB:", gameStore.steamDB);
   }
 });
 </script>
