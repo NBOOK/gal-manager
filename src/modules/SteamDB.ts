@@ -4,7 +4,7 @@ import { VdfMap } from "steam-binary-vdf";
 class SteamDB {
   private static instance: SteamDB | null = null;
 
-  private steamID: string = "";
+  //   private steamID: string = "";
   private steamShortcutPath: string = "";
   private steamGridPath: string = "";
   private steamLaunchOptionsPrefix: string = "";
@@ -22,7 +22,7 @@ class SteamDB {
   }
 
   async setup(config: any) {
-    this.steamID = config.steamID;
+    // this.steamID = config.steamID;
     this.steamShortcutPath = config.steamShortcutPath;
     this.steamGridPath = config.steamGridPath;
     this.linkLowRes = config.assetsLinkLowRes;
@@ -68,17 +68,7 @@ class SteamDB {
       JSON.stringify(this.vdf)
     );
 
-    this.unlinkImage(game.imageAssets.logoPath, gameID, "_logo");
-    this.unlinkImage("dummy.json", gameID, "");
-    if (this.linkLowRes) {
-      this.unlinkImage(game.imageAssets.headerSDPath, gameID, "");
-      this.unlinkImage(game.imageAssets.capsuleSDPath, gameID, "p");
-      this.unlinkImage(game.imageAssets.heroSDPath, gameID, "_hero");
-    } else {
-      this.unlinkImage(game.imageAssets.headerPath, gameID, "");
-      this.unlinkImage(game.imageAssets.capsulePath, gameID, "p");
-      this.unlinkImage(game.imageAssets.heroPath, gameID, "_hero");
-    }
+    this.unlinkImageAssets(game, gameID);
   }
 
   async addGame(game: GameEntry) {
@@ -122,16 +112,7 @@ class SteamDB {
       JSON.stringify(this.vdf)
     );
 
-    this.linkImage(game.imageAssets.logoPath, gameID, "_logo");
-    if (this.linkLowRes) {
-      this.linkImage(game.imageAssets.headerSDPath, gameID, "");
-      this.linkImage(game.imageAssets.capsuleSDPath, gameID, "p");
-      this.linkImage(game.imageAssets.heroSDPath, gameID, "_hero");
-    } else {
-      this.linkImage(game.imageAssets.headerPath, gameID, "");
-      this.linkImage(game.imageAssets.capsulePath, gameID, "p");
-      this.linkImage(game.imageAssets.heroPath, gameID, "_hero");
-    }
+    this.linkImageAssets(game, gameID);
   }
 
   private getGameID(gameNameEN: string): number {
@@ -162,6 +143,51 @@ class SteamDB {
     return gameID;
   }
 
+  async linkImageAssets(game: GameEntry, gameID?: number) {
+    if (!this.vdf || !this.vdf.shortcuts || !this.inDB(game.gameNameSlug)) {
+      return;
+    }
+    if (!gameID) {
+      const gameIndex = this.getGameIndex(game.gameNameSlug); // should get a valid index if inDB
+      gameID = (this.vdf.shortcuts as Record<string, any>)[gameIndex]
+        .appid as number;
+    }
+
+    this.linkImage(game.imageAssets.logoPath, gameID, "_logo");
+    if (this.linkLowRes) {
+      this.linkImage(game.imageAssets.headerSDPath, gameID, "");
+      this.linkImage(game.imageAssets.capsuleSDPath, gameID, "p");
+      this.linkImage(game.imageAssets.heroSDPath, gameID, "_hero");
+    } else {
+      this.linkImage(game.imageAssets.headerPath, gameID, "");
+      this.linkImage(game.imageAssets.capsulePath, gameID, "p");
+      this.linkImage(game.imageAssets.heroPath, gameID, "_hero");
+    }
+  }
+
+  async unlinkImageAssets(game: GameEntry, gameID?: number) {
+    if (!this.vdf || !this.vdf.shortcuts || !this.inDB(game.gameNameSlug)) {
+      return;
+    }
+    if (!gameID) {
+      const gameIndex = this.getGameIndex(game.gameNameSlug); // should get a valid index if inDB
+      gameID = (this.vdf.shortcuts as Record<string, any>)[gameIndex]
+        .appid as number;
+    }
+
+    this.unlinkImage(game.imageAssets.logoPath, gameID, "_logo");
+    this.unlinkImage("dummy.json", gameID, "");
+    if (this.linkLowRes) {
+      this.unlinkImage(game.imageAssets.headerSDPath, gameID, "");
+      this.unlinkImage(game.imageAssets.capsuleSDPath, gameID, "p");
+      this.unlinkImage(game.imageAssets.heroSDPath, gameID, "_hero");
+    } else {
+      this.unlinkImage(game.imageAssets.headerPath, gameID, "");
+      this.unlinkImage(game.imageAssets.capsulePath, gameID, "p");
+      this.unlinkImage(game.imageAssets.heroPath, gameID, "_hero");
+    }
+  }
+
   private linkImage(sourcePath: string, gameID: number, suffix: string) {
     const assetExtention = sourcePath.split(".").pop();
     const targetPath = `${this.steamGridPath}/${gameID}${suffix}.${assetExtention}`;
@@ -176,7 +202,7 @@ class SteamDB {
 
   private getGameIndex(gameNameSlug: string): string {
     if (!this.vdf || !this.vdf.shortcuts) {
-      return "0";
+      return "";
     }
     const launchOptions = this.steamLaunchOptionsPrefix + gameNameSlug;
     const keys = Object.keys(this.vdf.shortcuts);

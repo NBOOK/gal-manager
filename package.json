@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sglkc/kuroshiro": "^1.0.1",
+    "@sglkc/kuroshiro-analyzer-kuromoji": "^1.0.1",
     "pinia": "^2.3.0",
     "sharp": "^0.33.5",
     "steam-binary-vdf": "^0.1.0",
