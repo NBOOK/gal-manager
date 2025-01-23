@@ -2,7 +2,7 @@
 import { computed, ref, onMounted, onUnmounted, useTemplateRef } from "vue";
 import { useGameStore } from "@store/global-store";
 import GameItem from "@components/GameItem.vue";
-// import GameEntry from "@modules/GameEntry";
+import GameEntry from "@modules/GameEntry";
 
 // import GameEntry from "@modules/GameEntry";
 
@@ -114,7 +114,7 @@ const games = computed(() => {
   }
 
   if (gameStore.sort.by) {
-    const sortBy = gameStore.sort.by;
+    const sortBy = gameStore.sort.by as keyof GameEntry;
     const ascending = gameStore.sort.ascending;
 
     filteredGames = filteredGames.sort((gameA, gameB) => {

@@ -7,7 +7,7 @@ import GameList from "@components/GameList.vue";
 import AppBar from "@components/AppBar.vue";
 import StatusBar from "@components/StatusBar.vue";
 // import FirstTime from "@components/FirstTime.vue";
-import SteamDB from "@modules/SteamDB";
+// import SteamDB from "@modules/SteamDB";
 
 const gameStore = useGameStore();
 const firstTime = ref(false);
@@ -18,7 +18,6 @@ onMounted(async () => {
   if (Object.keys(gameStore.config.value).length === 0) {
     firstTime.value = true;
   } else {
-    gameStore.steamDB = new SteamDB();
     await gameStore.steamDB.setup(gameStore.config.value);
     console.log("SteamDB:", gameStore.steamDB);
   }

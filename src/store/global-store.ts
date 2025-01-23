@@ -1,9 +1,12 @@
 import { ref, computed, reactive } from "vue";
 import { defineStore } from "pinia";
+import GameEntry from "@modules/GameEntry";
+import SteamDB from "@modules/SteamDB";
+
 
 export const useGameStore = defineStore("globalStore", () => {
   // const games = ref<Record<string, ReturnType<typeof useGameStore>>>({});
-  const games = reactive({} as Record<string, typeof GameEntry>);
+  const games = reactive({} as Record<string, GameEntry>);
   const loading = ref<boolean>(false);
   const searchQuery = ref<string>("");
   const sort = reactive({ by: "gameName", ascending: true });
@@ -28,7 +31,7 @@ export const useGameStore = defineStore("globalStore", () => {
 
   const config = ref({} as any);
 
-  const steamDB = ref<typeof SteamDB>();
+  const steamDB = ref<SteamDB>(new SteamDB());
 
   return {
     games,

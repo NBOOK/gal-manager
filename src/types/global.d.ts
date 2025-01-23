@@ -11,9 +11,9 @@ declare global {
         createdTime: number;
         modifiedTime: number;
     }
-    var GameEntry: typeof GameEntry;
-    var ImageAssets: typeof ImageAssets;
-    var SteamDB: typeof SteamDB;
+    // let GameEntryVar: typeof GameEntry;
+    // let ImageAssetsVar: typeof ImageAssets;
+    // let SteamDBVar: typeof SteamDB;
 
     interface HTMLElement {
         __resizeObserver__?: ResizeObserver;
