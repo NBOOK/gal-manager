@@ -18,5 +18,3 @@ gameEntrySetConfig();
 imageAssetsSetConfig();
 
 console.log("Hello, Vite!");
-
-

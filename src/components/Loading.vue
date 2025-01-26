@@ -42,12 +42,12 @@ async function scanGames() {
     // pathKey: keyof typeof paths,
     flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk"
   ) {
-    // use first 50 entries for demo
     const batchTasks = entries.map(async (entry) => {
       //.slice(0, 10)
       if (!gameStore.games[entry.name]) {
         // console.log('Game entry:', entry.name, 'processing');
-        gameStore.games[entry.name] = await GameEntry.create(entry);
+        gameStore.games[entry.name] = new GameEntry();
+        await gameStore.games[entry.name].setup(entry);
         // console.log('Game entry:', entry.name, 'done');
         await (updateLock = updateLock.then(() => {
           currentGame.value = entry.name;

@@ -12,14 +12,20 @@ import StatusBar from "@components/StatusBar.vue";
 const gameStore = useGameStore();
 const firstTime = ref(false);
 
+// const test = ref({});
+
 onMounted(async () => {
-  gameStore.config.value = await window.ipcRenderer.invoke("fetchConfig");
-  console.log(gameStore.config.value);
+  gameStore.config.value = await window.ipcRenderer.invoke("fetchJsonConfig");
+  // console.log(gameStore.config.value);
   if (Object.keys(gameStore.config.value).length === 0) {
     firstTime.value = true;
   } else {
     await gameStore.steamDB.setup(gameStore.config.value);
-    console.log("SteamDB:", gameStore.steamDB);
+    // console.log("SteamDB:", gameStore.steamDB);
+    await gameStore.lutrisDB.setup(gameStore.config.value);
+    // test.value = await gameStore.lutrisDB.getGameConfig(
+    //   "shogun-sama-wa-otoshigoro-1714114133"
+    // );
   }
 });
 </script>

@@ -4,6 +4,25 @@ import { spawn } from "node:child_process";
 import sharp from "sharp";
 import path from "node:path";
 import { readVdf, VdfMap, writeVdf, getShortcutHash } from "steam-binary-vdf";
+import YAML from "yaml";
+import { Database as DatabaseType, Statement } from "better-sqlite3";
+import Kuroshiro from "@sglkc/kuroshiro";
+import KuromojiAnalyzer from "@sglkc/kuroshiro-analyzer-kuromoji";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const Database = require("better-sqlite3");
+
+let sqliteDB: DatabaseType;
+const kuroshiro = new Kuroshiro();
+// (async () => {
+//   try {
+//     // const kuroshiro = new Kuroshiro();
+//     await kuroshiro.init(new KuromojiAnalyzer());
+//     // 其他代码
+//   } catch (error) {
+//     console.error("初始化失败:", error);
+//   }
+// })();
 
 async function scanDir(dirPath: string): Promise<DirEntry[]> {
   try {
@@ -151,7 +170,7 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-async function fetchConfig(jsonPath?: string): Promise<any> {
+async function fetchJsonConfig(jsonPath?: string): Promise<any> {
   if (!jsonPath) {
     jsonPath = path.join(
       os.homedir(),
@@ -170,12 +189,12 @@ async function fetchConfig(jsonPath?: string): Promise<any> {
     const data = await fs.promises.readFile(jsonPath, "utf-8");
     return JSON.parse(data);
   } catch (error) {
-    console.error("Error fetching config:", error);
+    console.error("Error fetching json config: ", jsonPath, error);
     return {};
   }
 }
 
-async function saveConfig(config: any, jsonPath?: string): Promise<void> {
+async function saveJsonConfig(config: any, jsonPath?: string): Promise<void> {
   if (!jsonPath) {
     jsonPath = path.join(
       os.homedir(),
@@ -189,7 +208,31 @@ async function saveConfig(config: any, jsonPath?: string): Promise<void> {
     const data = JSON.stringify(config, null, 2);
     await fs.promises.writeFile(jsonPath, data, "utf-8");
   } catch (error) {
-    console.error("Error saving config:", error);
+    console.error("Error saving json config: ", jsonPath, error);
+  }
+}
+
+async function fetchYamlConfig(yamlPath: string): Promise<any> {
+  try {
+    const exists = await fileExists(yamlPath);
+    if (!exists) {
+      return {};
+    }
+
+    const data = await fs.promises.readFile(yamlPath, "utf-8");
+    return YAML.parse(data);
+  } catch (error) {
+    console.error("Error fetching yaml config:", yamlPath, error);
+    return {};
+  }
+}
+
+async function saveYamlConfig(config: any, yamlPath: string): Promise<void> {
+  try {
+    const data = YAML.stringify(config);
+    await fs.promises.writeFile(yamlPath, data, "utf-8");
+  } catch (error) {
+    console.error("Error saving yaml config:", yamlPath, error);
   }
 }
 
@@ -272,16 +315,132 @@ async function getGameID(name: string): Promise<string> {
   return getShortcutHash(name);
 }
 
+async function sqliteDBConnect(dbPath: string): Promise<void> {
+  console.log("Connecting to SQLite database:", dbPath);
+  try {
+    sqliteDB = new Database(dbPath);
+  } catch (error) {
+    console.error("Error connecting to SQLite database:", error);
+    throw error;
+  }
+  // sqliteDB = new Database(dbPath);
+}
+
+async function sqliteDBInsert(
+  gameNameEN: string,
+  gameNameSlug: string,
+  id: number,
+  timestamp: number
+): Promise<number> {
+  const sqlInsert = `
+    INSERT INTO games (
+      id, name, slug, parent_slug, platform, runner, executable,
+      directory, updated, lastplayed, installed, installed_at,
+      configpath, has_custom_banner, has_custom_icon, has_custom_coverart_big,
+      playtime, hidden, service, service_id, discord_id, sortname
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    RETURNING rowid;
+  `;
+  // prettier-ignore
+  const data = [
+    id, gameNameEN, gameNameSlug, null, "Windows", "wine", null,
+    "", null, 0, 1, timestamp,
+    `${gameNameSlug}-${timestamp}`, 1, 0, 1,
+    0.0, 0, null, null, null, "",
+  ];
+
+  const statement: Statement = sqliteDB.prepare(sqlInsert);
+  const result = statement.run(data);
+
+  return result.lastInsertRowid as number;
+}
+
+async function sqliteDBDelete(gameNameEN: string): Promise<void> {
+  const sqlDelete = `DELETE FROM games WHERE name = ?;`;
+  const statement: Statement = sqliteDB.prepare(sqlDelete);
+  statement.run(gameNameEN);
+}
+
+async function sqliteDBQuery(lutrisGameIndex: number): Promise<{
+  gameNameEN: string;
+  gameNameSlug: string;
+  gameConfigName: string;
+} | null> {
+  const sqlQuery = `SELECT name, slug, configpath FROM games WHERE id = ?;`;
+
+  // Prepare and execute the SQL statement
+  const statement: Statement = sqliteDB.prepare(sqlQuery);
+  const result = statement.get(lutrisGameIndex) as
+    | { name: string; slug: string; configpath: string }
+    | undefined;
+
+  return result
+    ? {
+        gameNameEN: result.name,
+        gameNameSlug: result.slug,
+        gameConfigName: result.configpath,
+      }
+    : null;
+}
+
+async function sqliteDBOp(op: string, params: any): Promise<any> {
+  switch (op) {
+    case "connect":
+      // Connect operation requires dbPath
+      return await sqliteDBConnect(params.dbPath);
+
+    case "insert":
+      // Insert operation requires gameNameEN, gameNameSlug, nextId, and timestamp
+      return await sqliteDBInsert(
+        params.gameNameEN,
+        params.gameNameSlug,
+        params.nextId,
+        params.timestamp
+      );
+
+    case "delete":
+      // Delete operation requires lutrisGameID
+      return await sqliteDBDelete(params.lutrisGameID);
+
+    case "query":
+      // Query operation requires lutrisGameIndex
+      return await sqliteDBQuery(params.lutrisGameIndex);
+
+    default:
+      throw new Error(`Unsupported operation: ${op}`);
+  }
+}
+
+async function kuroshiroOp(op: string, params: any): Promise<string> {
+  switch (op) {
+    case "convert":
+      return await kuroshiro.convert(params.text, {
+        to: params.to,
+        mode: params.mode,
+      });
+
+    case "hasJapanese":
+      return await kuroshiro.Util.hasJapanese(params.text);
+
+    default:
+      throw new Error(`Unsupported operation: ${op}`);
+  }
+}
+
 export default {
   scanDir,
   getDiskUsage,
   fileExists,
   resizeImage,
-  fetchConfig,
-  saveConfig,
+  fetchJsonConfig,
+  saveJsonConfig,
+  fetchYamlConfig,
+  saveYamlConfig,
   createSymbolicLink,
   removeSymbolicLink,
   readVdfFile,
   writeVdfFile,
   getGameID,
+  sqliteDBOp,
+  kuroshiroOp,
 };

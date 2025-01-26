@@ -97,11 +97,17 @@ function registerIpcMain() {
   ipcMain.handle('resizeImage', (_event, sourcePath: string, targetWidth: number, format: 'jpg' | 'webp', compression: number) => {
     return utils.resizeImage(sourcePath, targetWidth, format, compression)
   });
-  ipcMain.handle('fetchConfig', (_event, jsonPath?: string) => {
-    return utils.fetchConfig(jsonPath)
+  ipcMain.handle('fetchJsonConfig', (_event, jsonPath?: string) => {
+    return utils.fetchJsonConfig(jsonPath)
   });
-  ipcMain.handle('saveConfig', (_event, config: any, jsonPath?: string) => {
-    return utils.saveConfig(config, jsonPath)
+  ipcMain.handle('saveJsonConfig', (_event, config: any, jsonPath?: string) => {
+    return utils.saveJsonConfig(config, jsonPath)
+  });
+  ipcMain.handle('fetchYamlConfig', (_event, yamlPath: string) => {
+    return utils.fetchYamlConfig(yamlPath)
+  });
+  ipcMain.handle('saveYamlConfig', (_event, config: any, yamlPath: string) => {
+    return utils.saveYamlConfig(config, yamlPath)
   });
   ipcMain.handle('createSymbolicLink', (_event, source: string, target: string) => {
     return utils.createSymbolicLink(source, target)
@@ -124,5 +130,16 @@ function registerIpcMain() {
   });
   ipcMain.handle('writeFile', (_event, filePath: string, data: any, options?: { encoding?: BufferEncoding, flag?: string }) => {
     return fs.promises.writeFile(filePath, data, options || 'utf-8');
+  });
+  ipcMain.handle('sqliteDBOp', (_event, op: string, params:any) => {
+    try {
+      return utils.sqliteDBOp(op, params);
+    } catch (error) {
+      console.error('Error handling sqliteDBOp:', error);
+      throw error; // 重新抛出错误，让 Electron 能够将错误传递给渲染进程
+    }
+  });
+  ipcMain.handle('kuroshiroOp', (_event, op: string, params:any) => {
+    return utils.kuroshiroOp(op, params)
   });
 }

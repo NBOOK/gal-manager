@@ -1,9 +1,3 @@
-import Kuroshiro from "@sglkc/kuroshiro";
-import KuromojiAnalyzer from "@sglkc/kuroshiro-analyzer-kuromoji";
-
-const kuroshiro = new Kuroshiro();
-await kuroshiro.init(new KuromojiAnalyzer());
-
 function cleanAndCapitalize(input: string): string {
   const cleaned = input.trim().replace(/\s+/g, " ");
   const capitalized = cleaned
@@ -20,7 +14,12 @@ function cleanAndCapitalize(input: string): string {
 }
 
 async function romanize(text: string): Promise<string> {
-  const romanized = await kuroshiro.convert(text, {
+  // const romanized = await kuroshiro.convert(text, {
+  //   to: "romaji",
+  //   mode: "spaced",
+  // });
+  const romanized = await window.ipcRenderer.invoke("kuroshiroOp", "convert", {
+    text: text,
     to: "romaji",
     mode: "spaced",
   });
@@ -197,10 +196,18 @@ async function guessLauncher(executables: string[]): Promise<string[]> {
       score += 10;
     }
 
-    if (
-      kuroshiro.Util.hasJapanese(exe) ||
-      !/[a-zA-Z]/.test(await kuroshiro.convert(exe, { to: "hiragana" }))
-    ) {
+    const hasJapanese = await window.ipcRenderer.invoke(
+      "kuroshiroOp",
+      "hasJapanese",
+      {
+        text: exe,
+      }
+    );
+    const hiragana = await window.ipcRenderer.invoke("kuroshiroOp", "convert", {
+      text: exe,
+      to: "hiragana",
+    });
+    if (hasJapanese || !/[a-zA-Z]/.test(hiragana)) {
       score += 2;
     }
 
@@ -243,3 +250,10 @@ async function guessLauncher(executables: string[]): Promise<string[]> {
 
   return sortedExe;
 }
+
+export default {
+  romanize,
+  slugify,
+  getGameNameEN,
+  guessLauncher,
+};

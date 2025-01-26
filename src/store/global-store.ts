@@ -2,7 +2,7 @@ import { ref, computed, reactive } from "vue";
 import { defineStore } from "pinia";
 import GameEntry from "@modules/GameEntry";
 import SteamDB from "@modules/SteamDB";
-
+import LutrisDB from "@modules/LutrisDB";
 
 export const useGameStore = defineStore("globalStore", () => {
   // const games = ref<Record<string, ReturnType<typeof useGameStore>>>({});
@@ -22,7 +22,7 @@ export const useGameStore = defineStore("globalStore", () => {
     inUSB: { toggled: false, value: true },
   });
 
-  const filterOperator = ref(true)
+  const filterOperator = ref(true);
 
   const totalGames = computed(() => Object.keys(games).length);
   const totalDiskUsage = computed(() => {
@@ -32,6 +32,7 @@ export const useGameStore = defineStore("globalStore", () => {
   const config = ref({} as any);
 
   const steamDB = ref<SteamDB>(new SteamDB());
+  const lutrisDB = ref<LutrisDB>(new LutrisDB());
 
   return {
     games,
@@ -43,6 +44,7 @@ export const useGameStore = defineStore("globalStore", () => {
     filter,
     filterOperator,
     config,
-    steamDB
+    steamDB,
+    lutrisDB,
   };
 });

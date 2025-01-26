@@ -11,6 +11,7 @@
   "dependencies": {
     "@sglkc/kuroshiro": "^1.0.1",
     "@sglkc/kuroshiro-analyzer-kuromoji": "^1.0.1",
+    "better-sqlite3": "^11.8.1",
     "pinia": "^2.3.0",
     "sharp": "^0.33.5",
     "steam-binary-vdf": "^0.1.0",
@@ -18,10 +19,12 @@
     "vue": "^3.4.21",
     "vue-scroll-div": "^1.3.7-vuenext.2",
     "vue-virtual-scroller": "^2.0.0-beta.8",
-    "vuetify": "^3.7.6"
+    "vuetify": "^3.7.6",
+    "yaml": "^2.7.0"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",
+    "@types/better-sqlite3": "^7.6.12",
     "@vitejs/plugin-vue": "^5.0.4",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",

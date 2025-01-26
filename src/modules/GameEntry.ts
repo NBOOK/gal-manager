@@ -1,6 +1,6 @@
 import ImageAssets from "@modules/ImageAssets";
 import { useGameStore } from "@store/global-store";
-// import { computed } from 'vue';
+import utils from "./utils";
 let gameStore: ReturnType<typeof useGameStore>;
 
 export function gameEntrySetConfig() {
@@ -38,64 +38,59 @@ class GameEntry {
   //     return gameStore.steamDB.inDB(this.gameNameSlug);
   //   }
 
-  static async create(entry: DirEntry): Promise<GameEntry> {
-    const gameEntry = new GameEntry(entry);
+  // static async create(entry: DirEntry): Promise<GameEntry> {
+  //   const gameEntry = new GameEntry(entry);
 
-    await gameEntry.setGamePath(
-      gameEntry.basePath,
-      gameEntry.gameBrand,
-      gameEntry.gameName
-    );
+  //   await gameEntry.setGamePath(
+  //     gameEntry.basePath,
+  //     gameEntry.gameBrand,
+  //     gameEntry.gameName
+  //   );
 
-    return gameEntry;
-  }
+  //   return gameEntry;
+  // }
 
-  constructor(entry: DirEntry) {
+  constructor() {}
+
+  async setup(entry: DirEntry) {
     this.basePath = entry.basePath;
     this.folderName = entry.name;
-    if (entry.name.indexOf(" ‐ ") > 0) this.splitter = " ‐ ";
+    if (entry.name.includes(" ‐ ")) this.splitter = " ‐ ";
     this.gameBrand = entry.name.split(this.splitter)[0];
     this.gameBrandEN = this.gameBrand;
     this.gameName = entry.name
       .split(this.splitter)
       .slice(1)
       .join(this.splitter);
-    this.gameNameEN = this.gameName;
-    this.gameNameSlug = this.gameNameEN;
     this.createdTime = entry.createdTime;
     this.modifiedTime = entry.modifiedTime;
-  }
-
-  private async setGamePath(
-    basePath: string,
-    gameBrand: string,
-    gameName: string
-  ) {
-    if (
-      this.diskUsage > 0 &&
-      basePath === this.basePath &&
-      gameBrand === this.gameBrand &&
-      gameName === this.gameName
-    ) {
-      return;
-    }
-    [this.basePath, this.gameBrand, this.gameName] = [
-      basePath,
-      gameBrand,
-      gameName,
-    ];
 
     const [diskUsage, imageAssets]: [number, ImageAssets] = await Promise.all([
       window.ipcRenderer.invoke(
         "getDiskUsage",
-        `${basePath}/${gameBrand}${this.splitter}${gameName}`
+        `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}`
       ),
-      ImageAssets.create(basePath, gameBrand, gameName, this.splitter),
+      ImageAssets.create(
+        this.basePath,
+        this.gameBrand,
+        this.gameName,
+        this.splitter
+      ),
     ]);
 
     this.diskUsage = diskUsage;
     this.imageAssets = imageAssets;
-    this.inSteamDB = gameStore.steamDB.inDB(this.gameNameSlug);
+    this.inSteamDB = gameStore.steamDB.inDB(this);
+    this.inLutrisDB = gameStore.lutrisDB.inDB(this);
+
+    if (this.inLutrisDB) {
+      const gameProperties = await gameStore.lutrisDB.getGameProperties(this);
+      this.gameNameEN = gameProperties.gameNameEN;
+      this.gameNameSlug = gameProperties.gameNameSlug;
+    } else {
+      this.gameNameEN = await utils.romanize(this.gameName);
+      this.gameNameSlug = utils.slugify(this.gameNameEN);
+    }
   }
 
   async link() {
@@ -105,12 +100,30 @@ class GameEntry {
       `${gameStore.config.value.gamesMainPath}/${this.folderName}`
     );
     this.linked = true;
+    this.basePath = gameStore.config.value.gamesMainPath;
+    this.imageAssets.basePath = this.basePath;
   }
 
   async unlink() {
-    //@TODO
-    console.log(`Unlinking ${this.folderName}...`);
+    // console.log(`Unlinking ${this.folderName}...`);
+    window.ipcRenderer.invoke(
+      "removeSymbolicLink",
+      `${this.basePath}/${this.folderName}`
+    );
     this.linked = false;
+
+    if (this.inDeck) {
+      this.basePath = gameStore.config.value.gamesDataPath;
+    } else if (this.inSDCard) {
+      this.basePath = gameStore.config.value.gamesSDPath;
+    } else if (this.inUSB) {
+      this.basePath = gameStore.config.value.gamesUSBPath;
+    } else if (this.inNetDisk) {
+      this.basePath = gameStore.config.value.gamesMainPath;
+    } else {
+      throw new Error("Game not found in any disk");
+    }
+    this.imageAssets.basePath = this.basePath;
   }
 
   async addDB() {
@@ -142,6 +155,7 @@ class GameEntry {
     console.log(`Moving ${this.folderName}...`);
     this.inDeck = !this.inDeck;
     this.inSDCard = !this.inSDCard;
+    // await this.setGamePath();
   }
 
   get inDatabase(): number {

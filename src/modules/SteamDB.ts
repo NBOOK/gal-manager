@@ -11,6 +11,8 @@ class SteamDB {
   private vdf: VdfMap | null = null;
   linkLowRes: boolean = true;
 
+  private steamGameIndices: Record<string, number> = {};
+
   private taskQueue: { action: "add" | "remove"; game: GameEntry }[] = [];
   private processing: boolean = false;
 
@@ -32,6 +34,15 @@ class SteamDB {
       "readVdfFile",
       this.steamShortcutPath
     );
+    if (this.vdf && this.vdf.shortcuts) {
+      const shortcuts = this.vdf.shortcuts as Record<string, any>;
+      Object.keys(shortcuts).forEach((key) => {
+        const game = shortcuts[key];
+        const gameNameEN = game.AppName;
+        const steamGameIndex = parseInt(key, 10);
+        this.steamGameIndices[gameNameEN] = steamGameIndex;
+      });
+    }
   }
 
   private async processQueue() {
@@ -59,8 +70,8 @@ class SteamDB {
     if (!this.vdf) {
       return;
     }
-    const gameIndex = this.getGameIndex(game.gameNameSlug);
-    const gameID = this.getGameID(game.gameNameEN);
+    const gameIndex: string = this.getGameIndex(game).toString();
+    const appID = this.getAppID(game.gameNameEN);
     delete (this.vdf.shortcuts as Record<string, any>)[gameIndex];
     window.ipcRenderer.invoke(
       "writeVdfFile",
@@ -68,7 +79,9 @@ class SteamDB {
       JSON.stringify(this.vdf)
     );
 
-    this.unlinkImageAssets(game, gameID);
+    this.unlinkImageAssets(game, appID);
+
+    delete this.steamGameIndices[game.gameNameEN];
   }
 
   async addGame(game: GameEntry) {
@@ -80,20 +93,20 @@ class SteamDB {
     if (!this.vdf) {
       return;
     }
-    const gameIndex = this.getGameIndex(game.gameNameSlug);
+    const gameIndex: string = this.getGameIndex(game).toString();
     const exePath = `"/usr/bin/flatpak"`;
     const startDir = `"/usr/bin"`;
-    // const gameID = await window.ipcRenderer.invoke('getGameID', (exePath + game.gameNameEN));
-    const gameID = this.getGameID(game.gameNameEN);
+    // const appID = await window.ipcRenderer.invoke('getAppID', (exePath + game.gameNameEN));
+    const appID = this.getAppID(game.gameNameEN);
 
     const shortcut = {
-      appid: gameID, // @TOCHECK possibly not needed anymore
+      appid: appID, // @TOCHECK possibly not needed anymore, but can be used to identify assets names
       AppName: game.gameNameEN,
       Exe: exePath,
       StartDir: startDir,
       icon: game.imageAssets.iconPath,
       ShortcutPath: "",
-      LaunchOptions: `run net.lutris.Lutris lutris:rungame/${game.gameNameSlug}`,
+      LaunchOptions: `${this.steamLaunchOptionsPrefix}${game.gameNameSlug}`,
       IsHidden: 0,
       AllowDesktopConfig: 1,
       AllowOverlay: 1,
@@ -112,10 +125,12 @@ class SteamDB {
       JSON.stringify(this.vdf)
     );
 
-    this.linkImageAssets(game, gameID);
+    this.linkImageAssets(game, appID);
+
+    this.steamGameIndices[game.gameNameEN] = parseInt(gameIndex, 10);
   }
 
-  private getGameID(gameNameEN: string): number {
+  private getAppID(gameNameEN: string): number {
     const exe = "/usr/bin/flatpak";
     const uniqueID = exe + gameNameEN;
     const encoder = new TextEncoder();
@@ -139,101 +154,95 @@ class SteamDB {
     }
 
     const crc32Result = crc32(data);
-    const gameID = (crc32Result | 0x80000000) >>> 0;
-    return gameID;
+    const appID = (crc32Result | 0x80000000) >>> 0;
+    return appID;
   }
 
-  async linkImageAssets(game: GameEntry, gameID?: number) {
-    if (!this.vdf || !this.vdf.shortcuts || !this.inDB(game.gameNameSlug)) {
+  async linkImageAssets(game: GameEntry, appID?: number) {
+    if (!this.vdf || !this.vdf.shortcuts || !this.inDB(game)) {
       return;
     }
-    if (!gameID) {
-      const gameIndex = this.getGameIndex(game.gameNameSlug); // should get a valid index if inDB
-      gameID = (this.vdf.shortcuts as Record<string, any>)[gameIndex]
+    if (!appID) {
+      const gameIndex: string = this.getGameIndex(game).toString(); // should get a valid index if inDB
+      appID = (this.vdf.shortcuts as Record<string, any>)[gameIndex]
         .appid as number;
     }
 
-    this.linkImage(game.imageAssets.logoPath, gameID, "_logo");
+    this.linkImage(game.imageAssets.logoPath, appID, "_logo");
     if (this.linkLowRes) {
-      this.linkImage(game.imageAssets.headerSDPath, gameID, "");
-      this.linkImage(game.imageAssets.capsuleSDPath, gameID, "p");
-      this.linkImage(game.imageAssets.heroSDPath, gameID, "_hero");
+      this.linkImage(game.imageAssets.headerSDPath, appID, "");
+      this.linkImage(game.imageAssets.capsuleSDPath, appID, "p");
+      this.linkImage(game.imageAssets.heroSDPath, appID, "_hero");
     } else {
-      this.linkImage(game.imageAssets.headerPath, gameID, "");
-      this.linkImage(game.imageAssets.capsulePath, gameID, "p");
-      this.linkImage(game.imageAssets.heroPath, gameID, "_hero");
+      this.linkImage(game.imageAssets.headerPath, appID, "");
+      this.linkImage(game.imageAssets.capsulePath, appID, "p");
+      this.linkImage(game.imageAssets.heroPath, appID, "_hero");
     }
   }
 
-  async unlinkImageAssets(game: GameEntry, gameID?: number) {
-    if (!this.vdf || !this.vdf.shortcuts || !this.inDB(game.gameNameSlug)) {
+  async unlinkImageAssets(game: GameEntry, appID?: number) {
+    if (!this.vdf || !this.vdf.shortcuts || !this.inDB(game)) {
       return;
     }
-    if (!gameID) {
-      const gameIndex = this.getGameIndex(game.gameNameSlug); // should get a valid index if inDB
-      gameID = (this.vdf.shortcuts as Record<string, any>)[gameIndex]
+    if (!appID) {
+      const gameIndex: string = this.getGameIndex(game).toString(); // should get a valid index if inDB
+      appID = (this.vdf.shortcuts as Record<string, any>)[gameIndex]
         .appid as number;
     }
 
-    this.unlinkImage(game.imageAssets.logoPath, gameID, "_logo");
-    this.unlinkImage("dummy.json", gameID, "");
+    this.unlinkImage(game.imageAssets.logoPath, appID, "_logo");
+    this.unlinkImage("dummy.json", appID, "");
     if (this.linkLowRes) {
-      this.unlinkImage(game.imageAssets.headerSDPath, gameID, "");
-      this.unlinkImage(game.imageAssets.capsuleSDPath, gameID, "p");
-      this.unlinkImage(game.imageAssets.heroSDPath, gameID, "_hero");
+      this.unlinkImage(game.imageAssets.headerSDPath, appID, "");
+      this.unlinkImage(game.imageAssets.capsuleSDPath, appID, "p");
+      this.unlinkImage(game.imageAssets.heroSDPath, appID, "_hero");
     } else {
-      this.unlinkImage(game.imageAssets.headerPath, gameID, "");
-      this.unlinkImage(game.imageAssets.capsulePath, gameID, "p");
-      this.unlinkImage(game.imageAssets.heroPath, gameID, "_hero");
+      this.unlinkImage(game.imageAssets.headerPath, appID, "");
+      this.unlinkImage(game.imageAssets.capsulePath, appID, "p");
+      this.unlinkImage(game.imageAssets.heroPath, appID, "_hero");
     }
   }
 
-  private linkImage(sourcePath: string, gameID: number, suffix: string) {
+  private linkImage(sourcePath: string, appID: number, suffix: string) {
     const assetExtention = sourcePath.split(".").pop();
-    const targetPath = `${this.steamGridPath}/${gameID}${suffix}.${assetExtention}`;
+    const targetPath = `${this.steamGridPath}/${appID}${suffix}.${assetExtention}`;
     window.ipcRenderer.invoke("createSymbolicLink", sourcePath, targetPath);
   }
 
-  private unlinkImage(sourcePath: string, gameID: number, suffix: string) {
+  private unlinkImage(sourcePath: string, appID: number, suffix: string) {
     const assetExtention = sourcePath.split(".").pop();
-    const targetPath = `${this.steamGridPath}/${gameID}${suffix}.${assetExtention}`;
+    const targetPath = `${this.steamGridPath}/${appID}${suffix}.${assetExtention}`;
     window.ipcRenderer.invoke("removeSymbolicLink", targetPath);
   }
 
-  private getGameIndex(gameNameSlug: string): string {
+  private getGameIndex(game: GameEntry): number {
+    // Return the index of the game in steamDB or largest steamDB index + 1
+    // DON't use this function to check if the game is in steamDB
     if (!this.vdf || !this.vdf.shortcuts) {
-      return "";
+      return -1;
     }
-    const launchOptions = this.steamLaunchOptionsPrefix + gameNameSlug;
-    const keys = Object.keys(this.vdf.shortcuts);
-    for (const key of keys) {
-      if (
-        (this.vdf.shortcuts as Record<string, any>)[key].LaunchOptions ===
-        launchOptions
-      ) {
-        return key;
-      }
+    // const launchOptions = this.steamLaunchOptionsPrefix + gameNameSlug;
+    // const keys = Object.keys(this.vdf.shortcuts);
+    // for (const key of keys) {
+    //   if (
+    //     (this.vdf.shortcuts as Record<string, any>)[key].AppName === gameNameEN
+    //   ) {
+    //     return key;
+    //   }
+    // }
+    if (this.steamGameIndices[game.gameNameEN] !== undefined) {
+      return this.steamGameIndices[game.gameNameEN];
     }
-
-    const largestIndex = keys.length > 0 ? Math.max(...keys.map(Number)) : 0;
-    return (largestIndex + 1).toString();
+    const indices = Object.values(this.steamGameIndices);
+    const largestIndex = indices.length > 0 ? Math.max(...indices) : 0;
+    return largestIndex + 1;
   }
 
-  inDB(gameNameSlug: string): boolean {
+  inDB(game: GameEntry): boolean {
     if (!this.vdf || !this.vdf.shortcuts) {
       return false;
     }
-    const launchOptions = this.steamLaunchOptionsPrefix + gameNameSlug;
-    const keys = Object.keys(this.vdf.shortcuts);
-    for (const key of keys) {
-      if (
-        (this.vdf.shortcuts as Record<string, any>)[key].LaunchOptions ===
-        launchOptions
-      ) {
-        return true;
-      }
-    }
-    return false;
+    return this.steamGameIndices[game.gameNameEN] !== undefined;
   }
 }
 
