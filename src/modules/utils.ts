@@ -1,3 +1,6 @@
+import GameEntry from "./GameEntry";
+const collator = new Intl.Collator("ja");
+
 function cleanAndCapitalize(input: string): string {
   const cleaned = input
     .trim()
@@ -253,9 +256,124 @@ async function guessLauncher(executables: string[]): Promise<string[]> {
   return sortedExe;
 }
 
+function sortGames(
+  games: GameEntry[],
+  sortBy: keyof GameEntry = "gameName",
+  ascending: boolean = true
+): GameEntry[] {
+  return games.sort((gameA, gameB) => {
+    if (sortBy === "gameName" || sortBy === "gameBrand") {
+      // 使用日语排序
+      return ascending
+        ? collator.compare(gameA[sortBy], gameB[sortBy])
+        : collator.compare(gameB[sortBy], gameA[sortBy]);
+    } else {
+      // 其他字段使用默认排序逻辑
+      if (gameA[sortBy] < gameB[sortBy]) return ascending ? -1 : 1;
+      if (gameA[sortBy] > gameB[sortBy]) return ascending ? 1 : -1;
+      return 0;
+    }
+  });
+}
+
+function filterGamesByQuery(
+  games: GameEntry[],
+  searchQuery: string
+): GameEntry[] {
+  if (searchQuery) {
+    if (searchQuery.includes("@name=")) {
+      const nameQuery = searchQuery
+        .split("@name=")[1]
+        .split("@brand=")[0]
+        .trim();
+      games = games.filter(
+        (game) =>
+          game.gameName.toLowerCase().includes(nameQuery) ||
+          game.gameNameEN.toLowerCase().includes(nameQuery)
+      );
+    } else if (searchQuery.includes("@brand=")) {
+      const brandQuery = searchQuery
+        .split("@brand=")[1]
+        .split("@name=")[0]
+        .trim();
+      games = games.filter(
+        (game) =>
+          game.gameBrand.toLowerCase().includes(brandQuery) ||
+          game.gameBrandEN.toLowerCase().includes(brandQuery)
+      );
+    } else {
+      games = games.filter(
+        (game) =>
+          game.gameName.toLowerCase().includes(searchQuery) ||
+          game.gameNameEN.toLowerCase().includes(searchQuery) ||
+          game.gameBrand.toLowerCase().includes(searchQuery) ||
+          game.gameBrandEN.toLowerCase().includes(searchQuery)
+      );
+    }
+  }
+  return games;
+}
+
+function filterGamesByFilter(
+  games: GameEntry[],
+  filterConfig: Record<string, { toggled: boolean; value: any }>,
+  filterOperator: Record<string, boolean>
+): GameEntry[] {
+  let operator = filterOperator.group1
+    ? (list: boolean[]) => list.every(Boolean)
+    : (list: boolean[]) => list.some(Boolean);
+  let toggledKeys = Object.entries(filterConfig)
+    .filter(
+      ([key, value]) =>
+        ["linked", "inDatabase", "inAssets", "starred", "selected"].includes(
+          key
+        ) && value.toggled
+    )
+    .map(([key]) => key as keyof GameEntry);
+  if (toggledKeys.length) {
+    games = games.filter((game) =>
+      operator(toggledKeys.map((key) => game[key] === filterConfig[key].value))
+    );
+  }
+
+  operator = filterOperator.group2
+    ? (list: boolean[]) => list.every(Boolean)
+    : (list: boolean[]) => list.some(Boolean);
+  toggledKeys = Object.entries(filterConfig)
+    .filter(
+      ([key, value]) =>
+        ["inNetDisk", "inSDCard", "inDeck", "inUSB"].includes(key) &&
+        value.toggled
+    )
+    .map(([key]) => key as keyof GameEntry);
+  if (toggledKeys.length) {
+    games = games.filter((game) =>
+      operator(toggledKeys.map((key) => game[key] === filterConfig[key].value))
+    );
+  }
+  return games;
+}
+
+function filterSortGames(
+  games: GameEntry[],
+  searchQuery: string,
+  filterConfig: Record<string, { toggled: boolean; value: any }>,
+  filterOperator: Record<string, boolean>,
+  sortBy: keyof GameEntry,
+  ascending: boolean
+): GameEntry[] {
+  games = filterGamesByQuery(games, searchQuery);
+  games = filterGamesByFilter(games, filterConfig, filterOperator);
+  games = sortGames(games, sortBy, ascending);
+  return games;
+}
+
 export default {
   romanize,
   slugify,
   getGameNameEN,
   guessLauncher,
+  sortGames,
+  filterGamesByQuery,
+  filterSortGames,
 };

@@ -2,13 +2,8 @@
 import { computed, ref, onMounted, onUnmounted, useTemplateRef } from "vue";
 import { useGameStore } from "@store/global-store";
 import GameItem from "@components/GameItem.vue";
-import GameEntry from "@modules/GameEntry";
-
-// import GameEntry from "@modules/GameEntry";
 
 const gameStore = useGameStore();
-
-const collator = new Intl.Collator("ja");
 
 const contentHeight = ref(window.innerHeight - 48 - 18);
 
@@ -45,94 +40,7 @@ onUnmounted(() => {
   window.removeEventListener("resize", updateContentHeight);
 });
 
-const games = computed(() => {
-  let filteredGames = Object.values(gameStore.games); // 转换为数组一次即可
-
-  // filter by query
-  if (gameStore.searchQuery) {
-    const searchQuery = gameStore.searchQuery.toLowerCase();
-
-    if (searchQuery.includes("@name=")) {
-      const nameQuery = searchQuery
-        .split("@name=")[1]
-        .split("@brand=")[0]
-        .trim();
-      filteredGames = filteredGames.filter(
-        (game) =>
-          game.gameName.toLowerCase().includes(nameQuery) ||
-          game.gameNameEN.toLowerCase().includes(nameQuery)
-      );
-    } else if (searchQuery.includes("@brand=")) {
-      const brandQuery = searchQuery
-        .split("@brand=")[1]
-        .split("@name=")[0]
-        .trim();
-      filteredGames = filteredGames.filter(
-        (game) =>
-          game.gameBrand.toLowerCase().includes(brandQuery) ||
-          game.gameBrandEN.toLowerCase().includes(brandQuery)
-      );
-    } else {
-      filteredGames = filteredGames.filter(
-        (game) =>
-          game.gameName.toLowerCase().includes(searchQuery) ||
-          game.gameNameEN.toLowerCase().includes(searchQuery) ||
-          game.gameBrand.toLowerCase().includes(searchQuery) ||
-          game.gameBrandEN.toLowerCase().includes(searchQuery)
-      );
-    }
-  }
-
-  const filterConfig = gameStore.filter;
-  let toggledKeys = Object.entries(filterConfig)
-    .filter(
-      ([key, value]) =>
-        ["linked", "inDatabase", "inAssets", "starred"].includes(key) &&
-        value.toggled
-    )
-    .map(([key]) => key as keyof typeof filterConfig);
-  if (toggledKeys.length) {
-    filteredGames = filteredGames.filter((game) =>
-      toggledKeys.every((key) => game[key] === filterConfig[key].value)
-    );
-  }
-
-  const operator = gameStore.filterOperator
-    ? (list: boolean[]) => list.every(Boolean)
-    : (list: boolean[]) => list.some(Boolean);
-  toggledKeys = Object.entries(filterConfig)
-    .filter(
-      ([key, value]) =>
-        ["inNetDisk", "inSDCard", "inDeck", "inUSB"].includes(key) &&
-        value.toggled
-    )
-    .map(([key]) => key as keyof typeof filterConfig);
-  if (toggledKeys.length) {
-    filteredGames = filteredGames.filter((game) =>
-      operator(toggledKeys.map((key) => game[key] === filterConfig[key].value))
-    );
-  }
-
-  if (gameStore.sort.by) {
-    const sortBy = gameStore.sort.by as keyof GameEntry;
-    const ascending = gameStore.sort.ascending;
-
-    filteredGames = filteredGames.sort((gameA, gameB) => {
-      if (sortBy === "gameName" || sortBy === "gameBrand") {
-        // 使用日语排序
-        return ascending
-          ? collator.compare(gameA[sortBy], gameB[sortBy])
-          : collator.compare(gameB[sortBy], gameA[sortBy]);
-      } else {
-        // 其他字段使用默认排序逻辑
-        if (gameA[sortBy] < gameB[sortBy]) return ascending ? -1 : 1;
-        if (gameA[sortBy] > gameB[sortBy]) return ascending ? 1 : -1;
-        return 0;
-      }
-    });
-  }
-  return filteredGames;
-});
+const games = computed(() => gameStore.filterSortedGames);
 </script>
 
 <template>

@@ -84,6 +84,7 @@ const vOverflowDetector = {
         {{ game.gameName }}
       </div>
     </div>
+
     <div v-overflow-detector="'game-name-en'" class="scroll-container">
       <div
         class="game-name-en"
@@ -92,14 +93,21 @@ const vOverflowDetector = {
         {{ game.gameNameEN }}
       </div>
     </div>
-    <div class="game-brand">
-      {{ game.gameBrand }}
-      {{
-        game.gameBrandEN.toLowerCase() === game.gameBrand.toLowerCase()
-          ? ""
-          : ` | ${game.gameBrandEN}`
-      }}
+
+    <div v-overflow-detector="'game-brand'" class="scroll-container">
+      <div
+        class="game-brand"
+        :class="{ scrolled: overflowStates['game-brand'] }"
+      >
+        {{ game.gameBrand }}
+        {{
+          game.gameBrandEN.toLowerCase() === game.gameBrand.toLowerCase()
+            ? ""
+            : ` | ${game.gameBrandEN}`
+        }}
+      </div>
     </div>
+
     <div class="game-meta">
       {{ formatTime(game.modifiedTime) }}&nbsp&nbsp&nbsp&nbsp{{
         formatSize(game.diskUsage)

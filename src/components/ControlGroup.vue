@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import GameEntry from "@modules/GameEntry";
-// import GameImgThumb from "@modules/GameImgThumb";
+import { useGameStore } from "@store/global-store";
+
+const gameStore = useGameStore();
 
 const props = defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 
@@ -33,26 +35,27 @@ const databaseBtn = computed(() => {
     if (props.game.inLutrisDB && props.game.inSteamDB) {
       return {
         icon: "mdi-database",
-        hoverIcon: "mdi-database-edit",
+        iconHover: "mdi-database-edit",
         color: "green",
         readonly: false,
-        action: () => props.game.removeDB(),
+        // action: () => props.game.removeDB(),
+        action: () => gameStore.dbEditList.push(props.game),
       };
     } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
       return {
         icon: "mdi-database-minus",
-        hoverIcon: "mdi-database-edit",
+        iconHover: "mdi-database-edit",
         color: "orange",
         readonly: false,
-        action: () => props.game.addDB(),
+        action: () => gameStore.dbEditList.push(props.game),
       };
     } else {
       return {
         icon: "mdi-database-remove",
-        hoverIcon: "mdi-database-edit",
+        iconHover: "mdi-database-edit",
         color: "red",
         readonly: false,
-        action: () => props.game.addDB(),
+        action: () => gameStore.dbEditList.push(props.game),
       };
     }
   } else {
@@ -69,21 +72,21 @@ const imageBtn = computed(() => {
   if (props.game.imageAssets.assetsCount == 5) {
     return {
       icon: "mdi-image-check",
-      hoverIcon: "mdi-folder-open",
+      iconHover: "mdi-folder-open",
       color: "green",
       action: () => props.game.imageAssets.openImageOrGameFolder(),
     };
   } else if (props.game.imageAssets.assetsCount > 0) {
     return {
       icon: "mdi-image-minus",
-      hoverIcon: "mdi-folder-open",
+      iconHover: "mdi-folder-open",
       color: "orange",
       action: () => props.game.imageAssets.openImageOrGameFolder(),
     };
   } else {
     return {
       icon: "mdi-image-remove",
-      hoverIcon: "mdi-folder-open",
+      iconHover: "mdi-folder-open",
       color: "red",
       action: () => props.game.imageAssets.openImageOrGameFolder(),
     };
@@ -131,7 +134,7 @@ const storageBtn = computed(() => {
   if (props.game.inSDCard) {
     return {
       icon: "mdi-micro-sd",
-      hoverIcon: "mdi-delete-empty",
+      iconHover: "mdi-delete-empty",
       color: "green",
       hoverColor: "red",
       readonly: false,
@@ -140,7 +143,7 @@ const storageBtn = computed(() => {
   } else if (props.game.inDeck) {
     return {
       icon: "mdi-gamepad-square",
-      hoverIcon: "mdi-delete-empty",
+      iconHover: "mdi-delete-empty",
       color: "green",
       hoverColor: "red",
       readonly: false,
@@ -149,7 +152,7 @@ const storageBtn = computed(() => {
   } else {
     return {
       icon: "mdi-content-save-off",
-      hoverIcon: "mdi-content-save-off",
+      iconHover: "mdi-content-save-off",
       color: "blue-grey",
       hoverColor: "blue-grey",
       readonly: true,
@@ -175,11 +178,56 @@ const moveBtn = computed(() => {
     };
   }
 });
+
+const selectBtn = computed(() => {
+  return {
+    icon: props.game.selected
+      ? "mdi-checkbox-marked"
+      : "mdi-checkbox-blank-outline",
+    color: props.game.selected ? "grey-darken-4" : "grey",
+    action: () => (props.game.selected = !props.game.selected),
+  };
+});
+
+const starBtn = computed(() => {
+  return {
+    icon: props.game.starred ? "mdi-star" : "mdi-star-outline",
+    color: "amber",
+    action: () => (props.game.starred = !props.game.starred),
+  };
+});
 </script>
 
 <template>
   <!-- 右侧按钮 -->
   <div class="game-controls">
+    <!-- Dummy Placeholder -->
+    <v-btn icon size="x-small" variant="text" class="invisible"></v-btn>
+
+    <!-- Star Button -->
+    <v-btn
+      class="invisible"
+      icon
+      size="x-small"
+      variant="text"
+      @click="starBtn.action"
+    >
+      <v-icon
+        :icon="starBtn.icon"
+        :color="starBtn.color"
+        size="x-large"
+      ></v-icon>
+    </v-btn>
+
+    <!-- Select Button -->
+    <v-btn icon size="x-small" variant="text" @click="selectBtn.action">
+      <v-icon
+        :icon="selectBtn.icon"
+        :color="selectBtn.color"
+        size="x-large"
+      ></v-icon>
+    </v-btn>
+
     <!-- Link Button -->
     <v-btn
       icon
@@ -207,7 +255,7 @@ const moveBtn = computed(() => {
           v-bind="props"
         >
           <v-icon
-            :icon="isHovering ? databaseBtn.hoverIcon : databaseBtn.icon"
+            :icon="isHovering ? databaseBtn.iconHover : databaseBtn.icon"
             :color="databaseBtn.color"
             size="x-large"
           ></v-icon>
@@ -226,7 +274,7 @@ const moveBtn = computed(() => {
           v-bind="props"
         >
           <v-icon
-            :icon="isHovering ? imageBtn.hoverIcon : imageBtn.icon"
+            :icon="isHovering ? imageBtn.iconHover : imageBtn.icon"
             :color="imageBtn.color"
             size="x-large"
           ></v-icon>
@@ -261,7 +309,7 @@ const moveBtn = computed(() => {
           @click="storageBtn.action"
         >
           <v-icon
-            :icon="isHovering ? storageBtn.hoverIcon : storageBtn.icon"
+            :icon="isHovering ? storageBtn.iconHover : storageBtn.icon"
             :color="isHovering ? storageBtn.hoverColor : storageBtn.color"
             size="x-large"
           ></v-icon>
@@ -317,5 +365,9 @@ const moveBtn = computed(() => {
 
 .func-btns img {
   height: 100%;
+}
+
+.invisible {
+  visibility: hidden;
 }
 </style>

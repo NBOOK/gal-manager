@@ -18,7 +18,11 @@ const filterLinked = computed(() => {
       },
     };
   }
-  return { icon: "mdi-link", color: "", action: () => (linked.toggled = true) };
+  return {
+    icon: "mdi-link",
+    color: "geay-darken-4",
+    action: () => (linked.toggled = true),
+  };
 });
 
 const filterDatabase = computed(() => {
@@ -36,7 +40,7 @@ const filterDatabase = computed(() => {
     };
   return {
     icon: "mdi-database",
-    color: "",
+    color: "geay-darken-4",
     action: () => {
       inDatabase.toggled = true;
     },
@@ -58,29 +62,51 @@ const filterImage = computed(() => {
     };
   return {
     icon: "mdi-image",
-    color: "",
+    color: "geay-darken-4",
     action: () => {
       inAssets.toggled = true;
     },
   };
 });
 
-const filterStarred = computed(() => {
-  const starred = filterConfig.starred;
-  if (starred.toggled)
+// const filterStarred = computed(() => {
+//   const starred = filterConfig.starred;
+//   if (starred.toggled)
+//     return {
+//       icon: starred.value ? "mdi-star" : "mdi-star-outline",
+//       color: "amber",
+//       action: () => {
+//         starred.value = !starred.value;
+//         starred.toggled = !starred.value;
+//       },
+//     };
+//   return {
+//     icon: "mdi-star",
+//     color: "geay-darken-4",
+//     action: () => {
+//       starred.toggled = true;
+//     },
+//   };
+// });
+
+const filterSelected = computed(() => {
+  const selected = filterConfig.selected;
+  if (selected.toggled)
     return {
-      icon: starred.value ? "mdi-star" : "mdi-star-outline",
-      color: "amber",
+      icon: selected.value
+        ? "mdi-checkbox-marked"
+        : "mdi-checkbox-blank-outline",
+      color: "geay-darken-4",
       action: () => {
-        starred.value = !starred.value;
-        starred.toggled = !starred.value;
+        selected.value = !selected.value;
+        selected.toggled = !selected.value;
       },
     };
   return {
-    icon: "mdi-star",
-    color: "",
+    icon: "mdi-checkbox-blank-off-outline",
+    color: "geay-darken-4",
     action: () => {
-      starred.toggled = true;
+      selected.toggled = true;
     },
   };
 });
@@ -98,7 +124,7 @@ const filterCloud = computed(() => {
     };
   return {
     icon: "mdi-cloud",
-    color: "",
+    color: "geay-darken-4",
     action: () => {
       inNetDisk.toggled = true;
     },
@@ -118,7 +144,7 @@ const filterDeck = computed(() => {
     };
   return {
     icon: "mdi-gamepad-square",
-    color: "",
+    color: "geay-darken-4",
     action: () => {
       inDeck.toggled = true;
     },
@@ -138,7 +164,7 @@ const filterSD = computed(() => {
     };
   return {
     icon: "mdi-micro-sd",
-    color: "",
+    color: "geay-darken-4",
     action: () => {
       inSDCard.toggled = true;
     },
@@ -158,12 +184,20 @@ const filterUSB = computed(() => {
     };
   return {
     icon: "mdi-usb",
-    color: "",
+    color: "geay-darken-4",
     action: () => {
       inUSB.toggled = true;
     },
   };
 });
+
+function checkAllFilteredGames() {
+  gameStore.filterSortedGames.forEach((game) => (game.selected = true));
+}
+
+function uncheckAllFilteredGames() {
+  gameStore.filterSortedGames.forEach((game) => (game.selected = false));
+}
 </script>
 
 <template>
@@ -175,6 +209,23 @@ const filterUSB = computed(() => {
       density="compact"
     >
       <template v-slot:prepend>
+        <v-btn
+          icon
+          :loading="gameStore.loading"
+          @click="gameStore.loading = true"
+        >
+          <v-icon
+            :icon="gameStore.totalGames ? 'mdi-reload' : 'mdi-magnify-scan'"
+          />
+          <v-tooltip
+            activator="parent"
+            location="bottom"
+            open-delay="500"
+            close-on-content-click
+          >
+            {{ gameStore.totalGames ? "Rescan games" : "Scan games" }}
+          </v-tooltip>
+        </v-btn>
         <v-spacer></v-spacer>
       </template>
 
@@ -216,11 +267,7 @@ const filterUSB = computed(() => {
 
             <v-divider></v-divider>
 
-            <v-btn-toggle
-              mandatory
-              class="sort-btn-toggle-grid"
-              v-model="sortConfig.by"
-            >
+            <v-btn-toggle mandatory class="grid2x2" v-model="sortConfig.by">
               <v-btn value="gameName">
                 <v-icon size="x-large">mdi-alphabetical-variant</v-icon>
               </v-btn>
@@ -257,7 +304,19 @@ const filterUSB = computed(() => {
           transition="slide-y-transition"
         >
           <v-sheet rounded="lg">
-            <v-btn-group class="sort-btn-toggle-grid">
+            <v-btn
+              width="100%"
+              variant="flat"
+              density="compact"
+              v-model="gameStore.filterOperator.group1"
+              @click="
+                gameStore.filterOperator.group1 =
+                  !gameStore.filterOperator.group1
+              "
+            >
+              {{ gameStore.filterOperator.group1 ? "AND" : "OR" }}
+            </v-btn>
+            <v-btn-group class="grid2x2">
               <v-btn @click="filterLinked.action">
                 <v-icon
                   :icon="filterLinked.icon"
@@ -282,10 +341,18 @@ const filterUSB = computed(() => {
                 ></v-icon>
               </v-btn>
 
-              <v-btn @click="filterStarred.action">
+              <!-- <v-btn @click="filterStarred.action">
                 <v-icon
                   :icon="filterStarred.icon"
                   :color="filterStarred.color"
+                  size="x-large"
+                ></v-icon>
+              </v-btn> -->
+
+              <v-btn @click="filterSelected.action">
+                <v-icon
+                  :icon="filterSelected.icon"
+                  :color="filterSelected.color"
                   size="x-large"
                 ></v-icon>
               </v-btn>
@@ -297,12 +364,15 @@ const filterUSB = computed(() => {
               width="100%"
               variant="flat"
               density="compact"
-              v-model="gameStore.filterOperator"
-              @click="gameStore.filterOperator = !gameStore.filterOperator"
+              v-model="gameStore.filterOperator.group2"
+              @click="
+                gameStore.filterOperator.group2 =
+                  !gameStore.filterOperator.group2
+              "
             >
-              {{ gameStore.filterOperator ? "AND" : "OR" }}
+              {{ gameStore.filterOperator.group2 ? "AND" : "OR" }}
             </v-btn>
-            <v-btn-group class="sort-btn-toggle-grid">
+            <v-btn-group class="grid2x2">
               <v-btn @click="filterCloud.action">
                 <v-icon
                   :icon="filterCloud.icon"
@@ -340,22 +410,111 @@ const filterUSB = computed(() => {
       </v-btn>
 
       <template v-slot:append>
-        <v-btn
+        <v-spacer></v-spacer>
+        <!-- <v-btn
+          :class="{ invisible: gameStore.selectedGames.length === 0 }"
           icon
-          :loading="gameStore.loading"
-          @click="gameStore.loading = true"
+          @click="gameStore.dbEditList.push(...gameStore.selectedGames)"
         >
-          <v-icon
-            :icon="gameStore.totalGames ? 'mdi-reload' : 'mdi-magnify-scan'"
-          />
-          <v-tooltip
+          <v-icon icon="mdi-database-edit" />
+        </v-btn> -->
+        <v-btn icon>
+          <v-icon icon="mdi-dots-vertical" />
+          <v-menu
             activator="parent"
-            location="bottom"
-            open-delay="500"
-            close-on-content-click
+            :close-on-content-click="false"
+            scroll-strategy="close"
+            transition="slide-y-transition"
           >
-            {{ gameStore.totalGames ? "Rescan games" : "Scan games" }}
-          </v-tooltip>
+            <v-sheet rounded="lg">
+              <v-btn-group>
+                <v-btn @click="checkAllFilteredGames">
+                  <v-icon size="x-large">mdi-checkbox-multiple-marked</v-icon>
+                </v-btn>
+
+                <v-btn @click="uncheckAllFilteredGames">
+                  <v-icon size="x-large"
+                    >mdi-checkbox-multiple-blank-outline</v-icon
+                  >
+                </v-btn>
+              </v-btn-group>
+
+              <v-divider></v-divider>
+
+              <v-btn-group class="grid2x2">
+                <v-btn
+                  :readonly="gameStore.selectedGames.length === 0"
+                  @click="gameStore.dbEditList.push(...gameStore.selectedGames)"
+                >
+                  <v-icon
+                    :color="
+                      gameStore.selectedGames.length === 0
+                        ? 'grey'
+                        : 'grey-darken-4'
+                    "
+                    size="x-large"
+                    >mdi-database-edit</v-icon
+                  >
+                </v-btn>
+
+                <v-btn
+                  :readonly="
+                    gameStore.selectedGames.length === 0 ||
+                    gameStore.selectedGames.some(
+                      (game) => game.inDeck || game.inSDCard || game.inUSB
+                    )
+                  "
+                >
+                  <v-icon
+                    :color="
+                      gameStore.selectedGames.length === 0 ||
+                      gameStore.selectedGames.some(
+                        (game) => game.inDeck || game.inSDCard || game.inUSB
+                      )
+                        ? 'grey'
+                        : 'grey-darken-4'
+                    "
+                    size="x-large"
+                    >mdi-cloud-download</v-icon
+                  >
+                </v-btn>
+
+                <v-btn
+                  :readonly="
+                    gameStore.selectedGames.length === 0 ||
+                    !gameStore.selectedGames.every(
+                      (game) => game.inDeck || game.inSDCard || game.inUSB
+                    )
+                  "
+                >
+                  <v-icon
+                    :color="
+                      gameStore.selectedGames.length === 0 ||
+                      !gameStore.selectedGames.every(
+                        (game) => game.inDeck || game.inSDCard || game.inUSB
+                      )
+                        ? 'grey'
+                        : 'grey-darken-4'
+                    "
+                    size="x-large"
+                    >mdi-delete</v-icon
+                  >
+                </v-btn>
+
+                <v-btn :readonly="gameStore.selectedGames.length === 0">
+                  <v-icon
+                    :color="
+                      gameStore.selectedGames.length === 0
+                        ? 'grey'
+                        : 'grey-darken-4'
+                    "
+                    size="x-large"
+                    >mdi-chart-pie-outline</v-icon
+                  >
+                </v-btn>
+              </v-btn-group>
+            </v-sheet>
+          </v-menu>
         </v-btn>
       </template>
     </v-app-bar>
@@ -363,7 +522,7 @@ const filterUSB = computed(() => {
 </template>
 
 <style>
-.sort-btn-toggle-grid {
+.grid2x2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   /* 2 列 */
@@ -372,6 +531,10 @@ const filterUSB = computed(() => {
 
 .v-field__field:has(> #searchbox-no-border) ~ .v-field__outline {
   /* border: red solid; */
+  visibility: hidden;
+}
+
+.invisible {
   visibility: hidden;
 }
 </style>
