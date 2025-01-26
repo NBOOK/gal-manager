@@ -245,7 +245,7 @@ const filterUSB = computed(() => {
       <v-btn icon>
         <v-icon
           :icon="
-            Object.values(filterConfig).some((filter) => filter.toggled)
+            Object.values(filterConfig).some((filter: any) => filter.toggled)
               ? 'mdi-filter'
               : 'mdi-filter-outline'
           "

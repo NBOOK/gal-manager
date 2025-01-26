@@ -32,7 +32,8 @@ const databaseBtn = computed(() => {
     );
     if (props.game.inLutrisDB && props.game.inSteamDB) {
       return {
-        icon: "mdi-database-edit",
+        icon: "mdi-database",
+        hoverIcon: "mdi-database-edit",
         color: "green",
         readonly: false,
         action: () => props.game.removeDB(),
@@ -40,6 +41,7 @@ const databaseBtn = computed(() => {
     } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
       return {
         icon: "mdi-database-minus",
+        hoverIcon: "mdi-database-edit",
         color: "orange",
         readonly: false,
         action: () => props.game.addDB(),
@@ -47,6 +49,7 @@ const databaseBtn = computed(() => {
     } else {
       return {
         icon: "mdi-database-remove",
+        hoverIcon: "mdi-database-edit",
         color: "red",
         readonly: false,
         action: () => props.game.addDB(),
@@ -66,18 +69,21 @@ const imageBtn = computed(() => {
   if (props.game.imageAssets.assetsCount == 5) {
     return {
       icon: "mdi-image-check",
+      hoverIcon: "mdi-folder-open",
       color: "green",
-      action: () => {},
+      action: () => props.game.imageAssets.openImageOrGameFolder(),
     };
   } else if (props.game.imageAssets.assetsCount > 0) {
     return {
       icon: "mdi-image-minus",
+      hoverIcon: "mdi-folder-open",
       color: "orange",
       action: () => props.game.imageAssets.openImageOrGameFolder(),
     };
   } else {
     return {
       icon: "mdi-image-remove",
+      hoverIcon: "mdi-folder-open",
       color: "red",
       action: () => props.game.imageAssets.openImageOrGameFolder(),
     };
@@ -190,28 +196,43 @@ const moveBtn = computed(() => {
     </v-btn>
 
     <!-- Database Button -->
-    <v-btn
-      icon
-      size="x-small"
-      variant="text"
-      :readonly="databaseBtn.readonly"
-      @click="databaseBtn.action"
-    >
-      <v-icon
-        :icon="databaseBtn.icon"
-        :color="databaseBtn.color"
-        size="x-large"
-      ></v-icon>
-    </v-btn>
+    <v-hover>
+      <template v-slot:default="{ isHovering, props }">
+        <v-btn
+          icon
+          size="x-small"
+          variant="text"
+          :readonly="databaseBtn.readonly"
+          @click="databaseBtn.action"
+          v-bind="props"
+        >
+          <v-icon
+            :icon="isHovering ? databaseBtn.hoverIcon : databaseBtn.icon"
+            :color="databaseBtn.color"
+            size="x-large"
+          ></v-icon>
+        </v-btn>
+      </template>
+    </v-hover>
 
     <!-- Image Button -->
-    <v-btn icon size="x-small" variant="text" @click="imageBtn.action">
-      <v-icon
-        :icon="imageBtn.icon"
-        :color="imageBtn.color"
-        size="x-large"
-      ></v-icon>
-    </v-btn>
+    <v-hover>
+      <template v-slot:default="{ isHovering, props }">
+        <v-btn
+          icon
+          size="x-small"
+          variant="text"
+          @click="imageBtn.action"
+          v-bind="props"
+        >
+          <v-icon
+            :icon="isHovering ? imageBtn.hoverIcon : imageBtn.icon"
+            :color="imageBtn.color"
+            size="x-large"
+          ></v-icon>
+        </v-btn>
+      </template>
+    </v-hover>
 
     <!-- Cloud Button -->
     <v-btn

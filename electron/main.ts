@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, shell } from "electron";
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -132,14 +132,15 @@ function registerIpcMain() {
     return fs.promises.writeFile(filePath, data, options || 'utf-8');
   });
   ipcMain.handle('sqliteDBOp', (_event, op: string, params:any) => {
-    try {
-      return utils.sqliteDBOp(op, params);
-    } catch (error) {
-      console.error('Error handling sqliteDBOp:', error);
-      throw error; // 重新抛出错误，让 Electron 能够将错误传递给渲染进程
-    }
+    return utils.sqliteDBOp(op, params);
   });
   ipcMain.handle('kuroshiroOp', (_event, op: string, params:any) => {
     return utils.kuroshiroOp(op, params)
+  });
+  ipcMain.handle('openExternal', (_event, url: string) => {
+    return shell.openExternal(url)
+  });
+  ipcMain.handle('openPath', (_event, path: string) => {
+    return shell.openPath(path)
   });
 }

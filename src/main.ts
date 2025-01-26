@@ -16,5 +16,3 @@ app.mount("#app");
 
 gameEntrySetConfig();
 imageAssetsSetConfig();
-
-console.log("Hello, Vite!");

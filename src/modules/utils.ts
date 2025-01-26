@@ -1,5 +1,9 @@
 function cleanAndCapitalize(input: string): string {
-  const cleaned = input.trim().replace(/\s+/g, " ");
+  const cleaned = input
+    .trim()
+    .replace(/\s+/g, " ")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
   const capitalized = cleaned
     .split(" ")
     .map((word) => {
@@ -14,10 +18,6 @@ function cleanAndCapitalize(input: string): string {
 }
 
 async function romanize(text: string): Promise<string> {
-  // const romanized = await kuroshiro.convert(text, {
-  //   to: "romaji",
-  //   mode: "spaced",
-  // });
   const romanized = await window.ipcRenderer.invoke("kuroshiroOp", "convert", {
     text: text,
     to: "romaji",
@@ -29,6 +29,8 @@ async function romanize(text: string): Promise<string> {
 
 function slugify(text: string): string {
   return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .split("")
     .map((e) => (/[a-zA-Z0-9]/.test(e) ? e : "-"))
     .join("")

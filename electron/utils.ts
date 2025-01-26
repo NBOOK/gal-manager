@@ -14,15 +14,16 @@ const Database = require("better-sqlite3");
 
 let sqliteDB: DatabaseType;
 const kuroshiro = new Kuroshiro();
-// (async () => {
-//   try {
-//     // const kuroshiro = new Kuroshiro();
-//     await kuroshiro.init(new KuromojiAnalyzer());
-//     // 其他代码
-//   } catch (error) {
-//     console.error("初始化失败:", error);
-//   }
-// })();
+(async () => {
+  try {
+    // const kuroshiro = new Kuroshiro();
+    await kuroshiro.init(new KuromojiAnalyzer());
+    console.log("Kuroshiro initialized.");
+    // 其他代码
+  } catch (error) {
+    console.error("初始化失败:", error);
+  }
+})();
 
 async function scanDir(dirPath: string): Promise<DirEntry[]> {
   try {
@@ -316,14 +317,7 @@ async function getGameID(name: string): Promise<string> {
 }
 
 async function sqliteDBConnect(dbPath: string): Promise<void> {
-  console.log("Connecting to SQLite database:", dbPath);
-  try {
-    sqliteDB = new Database(dbPath);
-  } catch (error) {
-    console.error("Error connecting to SQLite database:", error);
-    throw error;
-  }
-  // sqliteDB = new Database(dbPath);
+  sqliteDB = new Database(dbPath);
 }
 
 async function sqliteDBInsert(
@@ -384,30 +378,35 @@ async function sqliteDBQuery(lutrisGameIndex: number): Promise<{
 }
 
 async function sqliteDBOp(op: string, params: any): Promise<any> {
-  switch (op) {
-    case "connect":
-      // Connect operation requires dbPath
-      return await sqliteDBConnect(params.dbPath);
+  try {
+    switch (op) {
+      case "connect":
+        // Connect operation requires dbPath
+        return await sqliteDBConnect(params.dbPath);
 
-    case "insert":
-      // Insert operation requires gameNameEN, gameNameSlug, nextId, and timestamp
-      return await sqliteDBInsert(
-        params.gameNameEN,
-        params.gameNameSlug,
-        params.nextId,
-        params.timestamp
-      );
+      case "insert":
+        // Insert operation requires gameNameEN, gameNameSlug, nextId, and timestamp
+        return await sqliteDBInsert(
+          params.gameNameEN,
+          params.gameNameSlug,
+          params.nextId,
+          params.timestamp
+        );
 
-    case "delete":
-      // Delete operation requires lutrisGameID
-      return await sqliteDBDelete(params.lutrisGameID);
+      case "delete":
+        // Delete operation requires lutrisGameID
+        return await sqliteDBDelete(params.lutrisGameID);
 
-    case "query":
-      // Query operation requires lutrisGameIndex
-      return await sqliteDBQuery(params.lutrisGameIndex);
+      case "query":
+        // Query operation requires lutrisGameIndex
+        return await sqliteDBQuery(params.lutrisGameIndex);
 
-    default:
-      throw new Error(`Unsupported operation: ${op}`);
+      default:
+        throw new Error(`Unsupported operation: ${op}`);
+    }
+  } catch (error) {
+    console.error(`Error handling sqliteDBOp (${op}, ${params}):`, error);
+    throw error;
   }
 }
 

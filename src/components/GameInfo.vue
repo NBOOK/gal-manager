@@ -92,7 +92,14 @@ const vOverflowDetector = {
         {{ game.gameNameEN }}
       </div>
     </div>
-    <div class="game-brand">{{ game.gameBrand }}</div>
+    <div class="game-brand">
+      {{ game.gameBrand }}
+      {{
+        game.gameBrandEN.toLowerCase() === game.gameBrand.toLowerCase()
+          ? ""
+          : ` | ${game.gameBrandEN}`
+      }}
+    </div>
     <div class="game-meta">
       {{ formatTime(game.modifiedTime) }}&nbsp&nbsp&nbsp&nbsp{{
         formatSize(game.diskUsage)
