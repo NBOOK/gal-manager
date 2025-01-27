@@ -6,6 +6,7 @@ import path from "node:path";
 import { readVdf, VdfMap, writeVdf, getShortcutHash } from "steam-binary-vdf";
 import YAML from "yaml";
 import { Database as DatabaseType, Statement } from "better-sqlite3";
+import { MAIN_DIST } from "./main";
 import Kuroshiro from "@sglkc/kuroshiro";
 import KuromojiAnalyzer from "@sglkc/kuroshiro-analyzer-kuromoji";
 import { createRequire } from "module";
@@ -14,16 +15,16 @@ const Database = require("better-sqlite3");
 
 let sqliteDB: DatabaseType;
 const kuroshiro = new Kuroshiro();
-(async () => {
-  try {
-    // const kuroshiro = new Kuroshiro();
-    await kuroshiro.init(new KuromojiAnalyzer());
-    console.log("Kuroshiro initialized.");
-    // 其他代码
-  } catch (error) {
-    console.error("初始化失败:", error);
-  }
-})();
+// (async () => {
+//   try {
+//     // const kuroshiro = new Kuroshiro();
+//     await kuroshiro.init(new KuromojiAnalyzer());
+//     console.log("Kuroshiro initialized.");
+//     // 其他代码
+//   } catch (error) {
+//     console.error("初始化失败:", error);
+//   }
+// })();
 
 async function scanDir(dirPath: string): Promise<DirEntry[]> {
   try {
@@ -412,6 +413,12 @@ async function sqliteDBOp(op: string, params: any): Promise<any> {
 
 async function kuroshiroOp(op: string, params: any): Promise<string> {
   switch (op) {
+    case "init":
+      await kuroshiro.init(
+        new KuromojiAnalyzer({ dictPath: path.join(MAIN_DIST, "dict") })
+      );
+      return "Kuroshiro initialized.";
+
     case "convert":
       return await kuroshiro.convert(params.text, {
         to: params.to,

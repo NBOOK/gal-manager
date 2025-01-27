@@ -58,9 +58,9 @@ watch(
         props.game.gameName
       );
       gameConnfig.gameNameEN = props.game.gameNameEN;
-      gameConnfig.gameNameENColor = "#F3E5F5";
+      gameConnfig.gameNameENColor = "#EDE7F6";
       gameConnfig.gameNameSlug = props.game.gameNameSlug;
-      gameConnfig.gameNameSlugColor = "#F3E5F5";
+      gameConnfig.gameNameSlugColor = "#EDE7F6";
       enTitleLoading.value = false;
     } else {
       await getGameNameENCandidates();
@@ -251,7 +251,7 @@ watch(
             density="compact"
             @click:select="(value) => gameConnfig.executable = value.id as string"
             :selected="[gameConnfig.executable]"
-            active-color="grey-darken-2"
+            base-color="grey-darken-2"
             height="100%"
             max-height="150px"
           >
@@ -283,7 +283,7 @@ watch(
             density="compact"
             @click:select="(value) => gameConnfig.winePrefix = value.id as string"
             :selected="[gameConnfig.winePrefix]"
-            active-color="grey-darken-2"
+            base-color="grey-darken-2"
             height="100%"
             max-height="150px"
           >
@@ -317,7 +317,7 @@ watch(
             density="compact"
             @click:select="(value) => gameConnfig.wineRunner = value.id as string"
             :selected="[gameConnfig.wineRunner]"
-            active-color="grey-darken-2"
+            base-color="grey-darken-2"
             height="100%"
             max-height="150px"
           >
@@ -351,7 +351,7 @@ watch(
             density="compact"
             @click:select="(value) => gameConnfig.locale = value.id as string"
             :selected="[gameConnfig.locale]"
-            active-color="grey-darken-2"
+            base-color="grey-darken-2"
             height="100%"
             max-height="150px"
           >
@@ -368,7 +368,7 @@ watch(
             >
               <v-list-item-title style="text-align: center">
                 <img
-                  :src="`/icons/${item}.svg`"
+                  :src="`icons/${item}.svg`"
                   style="height: 24px; width: 24px"
                 />
               </v-list-item-title>

@@ -16,6 +16,7 @@ const firstTime = ref(false);
 // const test = ref({});
 
 onMounted(async () => {
+  console.log(await window.ipcRenderer.invoke("kuroshiroOp", "init"));
   gameStore.config.value = await window.ipcRenderer.invoke("fetchJsonConfig");
   // console.log(gameStore.config.value);
   if (Object.keys(gameStore.config.value).length === 0) {

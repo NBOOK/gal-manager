@@ -20,6 +20,7 @@ export default defineConfig({
             rollupOptions: {
               external: [
                 "sharp",
+                // "@sglkc",
                 // other `C/C++` addons
               ],
             },

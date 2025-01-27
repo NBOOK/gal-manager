@@ -5,7 +5,9 @@
   "asar": true,
   "asarUnpack": [
       "**/node_modules/sharp/**/*",
-      "**/node_modules/@img/**/*"
+      "**/node_modules/@img/**/*",
+      // "**/node_modules/@sglkc/**/*",
+      // "**/node_modules/@sglkc/kuromoji/dict/*.dat.gz"
   ],
   "productName": "GalManager",
   "directories": {
