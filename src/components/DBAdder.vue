@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { reactive, ref, toValue, watch } from "vue";
+import { reactive, ref, watch } from "vue";
 import { useGameStore } from "@/store/global-store";
 import GameEntry from "@/modules/GameEntry";
 import utils from "@/modules/utils";
-import { id } from "vuetify/locale";
 
 const gameStore = useGameStore();
 const props = defineProps<{ game: GameEntry }>();

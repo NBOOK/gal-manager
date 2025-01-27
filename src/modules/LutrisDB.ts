@@ -46,6 +46,21 @@ class LutrisDB {
     this.wineRunnerPath = config.wineRunnerPath;
     this.winePrefixPath = config.winePrefixPath;
 
+    console.log(
+      this.lutrisGameConfigPath,
+      this.lutrisGameListPath,
+      this.lutrisDBPath,
+      this.lutrisIconPath,
+      this.lutrisBannerPath,
+      this.lutrisCoverPath,
+      this.lutrisDdefaultLocale,
+      this.lutrisDefaultRunner,
+      this.lutrisDefaultWinePrefix,
+      this.lutrisLaunchOptions,
+      this.wineRunnerPath,
+      this.winePrefixPath
+    );
+
     this.wineRunners = (
       await window.ipcRenderer.invoke("scanDir", this.wineRunnerPath)
     )
@@ -110,9 +125,13 @@ class LutrisDB {
     this.processQueue(); // @TOCHECK should we await this?
   }
 
-  async _addGame(game: GameEntry) {}
+  async _addGame(game: GameEntry) {
+    console.log("Adding: ", game);
+  }
 
-  async _removeGame(game: GameEntry) {}
+  async _removeGame(game: GameEntry) {
+    console.log("Removing: ", game);
+  }
 
   async getGameConfig(gameConfigName: string): Promise<Record<string, string>> {
     return await window.ipcRenderer.invoke(
