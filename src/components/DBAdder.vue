@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { reactive, ref, toValue, watch } from "vue";
 import { useGameStore } from "@/store/global-store";
 import GameEntry from "@/modules/GameEntry";
 import utils from "@/modules/utils";
-import { sl } from "vuetify/locale";
+import { id } from "vuetify/locale";
 
 const gameStore = useGameStore();
 const props = defineProps<{ game: GameEntry }>();
@@ -11,6 +11,8 @@ const gameNameENCandidates = ref<VNTitle[]>([]);
 const enTitleLoading = ref(true);
 const isMenuOpen = ref(false);
 const slugSync = ref(true);
+const executables = ref<string[]>([]);
+const executablesLoading = ref(true);
 
 function slugify(name: string, slug: string) {
   if (slugSync.value) {
@@ -32,6 +34,10 @@ const gameConnfig = reactive({
   gameNameENColor: "",
   gameNameSlug: "",
   gameNameSlugColor: "",
+  winePrefix: "",
+  wineRunner: "",
+  executable: "",
+  locale: "",
 });
 
 async function getGameNameENCandidates() {
@@ -60,6 +66,18 @@ watch(
     } else {
       await getGameNameENCandidates();
     }
+
+    const gamePath = `${props.game.basePath}/${props.game.gameBrand}${props.game.splitter}${props.game.gameName}`;
+    executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
+      .filter((file: DirEntry) => file.isFile && file.name.endsWith(".exe"))
+      .map((file: DirEntry) => file.name);
+    executables.value = await utils.guessLauncher(executables.value);
+    gameConnfig.executable = executables.value[0];
+    executablesLoading.value = false;
+
+    gameConnfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
+    gameConnfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
+    gameConnfig.locale = "ja_JP.utf8";
   },
   { immediate: true }
 );
@@ -67,8 +85,8 @@ watch(
 
 <template>
   <v-carousel-item>
-    <v-sheet rounded height="100%" class="pa-8 d-flex flex-column">
-      <!-- <v-container height="100%" class="d-flex flex-column"> -->
+    <v-card rounded="10" height="100%" class="pa-8 d-flex flex-column">
+      <!-- ------------------------- Orig Title ------------------------------- -->
       <v-row class="flex-grow-0">
         <v-text-field
           density="compact"
@@ -77,6 +95,7 @@ watch(
           clearable
           clear-icon="mdi-backspace-outline"
           placeholder="Game's orginal title."
+          prepend-icon="mdi-ideogram-cjk-variant"
           :spellcheck="false"
           v-model="gameConnfig.gameName"
         >
@@ -89,6 +108,7 @@ watch(
           </template> </v-text-field
       ></v-row>
 
+      <!-- ------------------------- Slug Title ------------------------------- -->
       <v-row class="flex-grow-0">
         <v-text-field
           density="compact"
@@ -97,6 +117,7 @@ watch(
           clearable
           clear-icon="mdi-backspace-outline"
           placeholder="Game's title slug (identifier)."
+          prepend-icon="mdi-identifier"
           :spellcheck="false"
           v-model="gameConnfig.gameNameSlug"
           :bg-color="
@@ -118,6 +139,7 @@ watch(
           </template> </v-text-field
       ></v-row>
 
+      <!-- ------------------------- Eng Title ------------------------------- -->
       <v-row class="flex-grow-0">
         <v-text-field
           density="compact"
@@ -126,6 +148,7 @@ watch(
           clearable
           clear-icon="mdi-backspace-outline"
           placeholder="Game's English/romanized title."
+          prepend-icon="mdi-alphabetical-variant"
           :spellcheck="false"
           :loading="enTitleLoading"
           v-model="gameConnfig.gameNameEN"
@@ -187,6 +210,8 @@ watch(
         </v-text-field>
       </v-row>
 
+      <!-- ------------------------- Steam/Lutris Categories ------------------------------- -->
+      <!-- @TODO add lutris category support -->
       <v-row class="flex-grow-0">
         <v-combobox
           label="Steam/Lutris Categories"
@@ -197,11 +222,164 @@ watch(
           multiple
           :items="['Gal', 'Anime', 'RPG', 'Emulation', 'Rhythm']"
           variant="outlined"
+          prepend-icon="mdi-tag-multiple"
           clear-icon="mdi-backspace-outline"
           :menu-props="{ transition: 'slide-y-transition' }"
         ></v-combobox>
       </v-row>
 
+      <!-- ------------------------- Lutris Env Setup ------------------------------- -->
+      <v-row class="flex-grow-0 justify-space-between flex-nowrap">
+        <!-- <v-col> -->
+        <v-card
+          border
+          elevation="0"
+          rounded="10"
+          width="100%"
+          style="margin-left: 38px"
+        >
+          <v-list-subheader
+            style="
+              height: 32px !important;
+              min-height: 10px !important;
+              font-size: 16px !important;
+              padding-left: 16px;
+            "
+            >Game Executable</v-list-subheader
+          >
+          <v-divider></v-divider>
+          <v-list
+            density="compact"
+            @click:select="(value) => gameConnfig.executable = value.id as string"
+            :selected="[gameConnfig.executable]"
+            active-color="grey-darken-2"
+            height="100%"
+            max-height="150px"
+          >
+            <v-list-item
+              v-for="item in executables"
+              :key="item"
+              :value="item"
+              style="min-height: 10px !important; height: 24px !important"
+            >
+              <v-list-item-title>{{ item }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card>
+        <!-- </v-col> -->
+        <v-spacer class="lutris-config-spacer"></v-spacer>
+        <!-- <v-col> -->
+        <v-card border elevation="0" rounded="10" width="100%">
+          <v-list-subheader
+            style="
+              height: 32px !important;
+              min-height: 10px !important;
+              font-size: 16px !important;
+              padding-left: 16px;
+            "
+            >Wine Prefix</v-list-subheader
+          >
+          <v-divider></v-divider>
+          <v-list
+            density="compact"
+            @click:select="(value) => gameConnfig.winePrefix = value.id as string"
+            :selected="[gameConnfig.winePrefix]"
+            active-color="grey-darken-2"
+            height="100%"
+            max-height="150px"
+          >
+            <v-list-item
+              v-for="item in gameStore.lutrisDB.winePrefixes"
+              :key="item"
+              :value="item"
+              style="min-height: 10px !important; height: 24px !important"
+            >
+              <v-list-item-title>{{ item }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card>
+        <!-- </v-col> -->
+
+        <v-spacer class="lutris-config-spacer"></v-spacer>
+
+        <!-- <v-col> -->
+        <v-card border elevation="0" rounded="10" width="100%">
+          <v-list-subheader
+            style="
+              height: 32px !important;
+              min-height: 10px !important;
+              font-size: 16px !important;
+              padding-left: 16px;
+            "
+            >Wine Runner</v-list-subheader
+          >
+          <v-divider></v-divider>
+          <v-list
+            density="compact"
+            @click:select="(value) => gameConnfig.wineRunner = value.id as string"
+            :selected="[gameConnfig.wineRunner]"
+            active-color="grey-darken-2"
+            height="100%"
+            max-height="150px"
+          >
+            <v-list-item
+              v-for="item in gameStore.lutrisDB.wineRunners"
+              :key="item"
+              :value="item"
+              style="min-height: 10px !important; height: 24px !important"
+            >
+              <v-list-item-title>{{ item }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card>
+        <!-- </v-col> -->
+
+        <v-spacer class="lutris-config-spacer"></v-spacer>
+
+        <!-- <v-col> -->
+        <v-card border elevation="0" rounded="10" width="100%" max-width="86px">
+          <v-list-subheader
+            style="
+              height: 32px !important;
+              min-height: 10px !important;
+              font-size: 16px !important;
+              padding-left: 16px;
+            "
+            >Locale</v-list-subheader
+          >
+          <v-divider></v-divider>
+          <v-list
+            density="compact"
+            @click:select="(value) => gameConnfig.locale = value.id as string"
+            :selected="[gameConnfig.locale]"
+            active-color="grey-darken-2"
+            height="100%"
+            max-height="150px"
+          >
+            <v-list-item
+              v-for="item in [
+                'ja_JP.utf8',
+                'zh_CN.utf8',
+                'zh_HK.utf8',
+                'en_US.utf8',
+              ]"
+              :key="item"
+              :value="item"
+              style="min-height: 10px !important; height: 24px !important"
+            >
+              <v-list-item-title style="text-align: center">
+                <img
+                  :src="`/icons/${item}.svg`"
+                  style="height: 24px; width: 24px"
+                />
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card>
+        <!-- </v-col> -->
+      </v-row>
+
+      <!-- ------------------------- Bottom Nav Btns ------------------------------- -->
       <v-row class="align-self-end align-end">
         <v-hover>
           <template v-slot:default="{ isHovering, props }">
@@ -245,7 +423,7 @@ watch(
           >Add to Database</v-btn
         >
       </v-row>
-    </v-sheet>
+    </v-card>
   </v-carousel-item>
 </template>
 
@@ -310,5 +488,12 @@ watch(
 .cover-mask.hidden {
   pointer-events: none;
   opacity: 0;
+}
+
+.lutris-config-spacer {
+  width: 100%;
+  max-width: 24px;
+  min-width: 0px;
+  flex-shrink: 1.25;
 }
 </style>
