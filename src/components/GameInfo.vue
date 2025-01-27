@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive } from "vue";
-import GameEntry from "@modules/GameEntry";
+import GameEntry from "@/modules/GameEntry";
 
 defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 

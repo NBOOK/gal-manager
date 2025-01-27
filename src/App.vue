@@ -1,12 +1,12 @@
 <script setup lang="ts">
 // import HelloWorld from '@components/HelloWorld.vue'
 import { onMounted, ref } from "vue";
-import { useGameStore } from "@store/global-store";
-import LoadingOverlay from "@components/Loading.vue";
-import DBAdder from "@components/DBAdder.vue";
-import GameList from "@components/GameList.vue";
-import AppBar from "@components/AppBar.vue";
-import StatusBar from "@components/StatusBar.vue";
+import { useGameStore } from "@/store/global-store";
+import LoadingOverlay from "@/components/Loading.vue";
+import DBAdderCarousel from "@/views/DBAdderCarousel.vue";
+import GameList from "@/components/GameList.vue";
+import AppBar from "@/components/AppBar.vue";
+import StatusBar from "@/components/StatusBar.vue";
 // import FirstTime from "@components/FirstTime.vue";
 // import SteamDB from "@modules/SteamDB";
 
@@ -36,7 +36,7 @@ onMounted(async () => {
     <AppBar v-if="!firstTime" />
     <LoadingOverlay v-if="!firstTime" />
     <!-- <FirstTime v-if="firstTime" /> -->
-    <DBAdder v-if="!firstTime" />
+    <DBAdderCarousel v-if="!firstTime" />
     <div v-if="firstTime" style="margin-top: 30vh">First Time!</div>
     <GameList v-if="!firstTime" />
     <StatusBar v-if="!firstTime" />

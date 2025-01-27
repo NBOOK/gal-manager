@@ -1,4 +1,4 @@
-import GameEntry from "./GameEntry";
+import GameEntry from "@/modules/GameEntry";
 const collator = new Intl.Collator("ja");
 
 function cleanAndCapitalize(input: string): string {
@@ -93,9 +93,14 @@ async function vndbQueryName(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        filters: ["search", "=", gameName],
+        filters: [
+          "and",
+          ["search", "=", gameName],
+          ["or", ["lang", "=", "en"], ["lang", "=", "ja"], ["lang", "=", "zh"]],
+        ],
         fields:
           "titles.official, titles.main, titles.lang, titles.latin, titles.title, aliases",
+        sort: "searchrank",
         results: 15,
       }),
     });
@@ -106,6 +111,7 @@ async function vndbQueryName(
       body: JSON.stringify({
         filters: ["search", "=", gameName],
         fields: "title,alttitle",
+        sort: "searchrank",
         results: 15,
       }),
     });
@@ -131,34 +137,44 @@ async function vndbQueryName(
       : { results: [] };
 
     // 处理 VN 数据
-    for (const vn of vnData.results) {
+    for (const [idx, vn] of vnData.results.entries()) {
       for (const title of vn.titles) {
-        if (!title.official) continue;
+        let weight = 1.1 - idx * 0.2;
+        if (
+          !title.official ||
+          !["en", "ja", "zh-Hans", "zh-Hant"].includes(title.lang)
+        )
+          continue;
+        if (title.main) weight *= 1.1;
         results.push({
           title: title.latin ? title.latin : title.title,
           origTitle: title.title,
           kind: "title",
-          ratio: editRatio(romanized, title.latin ? title.latin : title.title),
+          weight:
+            weight *
+            editRatio(romanized, title.latin ? title.latin : title.title),
         });
       }
       for (const alias of vn.aliases) {
-        if (cjkRegex.test(alias)) continue;
+        let weight = 0.9 - idx * 0.2;
+        if (cjkRegex.test(alias)) continue; // 只保留拉丁化别名
         results.push({
           title: alias,
           origTitle: "",
           kind: "alias",
-          ratio: editRatio(romanized, alias),
+          weight: weight * editRatio(romanized, alias),
         });
       }
     }
 
     // 处理 Release 数据
-    for (const release of releaseData.results) {
+    for (const [idx, release] of releaseData.results.entries()) {
+      let weight = 1 - idx * 0.05;
       results.push({
         title: release.title,
         origTitle: release.alttitle,
         kind: "releaseTitle",
-        ratio: editRatio(romanized, release.title),
+        weight: weight * editRatio(romanized, release.title),
       });
     }
   } catch (error) {
@@ -171,20 +187,56 @@ async function vndbQueryName(
 async function getGameNameEN(gameName: string): Promise<VNTitle[]> {
   const romanized = await romanize(gameName);
   const candidates = (await vndbQueryName(gameName, romanized)).sort(
-    (a, b) => b.ratio - a.ratio
+    (a, b) => b.weight - a.weight
   );
+
+  const uniqueCandidates: Record<string, VNTitle> = {};
+
+  candidates
+    .filter((item) => item.kind === "title")
+    .forEach((item) => {
+      if (!(slugify(item.title) in uniqueCandidates))
+        uniqueCandidates[slugify(item.title)] = item;
+    });
+
+  candidates
+    .filter((item) => item.kind === "releaseTitle")
+    .forEach((item) => {
+      if (!(slugify(item.title) in uniqueCandidates))
+        uniqueCandidates[slugify(item.title)] = item;
+    });
+
+  candidates
+    .filter((item) => item.kind === "alias")
+    .forEach((item) => {
+      if (!(slugify(item.title) in uniqueCandidates))
+        uniqueCandidates[slugify(item.title)] = item;
+    });
+
+  const cleanedCandidates = Object.values(uniqueCandidates).sort(
+    (a, b) => b.weight - a.weight
+  );
+
   const romanizedTitle: VNTitle = {
     title: romanized,
     origTitle: "",
     kind: "romanized",
-    ratio: 1,
+    weight: 1,
   };
-  if (candidates.length >= 6) {
-    candidates.splice(5, 0, romanizedTitle);
+  if (cleanedCandidates.length >= 6) {
+    cleanedCandidates.splice(5, 0, romanizedTitle);
   } else {
-    candidates.push(romanizedTitle);
+    cleanedCandidates.push(romanizedTitle);
   }
-  return candidates;
+
+  // Normalize weights to 0-100
+  const maxWeight = Math.max(...cleanedCandidates.map((title) => title.weight));
+  const minWeight = Math.min(...cleanedCandidates.map((title) => title.weight));
+
+  for (const title of cleanedCandidates) {
+    title.weight = ((title.weight - minWeight) / (maxWeight - minWeight)) * 100;
+  }
+  return cleanedCandidates;
 }
 
 async function guessLauncher(executables: string[]): Promise<string[]> {
@@ -281,6 +333,7 @@ function filterGamesByQuery(
   searchQuery: string
 ): GameEntry[] {
   if (searchQuery) {
+    searchQuery = searchQuery.toLowerCase();
     if (searchQuery.includes("@name=")) {
       const nameQuery = searchQuery
         .split("@name=")[1]
@@ -376,4 +429,5 @@ export default {
   sortGames,
   filterGamesByQuery,
   filterSortGames,
+  vndbQueryName,
 };

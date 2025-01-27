@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // import { reactive, computed } from "vue";
-import GameEntry from "@modules/GameEntry";
-import GameImgThumb from "./GameImgThumb.vue";
-import GameInfo from "./GameInfo.vue";
-import ControlGroup from "./ControlGroup.vue";
+import GameEntry from "@/modules/GameEntry";
+import GameImgThumb from "@/components/GameImgThumb.vue";
+import GameInfo from "@/components/GameInfo.vue";
+import ControlGroup from "@/components/ControlGroup.vue";
 
 defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 </script>

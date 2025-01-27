@@ -23,7 +23,7 @@ declare global {
     title: string;
     origTitle: string;
     kind: "romanized" | "alias" | "title" | "releaseTitle";
-    ratio: number;
+    weight: number;
   }
 }
 export {};

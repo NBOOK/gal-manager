@@ -1,4 +1,4 @@
-import GameEntry from "./GameEntry";
+import GameEntry from "@/modules/GameEntry";
 
 class LutrisDB {
   private static instance: LutrisDB | null = null;
@@ -15,6 +15,8 @@ class LutrisDB {
   private lutrisLaunchOptions: string = "";
   private wineRunnerPath: string = "";
   private winePrefixPath: string = "";
+  wineRunners: string[] = [];
+  winePrefixes: string[] = [];
   linkLowRes: boolean = true;
 
   private lutrisGameList: Record<string, string> = {};
@@ -43,6 +45,29 @@ class LutrisDB {
     this.lutrisLaunchOptions = config.lutrisLaunchOptions;
     this.wineRunnerPath = config.wineRunnerPath;
     this.winePrefixPath = config.winePrefixPath;
+
+    this.wineRunners = (
+      await window.ipcRenderer.invoke("scanDir", this.wineRunnerPath)
+    )
+      .filter((item: DirEntry) => item.isDirectory)
+      .map((item: DirEntry) => item.name)
+      .sort((a: string, b: string) => {
+        if (a.includes("latest") === b.includes("latest")) {
+          return a.localeCompare(b);
+        }
+        return a.includes("latest") ? -1 : 1;
+      });
+    this.winePrefixes = (
+      await window.ipcRenderer.invoke("scanDir", this.winePrefixPath)
+    )
+      .filter((item: DirEntry) => item.isDirectory)
+      .map((item: DirEntry) => item.name)
+      .sort((a: string, b: string) => {
+        if (a.includes("ADV") === b.includes("ADV")) {
+          return a.localeCompare(b);
+        }
+        return a.includes("ADV") ? -1 : 1;
+      });
 
     await window.ipcRenderer.invoke("sqliteDBOp", "connect", {
       dbPath: this.lutrisDBPath,

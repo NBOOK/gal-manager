@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useGameStore } from "@store/global-store";
+import { useGameStore } from "@/store/global-store";
 
 const gameStore = useGameStore();
 const sortConfig = gameStore.sort;
@@ -443,12 +443,16 @@ function uncheckAllFilteredGames() {
 
               <v-btn-group class="grid2x2">
                 <v-btn
-                  :readonly="gameStore.selectedGames.length === 0"
+                  :readonly="
+                    gameStore.selectedGames.length === 0 ||
+                    gameStore.selectedGames.some((game) => !game.linked)
+                  "
                   @click="gameStore.dbEditList.push(...gameStore.selectedGames)"
                 >
                   <v-icon
                     :color="
-                      gameStore.selectedGames.length === 0
+                      gameStore.selectedGames.length === 0 ||
+                      gameStore.selectedGames.some((game) => !game.linked)
                         ? 'grey'
                         : 'grey-darken-4'
                     "

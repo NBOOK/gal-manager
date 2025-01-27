@@ -1,4 +1,4 @@
-import { useGameStore } from "@store/global-store";
+import { useGameStore } from "@/store/global-store";
 let gameStore: ReturnType<typeof useGameStore>;
 
 export function imageAssetsSetConfig() {

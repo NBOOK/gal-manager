@@ -1,5 +1,5 @@
-import ImageAssets from "@modules/ImageAssets";
-import { useGameStore } from "@store/global-store";
+import ImageAssets from "@/modules/ImageAssets";
+import { useGameStore } from "@/store/global-store";
 import utils from "./utils";
 let gameStore: ReturnType<typeof useGameStore>;
 

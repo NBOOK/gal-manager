@@ -1,4 +1,4 @@
-import GameEntry from "./GameEntry";
+import GameEntry from "@/modules/GameEntry";
 import { VdfMap } from "steam-binary-vdf";
 
 class SteamDB {

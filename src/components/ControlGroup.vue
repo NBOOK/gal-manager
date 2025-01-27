@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import GameEntry from "@modules/GameEntry";
-import { useGameStore } from "@store/global-store";
+import GameEntry from "@/modules/GameEntry";
+import { useGameStore } from "@/store/global-store";
 
 const gameStore = useGameStore();
 

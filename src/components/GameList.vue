@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, useTemplateRef } from "vue";
-import { useGameStore } from "@store/global-store";
-import GameItem from "@components/GameItem.vue";
+import { useGameStore } from "@/store/global-store";
+import GameItem from "@/components/GameItem.vue";
 
 const gameStore = useGameStore();
 
@@ -70,6 +70,7 @@ const games = computed(() => gameStore.filterSortedGames);
   padding-top: 18px;
   padding-right: calc(1em - 10px);
   /* position: relative; */
+  overflow-y: scroll;
 }
 
 .v-virtual-scroll::-webkit-scrollbar {

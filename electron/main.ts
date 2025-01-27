@@ -143,4 +143,7 @@ function registerIpcMain() {
   ipcMain.handle('openPath', (_event, path: string) => {
     return shell.openPath(path)
   });
+  ipcMain.handle('getFileNameWithType', (_event, filePath: string, format?:string) => {
+    return utils.getFileNameWithType(filePath, format)
+  });
 }

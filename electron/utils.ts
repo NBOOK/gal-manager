@@ -426,6 +426,21 @@ async function kuroshiroOp(op: string, params: any): Promise<string> {
   }
 }
 
+async function getFileNameWithType(
+  dirPath: string,
+  format: string = "exe"
+): Promise<string[]> {
+  try {
+    const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isFile() && entry.name.endsWith(`.${format}`))
+      .map((entry) => entry.name);
+  } catch (error) {
+    console.error("Error reading directory:", dirPath, error);
+    return [];
+  }
+}
+
 export default {
   scanDir,
   getDiskUsage,
@@ -442,4 +457,5 @@ export default {
   getGameID,
   sqliteDBOp,
   kuroshiroOp,
+  getFileNameWithType,
 };

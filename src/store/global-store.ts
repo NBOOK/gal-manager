@@ -1,9 +1,9 @@
 import { ref, computed, reactive } from "vue";
 import { defineStore } from "pinia";
-import GameEntry from "@modules/GameEntry";
-import SteamDB from "@modules/SteamDB";
-import LutrisDB from "@modules/LutrisDB";
-import utils from "@modules/utils";
+import GameEntry from "@/modules/GameEntry";
+import SteamDB from "@/modules/SteamDB";
+import LutrisDB from "@/modules/LutrisDB";
+import utils from "@/modules/utils";
 
 export const useGameStore = defineStore("globalStore", () => {
   // const games = ref<Record<string, ReturnType<typeof useGameStore>>>({});
@@ -76,3 +76,5 @@ export const useGameStore = defineStore("globalStore", () => {
     dbEditList,
   };
 });
+
+window.utils = utils;
