@@ -100,13 +100,15 @@ function registerIpcMain() {
   ipcMain.handle('fetchJsonConfig', (_event, jsonPath?: string) => {
     return utils.fetchJsonConfig(jsonPath)
   });
-  ipcMain.handle('saveJsonConfig', (_event, config: any, jsonPath?: string) => {
+  ipcMain.handle('saveJsonConfig', (_event, serializedConfig: string, jsonPath?: string) => {
+    const config = JSON.parse(serializedConfig)
     return utils.saveJsonConfig(config, jsonPath)
   });
   ipcMain.handle('fetchYamlConfig', (_event, yamlPath: string) => {
     return utils.fetchYamlConfig(yamlPath)
   });
-  ipcMain.handle('saveYamlConfig', (_event, config: any, yamlPath: string) => {
+  ipcMain.handle('saveYamlConfig', (_event, serializedConfig: string, yamlPath: string) => {
+    const config = JSON.parse(serializedConfig)
     return utils.saveYamlConfig(config, yamlPath)
   });
   ipcMain.handle('createSymbolicLink', (_event, source: string, target: string) => {

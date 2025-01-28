@@ -127,26 +127,49 @@ class GameEntry {
     this.imageAssets.basePath = this.basePath;
   }
 
-  async addDB() {
+  async addDB(gameConfig: GameConnfig) {
     //@TODO
-    //placeholder, maybe should create a new DB class?
-    if (!this.inLutrisDB)
+    // gameName always comes from folderName,
+    // If not match call other functions to rename the folder
+    // this.gameName = gameConfig.gameName;
+    if (
+      this.gameNameEN !== gameConfig.gameNameEN ||
+      this.gameNameSlug !== gameConfig.gameNameSlug
+    ) {
+      console.log(`New name of ${this.gameNameEN} is ${gameConfig.gameNameEN}`);
+      console.log(`Removing old ${this.gameNameEN} from DB...`);
+      await this.removeDB();
+      console.log(`${this.gameNameEN} removed from DB`);
+      this.gameNameEN = gameConfig.gameNameEN;
+      this.gameNameSlug = gameConfig.gameNameSlug;
+    }
+
+    if (!this.inLutrisDB) {
       console.log(`Adding ${this.folderName} to LutrisDB...`);
+      await gameStore.lutrisDB.addGame(this, gameConfig);
+      this.inLutrisDB = true;
+      console.log(`${this.folderName} added to LutrisDB`);
+    }
     if (!this.inSteamDB) {
       console.log(`Adding ${this.folderName} to SteamDB...`);
-      gameStore.steamDB.addGame(this);
+      await gameStore.steamDB.addGame(this);
       this.inSteamDB = true;
+      console.log(`${this.folderName} added to SteamDB`);
     }
   }
 
   async removeDB() {
     //@TODO
     //placeholder, maybe should create a new DB class?
-    if (this.inLutrisDB)
+    if (this.inLutrisDB) {
       console.log(`Removing ${this.folderName} from LutrisDB...`);
+      await gameStore.lutrisDB.removeGame(this);
+      this.inLutrisDB = false;
+    }
+
     if (this.inSteamDB) {
       console.log(`Removing ${this.folderName} from SteamDB...`);
-      gameStore.steamDB.removeGame(this);
+      await gameStore.steamDB.removeGame(this);
       this.inSteamDB = false;
     }
   }

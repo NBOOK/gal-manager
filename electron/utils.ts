@@ -324,7 +324,7 @@ async function sqliteDBConnect(dbPath: string): Promise<void> {
 async function sqliteDBInsert(
   gameNameEN: string,
   gameNameSlug: string,
-  id: number,
+  lutrisGameIndex: number,
   timestamp: number
 ): Promise<number> {
   const sqlInsert = `
@@ -338,7 +338,7 @@ async function sqliteDBInsert(
   `;
   // prettier-ignore
   const data = [
-    id, gameNameEN, gameNameSlug, null, "Windows", "wine", null,
+    lutrisGameIndex, gameNameEN, gameNameSlug, null, "Windows", "wine", null,
     "", null, 0, 1, timestamp,
     `${gameNameSlug}-${timestamp}`, 1, 0, 1,
     0.0, 0, null, null, null, "",
@@ -350,10 +350,10 @@ async function sqliteDBInsert(
   return result.lastInsertRowid as number;
 }
 
-async function sqliteDBDelete(gameNameEN: string): Promise<void> {
-  const sqlDelete = `DELETE FROM games WHERE name = ?;`;
+async function sqliteDBDelete(lutrisGameIndex: number): Promise<void> {
+  const sqlDelete = `DELETE FROM games WHERE id = ?;`;
   const statement: Statement = sqliteDB.prepare(sqlDelete);
-  statement.run(gameNameEN);
+  statement.run(lutrisGameIndex);
 }
 
 async function sqliteDBQuery(lutrisGameIndex: number): Promise<{
@@ -386,17 +386,17 @@ async function sqliteDBOp(op: string, params: any): Promise<any> {
         return await sqliteDBConnect(params.dbPath);
 
       case "insert":
-        // Insert operation requires gameNameEN, gameNameSlug, nextId, and timestamp
+        // Insert operation requires gameNameEN, gameNameSlug, lutrisGameIndex, and timestamp
         return await sqliteDBInsert(
           params.gameNameEN,
           params.gameNameSlug,
-          params.nextId,
+          params.lutrisGameIndex,
           params.timestamp
         );
 
       case "delete":
-        // Delete operation requires lutrisGameID
-        return await sqliteDBDelete(params.lutrisGameID);
+        // Delete operation requires lutrisGameIndex
+        return await sqliteDBDelete(params.lutrisGameIndex);
 
       case "query":
         // Query operation requires lutrisGameIndex

@@ -1,10 +1,15 @@
+import { toRomaji, toKana, isKana } from "wanakana";
 import GameEntry from "@/modules/GameEntry";
 const collator = new Intl.Collator("ja");
 
 function cleanAndCapitalize(input: string): string {
   const cleaned = input
-    .trim()
+    .replace(
+      /\s?([!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~“”‘’～∼＊、，。：？！ー‐－（）『』「」【】…．．．※＃・＋])\s?/g,
+      "$1"
+    )
     .replace(/\s+/g, " ")
+    .trim()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
   const capitalized = cleaned
@@ -21,16 +26,18 @@ function cleanAndCapitalize(input: string): string {
 }
 
 async function romanize(text: string): Promise<string> {
-  const romanized = await window.ipcRenderer.invoke("kuroshiroOp", "convert", {
+  const kanaed = await window.ipcRenderer.invoke("kuroshiroOp", "convert", {
     text: text,
-    to: "romaji",
+    to: "hiragana",
     mode: "spaced",
   });
+  const romanized = toRomaji(kanaed);
   const cleaned = cleanAndCapitalize(romanized);
   return cleaned;
 }
 
 function slugify(text: string): string {
+  if (!text) return "";
   return text
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -260,11 +267,8 @@ async function guessLauncher(executables: string[]): Promise<string[]> {
         text: exe,
       }
     );
-    const hiragana = await window.ipcRenderer.invoke("kuroshiroOp", "convert", {
-      text: exe,
-      to: "hiragana",
-    });
-    if (hasJapanese || !/[a-zA-Z]/.test(hiragana)) {
+    const pureRomaji = isKana(toKana(exe.toLowerCase().replace(/\.exe$/, "")));
+    if (hasJapanese || pureRomaji) {
       score += 2;
     }
 

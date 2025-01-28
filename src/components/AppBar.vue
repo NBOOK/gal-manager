@@ -241,6 +241,7 @@ function uncheckAllFilteredGames() {
         single-line
         max-width="51%"
         rounded="lg"
+        :spellcheck="false"
         v-model="gameStore.searchQuery"
         @keydown.esc="gameStore.searchQuery = ''"
       ></v-text-field>

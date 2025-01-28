@@ -1,17 +1,24 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch, watchEffect } from "vue";
 import { useGameStore } from "@/store/global-store";
 import GameEntry from "@/modules/GameEntry";
 import utils from "@/modules/utils";
 
 const gameStore = useGameStore();
+const emit = defineEmits(["proceed", "abort"]);
 const props = defineProps<{ game: GameEntry }>();
+const game = computed(() => props.game);
 const gameNameENCandidates = ref<VNTitle[]>([]);
-const enTitleLoading = ref(true);
 const isMenuOpen = ref(false);
 const slugSync = ref(true);
 const executables = ref<string[]>([]);
+const enTitleColor = ref("");
+const slugTitleColor = ref("");
+
+const enTitleLoading = ref(true);
 const executablesLoading = ref(true);
+const dbAdding = ref(false);
+const dbRemoving = ref(false);
 
 function slugify(name: string, slug: string) {
   if (slugSync.value) {
@@ -30,9 +37,7 @@ const titleKindColor = {
 const gameConnfig = reactive({
   gameName: "",
   gameNameEN: "",
-  gameNameENColor: "",
   gameNameSlug: "",
-  gameNameSlugColor: "",
   winePrefix: "",
   wineRunner: "",
   executable: "",
@@ -43,11 +48,20 @@ async function getGameNameENCandidates() {
   enTitleLoading.value = true;
   gameNameENCandidates.value = await utils.getGameNameEN(gameConnfig.gameName);
   gameConnfig.gameNameEN = gameNameENCandidates.value[0].title;
-  gameConnfig.gameNameENColor =
-    titleKindColor[gameNameENCandidates.value[0].kind];
+  enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
   gameConnfig.gameNameSlug = slugify(gameConnfig.gameNameEN, "");
   enTitleLoading.value = false;
 }
+
+watch(
+  () => gameConnfig.gameNameEN,
+  () => {
+    gameConnfig.gameNameSlug = slugify(
+      gameConnfig.gameNameEN,
+      gameConnfig.gameNameSlug
+    );
+  }
+);
 
 watch(
   () => props.game,
@@ -58,9 +72,9 @@ watch(
         props.game.gameName
       );
       gameConnfig.gameNameEN = props.game.gameNameEN;
-      gameConnfig.gameNameENColor = "#EDE7F6";
+      enTitleColor.value = "#EDE7F6";
       gameConnfig.gameNameSlug = props.game.gameNameSlug;
-      gameConnfig.gameNameSlugColor = "#EDE7F6";
+      slugTitleColor.value = "#EDE7F6";
       enTitleLoading.value = false;
     } else {
       await getGameNameENCandidates();
@@ -68,18 +82,57 @@ watch(
 
     const gamePath = `${props.game.basePath}/${props.game.gameBrand}${props.game.splitter}${props.game.gameName}`;
     executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
-      .filter((file: DirEntry) => file.isFile && file.name.endsWith(".exe"))
+      .filter(
+        (file: DirEntry) =>
+          file.isFile && file.name.toLowerCase().endsWith(".exe")
+      )
       .map((file: DirEntry) => file.name);
     executables.value = await utils.guessLauncher(executables.value);
     gameConnfig.executable = executables.value[0];
     executablesLoading.value = false;
 
-    gameConnfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
-    gameConnfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
-    gameConnfig.locale = "ja_JP.utf8";
+    if (
+      gameStore.lutrisDB.winePrefixes.includes(
+        gameStore.config.lutrisDefaultWinePrefix
+      )
+    )
+      gameConnfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
+    else gameConnfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
+
+    if (
+      gameStore.lutrisDB.wineRunners.includes(
+        gameStore.config.lutrisDefaultWineRunner
+      )
+    )
+      gameConnfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
+    else gameConnfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
+
+    if (gameStore.config.locale) gameConnfig.locale = gameStore.config.locale;
+    else gameConnfig.locale = "ja_JP.utf8";
   },
   { immediate: true }
 );
+
+async function addGameToDB() {
+  // @TODO: check if game name changed,
+  // if so ask for confirmation and rename the game folder
+  if (gameConnfig.gameName !== props.game.gameName) {
+    console.log("Game name changed!");
+    // prompt for confirmation
+    return;
+  }
+  dbAdding.value = true;
+  await props.game.addDB(gameConnfig);
+  dbAdding.value = false;
+  emit("proceed");
+}
+
+async function removeGameFromDB() {
+  dbRemoving.value = true;
+  await props.game.removeDB();
+  dbRemoving.value = false;
+  emit("proceed");
+}
 </script>
 
 <template>
@@ -97,43 +150,13 @@ watch(
           prepend-icon="mdi-ideogram-cjk-variant"
           :spellcheck="false"
           v-model="gameConnfig.gameName"
+          class="vn-title-textinput"
         >
           <template #append-inner>
             <v-icon
               style="cursor: pointer"
               icon="mdi-search-web"
               @click="getGameNameENCandidates"
-            ></v-icon>
-          </template> </v-text-field
-      ></v-row>
-
-      <!-- ------------------------- Slug Title ------------------------------- -->
-      <v-row class="flex-grow-0">
-        <v-text-field
-          density="compact"
-          label="Slug"
-          variant="outlined"
-          clearable
-          clear-icon="mdi-backspace-outline"
-          placeholder="Game's title slug (identifier)."
-          prepend-icon="mdi-identifier"
-          :spellcheck="false"
-          v-model="gameConnfig.gameNameSlug"
-          :bg-color="
-            gameConnfig.gameNameSlug ? gameConnfig.gameNameSlugColor : ''
-          "
-          @input="
-            () => {
-              gameConnfig.gameNameSlugColor = '';
-              slugSync = false;
-            }
-          "
-        >
-          <template #append-inner>
-            <v-icon
-              style="cursor: pointer"
-              :icon="slugSync ? 'mdi-sync' : 'mdi-sync-off'"
-              @click="slugSync = !slugSync"
             ></v-icon>
           </template> </v-text-field
       ></v-row>
@@ -151,18 +174,15 @@ watch(
           :spellcheck="false"
           :loading="enTitleLoading"
           v-model="gameConnfig.gameNameEN"
-          :bg-color="gameConnfig.gameNameEN ? gameConnfig.gameNameENColor : ''"
+          :bg-color="gameConnfig.gameNameEN ? enTitleColor : ''"
           @input="
             () => {
-              gameConnfig.gameNameENColor = '';
-              gameConnfig.gameNameSlug = slugify(
-                gameConnfig.gameNameEN,
-                gameConnfig.gameNameSlug
-              );
-              gameConnfig.gameNameSlugColor = '';
+              enTitleColor = '';
+              slugTitleColor = '';
               isMenuOpen = false;
             }
           "
+          class="vn-title-textinput"
         >
           <template #append-inner>
             <v-icon
@@ -191,7 +211,8 @@ watch(
                 @click="
                   () => {
                     gameConnfig.gameNameEN = item.title;
-                    gameConnfig.gameNameENColor = titleKindColor[item.kind];
+                    enTitleColor = titleKindColor[item.kind];
+                    slugTitleColor = '';
                   }
                 "
               >
@@ -209,6 +230,36 @@ watch(
         </v-text-field>
       </v-row>
 
+      <!-- ------------------------- Slug Title ------------------------------- -->
+      <v-row class="flex-grow-0">
+        <v-text-field
+          density="compact"
+          label="Slug"
+          variant="outlined"
+          clearable
+          clear-icon="mdi-backspace-outline"
+          placeholder="Game's title slug (identifier)."
+          prepend-icon="mdi-identifier"
+          :spellcheck="false"
+          v-model="gameConnfig.gameNameSlug"
+          :bg-color="gameConnfig.gameNameSlug ? slugTitleColor : ''"
+          @input="
+            () => {
+              slugTitleColor = '';
+              slugSync = false;
+            }
+          "
+          class="vn-title-textinput"
+        >
+          <template #append-inner>
+            <v-icon
+              style="cursor: pointer"
+              :icon="slugSync ? 'mdi-sync' : 'mdi-sync-off'"
+              @click="slugSync = !slugSync"
+            ></v-icon>
+          </template> </v-text-field
+      ></v-row>
+
       <!-- ------------------------- Steam/Lutris Categories ------------------------------- -->
       <!-- @TODO add lutris category support -->
       <v-row class="flex-grow-0">
@@ -224,6 +275,7 @@ watch(
           prepend-icon="mdi-tag-multiple"
           clear-icon="mdi-backspace-outline"
           :menu-props="{ transition: 'slide-y-transition' }"
+          class="vn-title-textinput"
         ></v-combobox>
       </v-row>
 
@@ -235,7 +287,8 @@ watch(
           elevation="0"
           rounded="10"
           width="100%"
-          style="margin-left: 38px"
+          style="margin-left: 40px"
+          :loading="executablesLoading"
         >
           <v-list-subheader
             style="
@@ -388,24 +441,30 @@ watch(
               variant="outlined"
               :color="isHovering ? 'red' : 'grey-darken-4'"
               class="ml-2"
-              @click="$emit('abort')"
+              :disabled="game.inDatabase === 0 || dbAdding"
+              :loading="dbRemoving"
+              @click="removeGameFromDB"
               >Remove</v-btn
             >
           </template>
         </v-hover>
+
         <v-btn
           prepend-icon="mdi-stop"
           variant="outlined"
           color="grey-darken-4"
           class="ml-2"
+          :disabled="dbAdding || dbRemoving"
           @click="$emit('abort')"
           >Stop</v-btn
         >
+
         <v-btn
           prepend-icon="mdi-skip-next"
           variant="outlined"
           color="grey-darken-4"
           class="ml-2"
+          :disabled="dbAdding || dbRemoving"
           @click="$emit('proceed')"
           >Skip</v-btn
         >
@@ -414,11 +473,9 @@ watch(
           variant="outlined"
           color="green"
           class="ml-2"
-          @click="
-            () => {
-              $emit('proceed');
-            }
-          "
+          :disabled="dbRemoving"
+          :loading="dbAdding"
+          @click="addGameToDB"
           >Add to Database</v-btn
         >
       </v-row>

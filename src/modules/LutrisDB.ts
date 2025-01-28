@@ -1,4 +1,5 @@
 import GameEntry from "@/modules/GameEntry";
+import { Mutex } from "async-mutex";
 
 class LutrisDB {
   private static instance: LutrisDB | null = null;
@@ -9,10 +10,10 @@ class LutrisDB {
   private lutrisIconPath: string = "";
   private lutrisBannerPath: string = "";
   private lutrisCoverPath: string = "";
-  private lutrisDdefaultLocale: string = "";
-  private lutrisDefaultRunner: string = "";
-  private lutrisDefaultWinePrefix: string = "";
-  private lutrisLaunchOptions: string = "";
+  // private lutrisDdefaultLocale: string = "";
+  // private lutrisDefaultRunner: string = "";
+  // private lutrisDefaultWinePrefix: string = "";
+  // private lutrisLaunchOptions: string = "";
   private wineRunnerPath: string = "";
   private winePrefixPath: string = "";
   wineRunners: string[] = [];
@@ -22,8 +23,9 @@ class LutrisDB {
   private lutrisGameList: Record<string, string> = {};
   private lutrisGameIndices: Record<string, number> = {};
 
-  private taskQueue: { action: "add" | "remove"; game: GameEntry }[] = [];
-  private processing: boolean = false;
+  // private taskQueue: { action: "add" | "remove"; game: GameEntry }[] = [];
+  // private processing: boolean = false;
+  private mutex = new Mutex();
 
   constructor() {
     if (LutrisDB.instance) {
@@ -39,28 +41,11 @@ class LutrisDB {
     this.lutrisIconPath = config.lutrisIconPath;
     this.lutrisBannerPath = config.lutrisBannerPath;
     this.lutrisCoverPath = config.lutrisCoverPath;
-    this.lutrisDdefaultLocale = config.lutrisDdefaultLocale;
-    this.lutrisDefaultRunner = config.lutrisDefaultRunner;
-    this.lutrisDefaultWinePrefix = config.lutrisDefaultWinePrefix;
-    this.lutrisLaunchOptions = config.lutrisLaunchOptions;
     this.wineRunnerPath = config.wineRunnerPath;
     this.winePrefixPath = config.winePrefixPath;
+    this.linkLowRes = config.assetsLinkLowRes;
 
-    console.log(
-      this.lutrisGameConfigPath,
-      this.lutrisGameListPath,
-      this.lutrisDBPath,
-      this.lutrisIconPath,
-      this.lutrisBannerPath,
-      this.lutrisCoverPath,
-      this.lutrisDdefaultLocale,
-      this.lutrisDefaultRunner,
-      this.lutrisDefaultWinePrefix,
-      this.lutrisLaunchOptions,
-      this.wineRunnerPath,
-      this.winePrefixPath
-    );
-
+    // get wine runners (folder name only)
     this.wineRunners = (
       await window.ipcRenderer.invoke("scanDir", this.wineRunnerPath)
     )
@@ -72,6 +57,9 @@ class LutrisDB {
         }
         return a.includes("latest") ? -1 : 1;
       });
+    this.wineRunners.unshift("default");
+
+    // get wine prefixes (folder name only)
     this.winePrefixes = (
       await window.ipcRenderer.invoke("scanDir", this.winePrefixPath)
     )
@@ -84,14 +72,17 @@ class LutrisDB {
         return a.includes("ADV") ? -1 : 1;
       });
 
+    // connect DB
     await window.ipcRenderer.invoke("sqliteDBOp", "connect", {
       dbPath: this.lutrisDBPath,
     });
 
+    // load lutris game-paths.json
     this.lutrisGameList = await window.ipcRenderer.invoke(
-      "fetchYamlConfig",
+      "fetchJsonConfig",
       this.lutrisGameListPath
     );
+    // convert [{id: exePath}...] to {gameName: id}
     Object.keys(this.lutrisGameList).forEach((key) => {
       const path = this.lutrisGameList[key];
       const pathParts = path.split("/");
@@ -104,49 +95,190 @@ class LutrisDB {
     });
   }
 
-  private async processQueue() {
-    if (this.processing) {
-      return;
-    }
-    this.processing = true;
-    while (this.taskQueue.length > 0) {
-      const task = this.taskQueue.shift()!;
-      if (task.action === "add") {
-        await this._addGame(task.game);
-      } else if (task.action === "remove") {
-        await this._removeGame(task.game);
-      }
-    }
-    this.processing = false;
+  // private async processQueue() {
+  //   if (this.processing) {
+  //     return;
+  //   }
+  //   this.processing = true;
+  //   while (this.taskQueue.length > 0) {
+  //     const task = this.taskQueue.shift()!;
+  //     if (task.action === "add") {
+  //       await this._addGame(task.game);
+  //     } else if (task.action === "remove") {
+  //       await this._removeGame(task.game);
+  //     }
+  //   }
+  //   this.processing = false;
+  // }
+
+  async addGame(game: GameEntry, gameConfig: GameConnfig) {
+    // this.taskQueue.push({ action: "remove", game });
+    // this.processQueue(); // @TOCHECK should we await this?
+    await this.mutex.runExclusive(
+      async () => await this._addGame(game, gameConfig)
+    );
   }
 
   async removeGame(game: GameEntry) {
-    this.taskQueue.push({ action: "remove", game });
-    this.processQueue(); // @TOCHECK should we await this?
+    // this.taskQueue.push({ action: "remove", game });
+    // this.processQueue(); // @TOCHECK should we await this?
+    await this.mutex.runExclusive(async () => await this._removeGame(game));
   }
 
-  async _addGame(game: GameEntry) {
-    console.log("Adding: ", game);
-  }
+  private async _addGame(game: GameEntry, gameConfig: GameConnfig) {
+    console.log("Adding: ", game, gameConfig);
+    const timestamp: number = Math.floor(Date.now() / 1000);
+    const exePath = `${game.basePath}/${game.folderName}/${gameConfig.executable}`;
+    const lutrisPerGameConfig: {
+      name: string;
+      game_slug: string;
+      game: { exe: string; prefix: string };
+      system: { locale: string };
+      wine?: { version: string };
+    } = {
+      name: gameConfig.gameNameEN,
+      game_slug: gameConfig.gameNameSlug,
+      game: {
+        exe: exePath,
+        prefix: `${this.winePrefixPath}/${gameConfig.winePrefix}`,
+      },
+      system: { locale: gameConfig.locale },
+    };
+    if (gameConfig.wineRunner !== "default") {
+      lutrisPerGameConfig.wine = { version: gameConfig.wineRunner };
+    }
 
-  async _removeGame(game: GameEntry) {
-    console.log("Removing: ", game);
-  }
-
-  async getGameConfig(gameConfigName: string): Promise<Record<string, string>> {
-    return await window.ipcRenderer.invoke(
-      "fetchYamlConfig",
-      `${this.lutrisGameConfigPath}/${gameConfigName}.yml`
-    );
-  }
-
-  async saveGameConfig(gameConfigName: string, config: Record<string, string>) {
-    return await window.ipcRenderer.invoke(
+    // save per game config
+    console.log("Saving pergame config: ", lutrisPerGameConfig);
+    await window.ipcRenderer.invoke(
       "saveYamlConfig",
-      config,
-      `${this.lutrisGameConfigPath}/${gameConfigName}.yml`
+      JSON.stringify(lutrisPerGameConfig),
+      `${this.lutrisGameConfigPath}/${gameConfig.gameNameSlug}-${timestamp}.yml`
     );
+    console.log("Per game config saved");
+
+    // update lutris game-paths.json
+    console.log("Updating game list");
+    const lutrisGameIndex = this.getGameIndex(game);
+    this.lutrisGameIndices[game.gameName] = lutrisGameIndex;
+    this.lutrisGameList[lutrisGameIndex.toString()] = exePath;
+    await window.ipcRenderer.invoke(
+      "saveJsonConfig",
+      JSON.stringify(this.lutrisGameList),
+      this.lutrisGameListPath
+    );
+    console.log("Game list updated");
+
+    // update lutrisDB
+    console.log("Updating lutrisDB+");
+    await window.ipcRenderer.invoke("sqliteDBOp", "insert", {
+      gameNameEN: gameConfig.gameNameEN,
+      gameNameSlug: gameConfig.gameNameSlug,
+      lutrisGameIndex: lutrisGameIndex,
+      timestamp: timestamp,
+    });
+    console.log("lutrisDB updated+");
+
+    // link images, not awaiting is OK
+    console.log("Linking images");
+    await this.linkImageAssets(game, gameConfig);
+    console.log("Images linked");
   }
+
+  private async linkImageAssets(game: GameEntry, gameConfig: GameConnfig) {
+    await window.ipcRenderer.invoke(
+      "createSymbolicLink",
+      game.imageAssets.iconPath,
+      `${this.lutrisIconPath}/lutris_${gameConfig.gameNameSlug}.png` // icon has lutris_ prefix and is always png
+    );
+    if (this.linkLowRes) {
+      await window.ipcRenderer.invoke(
+        "createSymbolicLink",
+        game.imageAssets.capsuleSDPath,
+        `${this.lutrisCoverPath}/${gameConfig.gameNameSlug}.jpg` // extention doesn't matter here
+      );
+      await window.ipcRenderer.invoke(
+        "createSymbolicLink",
+        game.imageAssets.headerSDPath,
+        `${this.lutrisBannerPath}/${gameConfig.gameNameSlug}.jpg`
+      );
+    } else {
+      await window.ipcRenderer.invoke(
+        "createSymbolicLink",
+        game.imageAssets.capsulePath,
+        `${this.lutrisCoverPath}/${gameConfig.gameNameSlug}.jpg` // extention doesn't matter here
+      );
+      await window.ipcRenderer.invoke(
+        "createSymbolicLink",
+        game.imageAssets.headerPath,
+        `${this.lutrisBannerPath}/${gameConfig.gameNameSlug}.jpg`
+      );
+    }
+  }
+
+  private async _removeGame(game: GameEntry) {
+    console.log("Removing: ", game);
+    const lutrisGameIndex = this.getGameIndex(game);
+    const perGameConfigName = (await this.getGameProperties(game))
+      .gameConfigName;
+
+    // remove per game config
+    console.log("Removing per game config");
+    await window.ipcRenderer.invoke(
+      "removeSymbolicLink",
+      `${this.lutrisGameConfigPath}/${perGameConfigName}.yml`
+    );
+    console.log("Per game config removed");
+
+    // update lutris game-paths.json
+    console.log("Updating game list");
+    delete this.lutrisGameIndices[game.gameName];
+    delete this.lutrisGameList[lutrisGameIndex.toString()];
+    await window.ipcRenderer.invoke(
+      "saveJsonConfig",
+      JSON.stringify(this.lutrisGameList),
+      this.lutrisGameListPath
+    );
+    console.log("Game list updated");
+
+    // update lutrisDB
+    console.log("Updating lutrisDB-");
+    await window.ipcRenderer.invoke("sqliteDBOp", "delete", {
+      lutrisGameIndex: lutrisGameIndex,
+    });
+    console.log("lutrisDB- updated");
+
+    // unlink images, not awaiting is OK
+    console.log("Unlinking images");
+    await window.ipcRenderer.invoke(
+      "removeSymbolicLink",
+      `${this.lutrisCoverPath}/${game.gameNameSlug}.jpg`
+    );
+    await window.ipcRenderer.invoke(
+      "removeSymbolicLink",
+      `${this.lutrisBannerPath}/${game.gameNameSlug}.jpg`
+    );
+    await window.ipcRenderer.invoke(
+      "removeSymbolicLink",
+      `${this.lutrisIconPath}/lutris_${game.gameNameSlug}.png`
+    );
+    console.log("Images unlinked");
+  }
+
+  // async getGameConfig(gameConfigName: string): Promise<Record<string, string>> {
+  //   return await window.ipcRenderer.invoke(
+  //     "fetchYamlConfig",
+  //     `${this.lutrisGameConfigPath}/${gameConfigName}.yml`
+  //   );
+  // }
+
+  // async saveGameConfig(gameConfigName: string, config: Record<string, string>) {
+  //   return await window.ipcRenderer.invoke(
+  //     "saveYamlConfig",
+  //     config,
+  //     `${this.lutrisGameConfigPath}/${gameConfigName}.yml`
+  //   );
+  // }
 
   inDB(game: GameEntry): boolean {
     return this.lutrisGameIndices[game.gameName] !== undefined;

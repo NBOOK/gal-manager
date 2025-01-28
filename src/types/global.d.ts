@@ -25,5 +25,15 @@ declare global {
     kind: "romanized" | "alias" | "title" | "releaseTitle";
     weight: number;
   }
+
+  interface GameConnfig {
+    gameName: string;
+    gameNameEN: string;
+    gameNameSlug: string;
+    winePrefix: string;
+    wineRunner: string;
+    executable: string;
+    locale: string;
+  }
 }
 export {};

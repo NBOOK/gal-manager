@@ -1,5 +1,6 @@
 import GameEntry from "@/modules/GameEntry";
 import { VdfMap } from "steam-binary-vdf";
+import { Mutex } from "async-mutex";
 
 class SteamDB {
   private static instance: SteamDB | null = null;
@@ -13,8 +14,10 @@ class SteamDB {
 
   private steamGameIndices: Record<string, number> = {};
 
-  private taskQueue: { action: "add" | "remove"; game: GameEntry }[] = [];
-  private processing: boolean = false;
+  private mutex = new Mutex();
+
+  // private taskQueue: { action: "add" | "remove"; game: GameEntry }[] = [];
+  // private processing: boolean = false;
 
   constructor() {
     if (SteamDB.instance) {
@@ -45,25 +48,26 @@ class SteamDB {
     }
   }
 
-  private async processQueue() {
-    if (this.processing) {
-      return;
-    }
-    this.processing = true;
-    while (this.taskQueue.length > 0) {
-      const task = this.taskQueue.shift()!;
-      if (task.action === "add") {
-        await this._addGame(task.game);
-      } else if (task.action === "remove") {
-        await this._removeGame(task.game);
-      }
-    }
-    this.processing = false;
-  }
+  // private async processQueue() {
+  //   if (this.processing) {
+  //     return;
+  //   }
+  //   this.processing = true;
+  //   while (this.taskQueue.length > 0) {
+  //     const task = this.taskQueue.shift()!;
+  //     if (task.action === "add") {
+  //       await this._addGame(task.game);
+  //     } else if (task.action === "remove") {
+  //       await this._removeGame(task.game);
+  //     }
+  //   }
+  //   this.processing = false;
+  // }
 
   async removeGame(game: GameEntry) {
-    this.taskQueue.push({ action: "remove", game });
-    this.processQueue(); // @TOCHECK should we await this?
+    // this.taskQueue.push({ action: "remove", game });
+    // this.processQueue(); // @TOCHECK should we await this?
+    await this.mutex.runExclusive(async () => await this._removeGame(game));
   }
 
   private async _removeGame(game: GameEntry) {
@@ -73,20 +77,26 @@ class SteamDB {
     const gameIndex: string = this.getGameIndex(game).toString();
     const appID = this.getAppID(game.gameNameEN);
     delete (this.vdf.shortcuts as Record<string, any>)[gameIndex];
-    window.ipcRenderer.invoke(
+
+    console.log("Writing VDF- file", this.steamShortcutPath, this.vdf);
+    await window.ipcRenderer.invoke(
       "writeVdfFile",
       this.steamShortcutPath,
       JSON.stringify(this.vdf)
     );
+    console.log("VDF- file written");
 
-    this.unlinkImageAssets(game, appID);
+    console.log("Unlinking image assets", game, appID);
+    await this.unlinkImageAssets(game, appID);
+    console.log("Image assets unlinked");
 
     delete this.steamGameIndices[game.gameNameEN];
   }
 
   async addGame(game: GameEntry) {
-    this.taskQueue.push({ action: "add", game });
-    this.processQueue(); // @TOCHECK should we await this?
+    // this.taskQueue.push({ action: "add", game });
+    // this.processQueue(); // @TOCHECK should we await this?
+    await this.mutex.runExclusive(async () => await this._addGame(game));
   }
 
   private async _addGame(game: GameEntry) {
@@ -119,13 +129,17 @@ class SteamDB {
 
     (this.vdf.shortcuts as Record<string, any>)[gameIndex] = shortcut;
 
-    window.ipcRenderer.invoke(
+    console.log("Writing VDF+ file", this.steamShortcutPath, this.vdf);
+    await window.ipcRenderer.invoke(
       "writeVdfFile",
       this.steamShortcutPath,
       JSON.stringify(this.vdf)
     );
+    console.log("VDF+ file written");
 
-    this.linkImageAssets(game, appID);
+    console.log("Linking image assets", game, appID);
+    await this.linkImageAssets(game, appID);
+    console.log("Image assets linked");
 
     this.steamGameIndices[game.gameNameEN] = parseInt(gameIndex, 10);
   }
@@ -159,7 +173,7 @@ class SteamDB {
   }
 
   async linkImageAssets(game: GameEntry, appID?: number) {
-    if (!this.vdf || !this.vdf.shortcuts || !this.inDB(game)) {
+    if (!this.vdf || !this.vdf.shortcuts) {
       return;
     }
     if (!appID) {
@@ -168,20 +182,20 @@ class SteamDB {
         .appid as number;
     }
 
-    this.linkImage(game.imageAssets.logoPath, appID, "_logo");
+    await this.linkImage(game.imageAssets.logoPath, appID, "_logo");
     if (this.linkLowRes) {
-      this.linkImage(game.imageAssets.headerSDPath, appID, "");
-      this.linkImage(game.imageAssets.capsuleSDPath, appID, "p");
-      this.linkImage(game.imageAssets.heroSDPath, appID, "_hero");
+      await this.linkImage(game.imageAssets.headerSDPath, appID, "");
+      await this.linkImage(game.imageAssets.capsuleSDPath, appID, "p");
+      await this.linkImage(game.imageAssets.heroSDPath, appID, "_hero");
     } else {
-      this.linkImage(game.imageAssets.headerPath, appID, "");
-      this.linkImage(game.imageAssets.capsulePath, appID, "p");
-      this.linkImage(game.imageAssets.heroPath, appID, "_hero");
+      await this.linkImage(game.imageAssets.headerPath, appID, "");
+      await this.linkImage(game.imageAssets.capsulePath, appID, "p");
+      await this.linkImage(game.imageAssets.heroPath, appID, "_hero");
     }
   }
 
-  async unlinkImageAssets(game: GameEntry, appID?: number) {
-    if (!this.vdf || !this.vdf.shortcuts || !this.inDB(game)) {
+  private async unlinkImageAssets(game: GameEntry, appID?: number) {
+    if (!this.vdf || !this.vdf.shortcuts) {
       return;
     }
     if (!appID) {
@@ -190,29 +204,37 @@ class SteamDB {
         .appid as number;
     }
 
-    this.unlinkImage(game.imageAssets.logoPath, appID, "_logo");
-    this.unlinkImage("dummy.json", appID, "");
+    await this.unlinkImage(game.imageAssets.logoPath, appID, "_logo");
+    await this.unlinkImage("dummy.json", appID, "");
     if (this.linkLowRes) {
-      this.unlinkImage(game.imageAssets.headerSDPath, appID, "");
-      this.unlinkImage(game.imageAssets.capsuleSDPath, appID, "p");
-      this.unlinkImage(game.imageAssets.heroSDPath, appID, "_hero");
+      await this.unlinkImage(game.imageAssets.headerSDPath, appID, "");
+      await this.unlinkImage(game.imageAssets.capsuleSDPath, appID, "p");
+      await this.unlinkImage(game.imageAssets.heroSDPath, appID, "_hero");
     } else {
-      this.unlinkImage(game.imageAssets.headerPath, appID, "");
-      this.unlinkImage(game.imageAssets.capsulePath, appID, "p");
-      this.unlinkImage(game.imageAssets.heroPath, appID, "_hero");
+      await this.unlinkImage(game.imageAssets.headerPath, appID, "");
+      await this.unlinkImage(game.imageAssets.capsulePath, appID, "p");
+      await this.unlinkImage(game.imageAssets.heroPath, appID, "_hero");
     }
   }
 
-  private linkImage(sourcePath: string, appID: number, suffix: string) {
+  private async linkImage(sourcePath: string, appID: number, suffix: string) {
     const assetExtention = sourcePath.split(".").pop();
     const targetPath = `${this.steamGridPath}/${appID}${suffix}.${assetExtention}`;
-    window.ipcRenderer.invoke("createSymbolicLink", sourcePath, targetPath);
+
+    console.log(`${sourcePath} -> ${targetPath}`);
+    await window.ipcRenderer.invoke(
+      "createSymbolicLink",
+      sourcePath,
+      targetPath
+    );
   }
 
-  private unlinkImage(sourcePath: string, appID: number, suffix: string) {
+  private async unlinkImage(sourcePath: string, appID: number, suffix: string) {
     const assetExtention = sourcePath.split(".").pop();
     const targetPath = `${this.steamGridPath}/${appID}${suffix}.${assetExtention}`;
-    window.ipcRenderer.invoke("removeSymbolicLink", targetPath);
+
+    console.log(`[X] ${targetPath}`);
+    await window.ipcRenderer.invoke("removeSymbolicLink", targetPath);
   }
 
   private getGameIndex(game: GameEntry): number {

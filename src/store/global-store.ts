@@ -79,10 +79,10 @@ export const useGameStore = defineStore("globalStore", () => {
 
 // Extend the Window interface to include the utils property
 // For debugging purposes only
-// declare global {
-//   interface Window {
-//     utils: typeof utils;
-//   }
-// }
+declare global {
+  interface Window {
+    utils: typeof utils;
+  }
+}
 
-// window.utils = utils;
+window.utils = utils;
