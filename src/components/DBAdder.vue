@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch, watchEffect } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useGameStore } from "@/store/global-store";
 import GameEntry from "@/modules/GameEntry";
 import utils from "@/modules/utils";
@@ -550,6 +550,10 @@ async function removeGameFromDB() {
   width: 100%;
   max-width: 24px;
   min-width: 0px;
-  flex-shrink: 1.25;
+  flex-shrink: 1.32;
+}
+
+.v-list-item-title {
+  font-size: 14px;
 }
 </style>

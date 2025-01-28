@@ -6,6 +6,7 @@ import GameEntry from "@/modules/GameEntry";
 const gameStore = useGameStore();
 const currentGame = ref<string>("");
 const processedGames = ref<number>(0);
+const processedBuffer = ref<number>(0);
 const totalGames = ref<number>(0);
 
 async function scanGames() {
@@ -45,6 +46,7 @@ async function scanGames() {
     const batchTasks = entries.map(async (entry) => {
       //.slice(0, 10)
       if (!gameStore.games[entry.name]) {
+        processedBuffer.value++;
         // console.log('Game entry:', entry.name, 'processing');
         gameStore.games[entry.name] = new GameEntry();
         await gameStore.games[entry.name].setup(entry);
@@ -87,17 +89,60 @@ watch(
 </script>
 
 <template>
-  <div v-if="gameStore.loading" class="overlay">
-    <div class="loading-content">
-      <p>{{ processedGames }}/{{ totalGames }}</p>
-      <p>Processing: {{ currentGame }}</p>
-      <progress :value="processedGames" :max="totalGames"></progress>
-      <v-progress-linear
-        :model-value="processedGames"
-        :max="totalGames"
-      ></v-progress-linear>
-    </div>
-  </div>
+  <v-overlay
+    v-model="gameStore.loading"
+    no-click-animation
+    persistent
+    class="align-center justify-center"
+    style="backdrop-filter: blur(1rem)"
+  >
+    <v-container width="100vw" max-height="100vh">
+      <div v-if="processedGames === 0">
+        <div
+          class="mb-5 text-center align-content-center text-h5 font-weight-bold"
+        >
+          <v-progress-circular
+            indeterminate
+            size="100"
+            width="7"
+            color="white"
+            class="justify-center align-content-center"
+          ></v-progress-circular>
+        </div>
+        <div
+          class="text-center align-content-center text-h5 font-weight-bold"
+          style="color: white"
+        >
+          Scanning games...
+        </div>
+      </div>
+      <div v-if="processedGames > 0">
+        <div
+          class="mb-5 text-center align-content-center text-h5 font-weight-bold"
+          style="color: white; height: 100px"
+        >
+          {{ currentGame }}
+        </div>
+        <v-progress-linear
+          height="10"
+          color="white"
+          buffer-color="green-lighten-3"
+          buffer-opacity="1"
+          rounded
+          stream
+          :model-value="processedGames"
+          :buffer-value="processedBuffer"
+          :max="totalGames"
+        ></v-progress-linear>
+        <div
+          class="mt-3 text-h5 text-center font-weight-medium"
+          style="color: white"
+        >
+          {{ processedGames }} / {{ totalGames }}
+        </div>
+      </div>
+    </v-container>
+  </v-overlay>
 </template>
 
 <style scoped>
