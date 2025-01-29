@@ -169,6 +169,7 @@ class SteamDB {
 
     const crc32Result = crc32(data);
     const appID = (crc32Result | 0x80000000) >>> 0;
+    console.log(`AppID for ${uniqueID}: ${appID}`);
     return appID;
   }
 

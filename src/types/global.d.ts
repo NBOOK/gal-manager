@@ -28,6 +28,7 @@ declare global {
 
   interface GameConnfig {
     gameName: string;
+    gameBrand: string;
     gameNameEN: string;
     gameNameSlug: string;
     winePrefix: string;

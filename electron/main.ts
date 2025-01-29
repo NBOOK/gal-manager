@@ -148,4 +148,29 @@ function registerIpcMain() {
   ipcMain.handle('getFileNameWithType', (_event, filePath: string, format?:string) => {
     return utils.getFileNameWithType(filePath, format)
   });
+  ipcMain.handle('renameItem', (_event, oldPath: string, newPath: string) => {
+    return utils.renameItem(oldPath, newPath)
+  });
+  ipcMain.handle('removeItem', (_event, path: string) => {
+    return utils.removeItem(path)
+  });
+  ipcMain.handle('start-copy', async (event, { source, destination }) => {
+    try {
+        const totalSize = await utils.getTotalSize(source);
+        let copiedSize = { value: 0 };
+
+        if ((await fs.promises.stat(source)).isDirectory()) {
+            await utils.copyDirectory(source, destination, event, totalSize, copiedSize);
+        } else {
+            await utils.copyFileWithProgress(source, destination, event, totalSize, copiedSize);
+        }
+
+        event.sender.send('copy-finished', { success: true });
+    } catch (error) {
+        event.sender.send('copy-finished', { success: false, error: (error as Error).message });
+    }
+  });
+  ipcMain.handle('readlink', (_event, path: string) => {
+    return fs.promises.readlink(path);
+  });
 }

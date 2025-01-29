@@ -59,24 +59,6 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
 
           // 如果是目录（或符号链接指向目录），计算磁盘占用和时间戳
           if (result.isDirectory) {
-            // let totalSize = 0;
-            // const calculateDiskUsage = async (dir: string) => {
-            //   const subEntries = await fs.promises.readdir(dir, { withFileTypes: true });
-            //   for (const subEntry of subEntries) {
-            //     const subEntryPath = path.join(dir, subEntry.name);
-            //     const subStats = await fs.promises.stat(subEntryPath);
-            //     if (subEntry.isDirectory()) {
-            //       await calculateDiskUsage(subEntryPath); // 递归子目录
-            //     } else {
-            //       totalSize += subStats.size; // 文件大小
-            //     }
-            //   }
-            // };
-
-            // await calculateDiskUsage(entryPath); // 开始计算磁盘占用
-            // result.diskUsage = totalSize;
-            // result.diskUsage = await getDiskUsage(entryPath);
-
             // 获取创建时间和修改时间
             const stats = await fs.promises.stat(entryPath);
             result.createdTime = stats.birthtimeMs;
@@ -268,7 +250,7 @@ async function resizeImage(
       })
       .toFile(targetPath);
 
-    return targetPath;
+    return targetName;
   } catch (error) {
     console.error("Error resizing image:", error);
     throw error;
@@ -448,6 +430,109 @@ async function getFileNameWithType(
   }
 }
 
+async function renameItem(oldPath: string, newPath: string): Promise<void> {
+  try {
+    await fs.promises.rename(oldPath, newPath);
+  } catch (error) {
+    console.error("Error renaming item:", error);
+    throw error;
+  }
+}
+
+async function removeItem(itemPath: string): Promise<void> {
+  try {
+    const stats = await fs.promises.stat(itemPath);
+    if (stats.isDirectory()) {
+      await fs.promises.rmdir(itemPath, { recursive: true });
+    } else {
+      await fs.promises.unlink(itemPath);
+    }
+  } catch (error) {
+    console.error("Error removing item:", error);
+    throw error;
+  }
+}
+
+async function getTotalSize(dir: string): Promise<number> {
+  // use fs.promises.readdir and fs.promises.stat to get
+  // the total size of all files in a directory, should be
+  // more accurate interms of size copied than using du
+  let totalSize = 0;
+
+  async function getSize(filePath: string) {
+    const stats = await fs.promises.stat(filePath);
+    if (stats.isDirectory()) {
+      const files = await fs.promises.readdir(filePath);
+      for (const file of files) {
+        await getSize(path.join(filePath, file));
+      }
+    } else {
+      totalSize += stats.size;
+    }
+  }
+
+  await getSize(dir);
+  return totalSize;
+}
+
+// 递归复制目录
+async function copyDirectory(
+  src: string,
+  dest: string,
+  event: Electron.IpcMainInvokeEvent,
+  totalSize: number,
+  copiedSize: { value: number }
+) {
+  await fs.promises.mkdir(dest, { recursive: true });
+  const files = await fs.promises.readdir(src);
+
+  for (const file of files) {
+    const srcPath = path.join(src, file);
+    const destPath = path.join(dest, file);
+    const stats = await fs.promises.stat(srcPath);
+
+    if (stats.isDirectory()) {
+      await copyDirectory(srcPath, destPath, event, totalSize, copiedSize);
+    } else {
+      await copyFileWithProgress(
+        srcPath,
+        destPath,
+        event,
+        totalSize,
+        copiedSize
+      );
+    }
+  }
+}
+
+// 复制文件并发送进度
+async function copyFileWithProgress(
+  src: string,
+  dest: string,
+  event: Electron.IpcMainInvokeEvent,
+  totalSize: number,
+  copiedSize: { value: number }
+) {
+  return new Promise<void>((resolve, reject) => {
+    const readStream = fs.createReadStream(src);
+    const writeStream = fs.createWriteStream(dest);
+
+    readStream.on("data", (chunk) => {
+      copiedSize.value += chunk.length;
+      event.sender.send("copy-progress", {
+        copied: copiedSize.value,
+        total: totalSize,
+      });
+    });
+
+    readStream.on("end", resolve);
+    readStream.on("error", reject);
+    writeStream.on("error", reject);
+
+    readStream.pipe(writeStream);
+  });
+}
+
 export default {
   scanDir,
   getDiskUsage,
@@ -465,4 +550,9 @@ export default {
   sqliteDBOp,
   kuroshiroOp,
   getFileNameWithType,
+  getTotalSize,
+  copyDirectory,
+  copyFileWithProgress,
+  renameItem,
+  removeItem,
 };

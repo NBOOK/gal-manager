@@ -12,14 +12,59 @@ class ImageAssets {
   gameBrand: string = "";
   gameName: string = "";
   splitter: string = " - ";
-  iconPath: string = "";
-  logoPath: string = "";
-  headerPath: string = "";
-  capsulePath: string = "";
-  heroPath: string = "";
-  headerSDPath: string = "";
-  capsuleSDPath: string = "";
-  heroSDPath: string = "";
+  iconName: string = "";
+  logoName: string = "";
+  capsuleName: string = "";
+  headerName: string = "";
+  heroName: string = "";
+  capsuleSDName: string = "";
+  headerSDName: string = "";
+  heroSDName: string = "";
+  // iconPath: string = "";
+  // logoPath: string = "";
+  // headerPath: string = "";
+  // capsulePath: string = "";
+  // heroPath: string = "";
+  // headerSDPath: string = "";
+  // capsuleSDPath: string = "";
+  // heroSDPath: string = "";
+
+  get gameFolderPath() {
+    return `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}`;
+  }
+  get assetsFolderPath() {
+    return `${this.gameFolderPath}/${gameStore.config.value.assetsFolderName}`;
+  }
+  get iconPath() {
+    return this.iconName ? `${this.assetsFolderPath}/${this.iconName}` : "";
+  }
+  get logoPath() {
+    return this.logoName ? `${this.assetsFolderPath}/${this.logoName}` : "";
+  }
+  get capsulePath() {
+    return this.capsuleName
+      ? `${this.assetsFolderPath}/${this.capsuleName}`
+      : "";
+  }
+  get headerPath() {
+    return this.headerName ? `${this.assetsFolderPath}/${this.headerName}` : "";
+  }
+  get heroPath() {
+    return this.heroName ? `${this.assetsFolderPath}/${this.heroName}` : "";
+  }
+  get capsuleSDPath() {
+    return this.capsuleSDName
+      ? `${this.assetsFolderPath}/${this.capsuleSDName}`
+      : "";
+  }
+  get headerSDPath() {
+    return this.headerSDName
+      ? `${this.assetsFolderPath}/${this.headerSDName}`
+      : "";
+  }
+  get heroSDPath() {
+    return this.heroSDName ? `${this.assetsFolderPath}/${this.heroSDName}` : "";
+  }
 
   static async create(
     basePath: string,
@@ -63,43 +108,44 @@ class ImageAssets {
 
   async scanImageAssets() {
     const assetNames: { [key: string]: string } = {
-      iconPath: gameStore.config.value.assetsIconName,
-      logoPath: gameStore.config.value.assetsLogoName,
-      capsulePath: gameStore.config.value.assetsCapsuleName,
-      headerPath: gameStore.config.value.assetsHeaderName,
-      heroPath: gameStore.config.value.assetsHeroName,
-      capsuleSDPath:
+      iconName: gameStore.config.value.assetsIconName,
+      logoName: gameStore.config.value.assetsLogoName,
+      capsuleName: gameStore.config.value.assetsCapsuleName,
+      headerName: gameStore.config.value.assetsHeaderName,
+      heroName: gameStore.config.value.assetsHeroName,
+      capsuleSDName:
         gameStore.config.value.assetsCapsuleName +
         gameStore.config.value.assetsLowResSuffix,
-      headerSDPath:
+      headerSDName:
         gameStore.config.value.assetsHeaderName +
         gameStore.config.value.assetsLowResSuffix,
-      heroSDPath:
+      heroSDName:
         gameStore.config.value.assetsHeroName +
         gameStore.config.value.assetsLowResSuffix,
     };
 
     const formats: { [key: string]: string[] } = {
-      iconPath: ["ico", "png", "bmp", "webp", "jpg"],
-      logoPath: ["png", "webp"],
-      capsulePath: ["png", "webp", "jpg"],
-      headerPath: ["png", "webp", "jpg"],
-      heroPath: ["png", "webp", "jpg"],
-      capsuleSDPath: ["webp", "jpg"],
-      headerSDPath: ["webp", "jpg"],
-      heroSDPath: ["webp", "jpg"],
+      iconName: ["ico", "png", "bmp", "webp", "jpg"],
+      logoName: ["png", "webp"],
+      capsuleName: ["png", "webp", "jpg"],
+      headerName: ["png", "webp", "jpg"],
+      heroName: ["png", "webp", "jpg"],
+      capsuleSDName: ["webp", "jpg"],
+      headerSDName: ["webp", "jpg"],
+      heroSDName: ["webp", "jpg"],
     };
 
     await Promise.all(
       Object.entries(assetNames).map(async ([key, assetName]) => {
         for (const format of formats[key]) {
-          const filePath = `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}/${gameStore.config.value.assetsFolderName}/${assetName}.${format}`;
+          const filePath = `${this.assetsFolderPath}/${assetName}.${format}`;
           const exists = await window.ipcRenderer.invoke(
             "fileExists",
             filePath
           );
           if (exists) {
-            (this as any)[key] = filePath;
+            const fileName = `${assetName}.${format}`;
+            (this as any)[key] = fileName;
             break;
           }
         }
@@ -108,29 +154,32 @@ class ImageAssets {
 
     await Promise.all([
       (async () => {
-        if (this.capsulePath && !this.capsuleSDPath) {
-          this.capsuleSDPath = await window.ipcRenderer.invoke(
+        if (this.capsuleName && !this.capsuleSDName) {
+          this.capsuleSDName = await window.ipcRenderer.invoke(
             "resizeImage",
             this.capsulePath,
-            300
+            300,
+            gameStore.config.value.assetsLowResFormat
           );
         }
       })(),
       (async () => {
         if (this.headerPath && !this.headerSDPath) {
-          this.headerSDPath = await window.ipcRenderer.invoke(
+          this.headerSDName = await window.ipcRenderer.invoke(
             "resizeImage",
             this.headerPath,
-            460
+            460,
+            gameStore.config.value.assetsLowResFormat
           );
         }
       })(),
       (async () => {
         if (this.heroPath && !this.heroSDPath) {
-          this.heroSDPath = await window.ipcRenderer.invoke(
+          this.heroSDName = await window.ipcRenderer.invoke(
             "resizeImage",
             this.heroPath,
-            1280
+            1280,
+            gameStore.config.value.assetsLowResFormat
           );
         }
       })(),
@@ -147,12 +196,10 @@ class ImageAssets {
     //   this.gameBrand,
     //   this.gameName
     // );
-    const assetsFolderPath = `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}/${gameStore.config.value.assetsFolderName}`;
-    const gameFolderPath = `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}`;
-    if (await window.ipcRenderer.invoke("fileExists", assetsFolderPath)) {
-      window.ipcRenderer.invoke("openPath", assetsFolderPath);
+    if (await window.ipcRenderer.invoke("fileExists", this.assetsFolderPath)) {
+      window.ipcRenderer.invoke("openPath", this.assetsFolderPath);
     } else {
-      window.ipcRenderer.invoke("openPath", gameFolderPath);
+      window.ipcRenderer.invoke("openPath", this.gameFolderPath);
     }
   }
 

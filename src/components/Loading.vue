@@ -14,7 +14,7 @@ async function scanGames() {
     main: gameStore.config.value.gamesMainPath,
     deck: gameStore.config.value.gamesDataPath,
     sdCard: gameStore.config.value.gamesSDPath,
-    netDisk: gameStore.config.value.gamesNetPath,
+    netDisk: gameStore.config.value.gamesExternalPath,
   };
 
   // scan all game directories in multiple paths
@@ -58,7 +58,25 @@ async function scanGames() {
       }
       gameStore.games[entry.name][flag] = true;
       if (flag === "linked") {
-        gameStore.games[entry.name].linkedPath = entry.symbolicTarget;
+        const lastSlashIndex = entry.symbolicTarget.lastIndexOf("/");
+        const linkedBasePath = entry.symbolicTarget.substring(
+          0,
+          lastSlashIndex
+        );
+        const linkedFolderName = entry.symbolicTarget.substring(
+          lastSlashIndex + 1
+        );
+        if (entry.name !== linkedFolderName) {
+          throw new Error(
+            `Game name ${entry.name} does not match linked folder name ${linkedFolderName}`
+          );
+        }
+        if (!Object.values(paths).includes(linkedBasePath)) {
+          throw new Error(
+            `Linked folder ${linkedBasePath} is not in any of the game paths: ${paths}`
+          );
+        }
+        gameStore.games[entry.name].linkedBasePath = linkedBasePath;
       }
     });
 

@@ -21,6 +21,12 @@ onMounted(async () => {
   } else {
     await gameStore.steamDB.setup(gameStore.config.value);
     await gameStore.lutrisDB.setup(gameStore.config.value);
+    const externalLinkTarget = await window.ipcRenderer.invoke(
+      "readlink",
+      gameStore.config.value.gamesExternalPath
+    );
+    gameStore.netDiskOnline =
+      externalLinkTarget === gameStore.config.value.gamesNetPath;
   }
 });
 </script>

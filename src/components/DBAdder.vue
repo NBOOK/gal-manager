@@ -34,8 +34,9 @@ const titleKindColor = {
   alias: "#fff3e0",
 };
 
-const gameConnfig = reactive({
+const gameConnfig = reactive<GameConnfig>({
   gameName: "",
+  gameBrand: "",
   gameNameEN: "",
   gameNameSlug: "",
   winePrefix: "",
@@ -44,12 +45,9 @@ const gameConnfig = reactive({
   locale: "",
 });
 
-async function getGameNameENCandidates() {
+async function getGameNameENCandidates(gameName: string) {
   enTitleLoading.value = true;
-  gameNameENCandidates.value = await utils.getGameNameEN(gameConnfig.gameName);
-  gameConnfig.gameNameEN = gameNameENCandidates.value[0].title;
-  enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
-  gameConnfig.gameNameSlug = slugify(gameConnfig.gameNameEN, "");
+  gameNameENCandidates.value = await utils.getGameNameEN(gameName);
   enTitleLoading.value = false;
 }
 
@@ -67,17 +65,20 @@ watch(
   () => props.game,
   async () => {
     gameConnfig.gameName = props.game.gameName;
+    gameConnfig.gameBrand = props.game.gameBrand;
+
+    await getGameNameENCandidates(props.game.gameName);
+
     if (props.game.inDatabase) {
-      gameNameENCandidates.value = await utils.getGameNameEN(
-        props.game.gameName
-      );
       gameConnfig.gameNameEN = props.game.gameNameEN;
       enTitleColor.value = "#EDE7F6";
       gameConnfig.gameNameSlug = props.game.gameNameSlug;
       slugTitleColor.value = "#EDE7F6";
-      enTitleLoading.value = false;
     } else {
-      await getGameNameENCandidates();
+      gameConnfig.gameNameEN = gameNameENCandidates.value[0].title;
+      enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
+      gameConnfig.gameNameSlug = slugify(gameConnfig.gameNameEN, "");
+      slugTitleColor.value = enTitleColor.value;
     }
 
     const gamePath = `${props.game.basePath}/${props.game.gameBrand}${props.game.splitter}${props.game.gameName}`;
@@ -114,14 +115,18 @@ watch(
 );
 
 async function addGameToDB() {
-  // @TODO: check if game name changed,
-  // if so ask for confirmation and rename the game folder
-  if (gameConnfig.gameName !== props.game.gameName) {
-    console.log("Game name changed!");
-    // prompt for confirmation
-    return;
-  }
   dbAdding.value = true;
+  if (props.game.inDatabase > 0) {
+    console.log("Game already in database! Removing it...");
+    await props.game.removeDB();
+  }
+  if (
+    gameConnfig.gameName !== props.game.gameName ||
+    gameConnfig.gameBrand !== props.game.gameBrand
+  ) {
+    console.log("Game name changed! Updating it...");
+    await props.game.rename(gameConnfig);
+  }
   await props.game.addDB(gameConnfig);
   dbAdding.value = false;
   emit("proceed");

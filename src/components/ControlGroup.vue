@@ -29,7 +29,9 @@ const databaseBtn = computed(() => {
   if (props.game.linked) {
     console.log(
       props.game.gameName,
+      "Lutris: ",
       props.game.inLutrisDB,
+      ", Steam: ",
       props.game.inSteamDB
     );
     if (props.game.inLutrisDB && props.game.inSteamDB) {
@@ -94,7 +96,14 @@ const imageBtn = computed(() => {
 });
 
 const cloudBtn = computed(() => {
-  if (props.game.inNetDisk) {
+  if (!gameStore.netDiskOnline) {
+    return {
+      icon: "mdi-cloud-off",
+      color: "grey-darken-4",
+      readonly: true,
+      action: () => {},
+    };
+  } else if (props.game.inNetDisk) {
     if (props.game.inDeck || props.game.inSDCard) {
       return {
         icon: "mdi-cloud",
