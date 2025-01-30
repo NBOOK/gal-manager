@@ -254,10 +254,44 @@ class GameEntry {
   }
 
   async downloadTo(target: string) {
+    const exclude = [this.imageAssets.assetsFolderPath];
+    const include = [
+      this.imageAssets.capsulePath,
+      this.imageAssets.headerPath,
+      this.imageAssets.heroPath,
+      this.imageAssets.logoPath,
+      this.imageAssets.iconPath,
+      this.imageAssets.capsuleSDPath,
+      this.imageAssets.headerSDPath,
+      this.imageAssets.heroSDPath,
+    ].filter((path) => path !== "");
+
     const destination = `${target}/${this.folderName}`;
     console.log(`Downloading ${this.gamePath} to ${destination}...`);
-    await window.ipcRenderer.invoke("start-copy", this.gamePath, destination);
+    console.log(`Include: ${include}`);
+    console.log(`Exclude: ${exclude}`);
+    await window.ipcRenderer.invoke(
+      "start-copy",
+      this.gamePath,
+      destination,
+      include,
+      exclude
+    );
     console.log(`Downloaded ${this.gamePath} to ${destination}`);
+
+    const assetsSource = this.imageAssets.assetsFolderPath;
+    const assetsDestination = `${gameStore.config.value.gamesAssetsPath}/${this.folderName}/${gameStore.config.value.assetsFolderName}`;
+    console.log(`Downloading ${assetsSource} to ${assetsDestination}...`);
+    console.log(`Include: ${include}`);
+    console.log(`Exclude: ${exclude}`);
+    await window.ipcRenderer.invoke(
+      "start-copy",
+      assetsSource,
+      assetsDestination,
+      include,
+      exclude
+    );
+    console.log(`Downloaded ${assetsSource} to ${assetsDestination}`);
 
     if (target === gameStore.config.value.gamesDataPath) {
       this.inDeck = true;

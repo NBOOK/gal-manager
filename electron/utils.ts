@@ -479,6 +479,8 @@ async function getTotalSize(dir: string): Promise<number> {
 async function copyDirectory(
   src: string,
   dest: string,
+  include: string[],
+  exclude: string[],
   event: Electron.IpcMainInvokeEvent
 ) {
   await fs.promises.mkdir(dest, { recursive: true });
@@ -490,8 +492,15 @@ async function copyDirectory(
     const stats = await fs.promises.stat(srcPath);
 
     if (stats.isDirectory()) {
-      await copyDirectory(srcPath, destPath, event);
+      await copyDirectory(srcPath, destPath, include, exclude, event);
     } else {
+      // leaf file
+      const startWithExclude = exclude.some((excludePath) => {
+        return srcPath.startsWith(excludePath);
+      });
+      const isInclude = include.includes(srcPath);
+      if (startWithExclude && !isInclude) continue;
+
       await copyFileWithProgress(srcPath, destPath, event);
     }
   }

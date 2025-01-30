@@ -133,10 +133,10 @@ function registerIpcMain() {
   ipcMain.handle('writeFile', (_event, filePath: string, data: any, options?: { encoding?: BufferEncoding, flag?: string }) => {
     return fs.promises.writeFile(filePath, data, options || 'utf-8');
   });
-  ipcMain.handle('sqliteDBOp', (_event, op: string, params:any) => {
+  ipcMain.handle('sqliteDBOp', (_event, op: string, params: any) => {
     return utils.sqliteDBOp(op, params);
   });
-  ipcMain.handle('kuroshiroOp', (_event, op: string, params:any) => {
+  ipcMain.handle('kuroshiroOp', (_event, op: string, params: any) => {
     return utils.kuroshiroOp(op, params)
   });
   ipcMain.handle('openExternal', (_event, url: string) => {
@@ -145,7 +145,7 @@ function registerIpcMain() {
   ipcMain.handle('openPath', (_event, path: string) => {
     return shell.openPath(path)
   });
-  ipcMain.handle('getFileNameWithType', (_event, filePath: string, format?:string) => {
+  ipcMain.handle('getFileNameWithType', (_event, filePath: string, format?: string) => {
     return utils.getFileNameWithType(filePath, format)
   });
   ipcMain.handle('renameItem', (_event, oldPath: string, newPath: string) => {
@@ -154,17 +154,22 @@ function registerIpcMain() {
   ipcMain.handle('removeItem', (_event, path: string) => {
     return utils.removeItem(path)
   });
-  ipcMain.handle('start-copy', async (event, source, destination) => {
+  ipcMain.handle('start-copy', async (event, source:string, destination:string, include:string[], exclude:string[]) => {
     try {
-        if ((await fs.promises.stat(source)).isDirectory()) {
-            await utils.copyDirectory(source, destination, event);
-        } else {
-            await utils.copyFileWithProgress(source, destination, event);
-        }
-
-        event.sender.send('copy-finished', { success: true });
+      if ((await fs.promises.stat(source)).isDirectory()) {
+        await utils.copyDirectory(source, destination, include, exclude, event);
+      } 
+      else {
+        const startWithExclude = exclude.some((excludePath) => {
+          return source.startsWith(excludePath);
+        });
+        const isInclude = include.includes(source);
+        if (startWithExclude && !isInclude) return;
+        await utils.copyFileWithProgress(source, destination, event);
+      }
+      event.sender.send('copy-finished', { success: true });
     } catch (error) {
-        event.sender.send('copy-finished', { success: false, error: (error as Error).message });
+      event.sender.send('copy-finished', { success: false, error: (error as Error).message });
     }
   });
   ipcMain.handle('readlink', (_event, path: string) => {
