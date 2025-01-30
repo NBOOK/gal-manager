@@ -116,7 +116,7 @@ const cloudBtn = computed(() => {
         icon: "mdi-cloud-download",
         color: "green",
         readonly: false,
-        action: () => (props.game.inDeck = true), //@TODO: 下载到本地
+        action: () => {}, //@TODO: 下载到本地
       };
     }
   } else {
@@ -176,7 +176,7 @@ const moveBtn = computed(() => {
       icon: "mdi-folder-move",
       color: "green",
       readonly: false,
-      action: () => props.game.localMove(),
+      action: () => {},
     };
   } else {
     return {

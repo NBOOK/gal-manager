@@ -57,6 +57,15 @@ export const useGameStore = defineStore("globalStore", () => {
 
   const dbEditList = ref([] as GameEntry[]);
 
+  const downloadList = ref(
+    [] as {
+      game: GameEntry;
+      source: string;
+      target: string;
+      progress: number;
+    }[]
+  );
+
   const netDiskOnline = ref(false);
 
   return {
@@ -76,6 +85,7 @@ export const useGameStore = defineStore("globalStore", () => {
     steamDB,
     lutrisDB,
     dbEditList,
+    downloadList,
     netDiskOnline,
   };
 });

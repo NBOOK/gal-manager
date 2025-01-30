@@ -322,7 +322,7 @@ async function sqliteDBInsert(
   const data = [
     lutrisGameIndex, gameNameEN, gameNameSlug, null, "Windows", "wine", null,
     "", null, 0, 1, timestamp,
-    `${gameNameSlug}-${timestamp}`, 1, 0, 1,
+    `${gameNameSlug}-${timestamp}`, 1, 1, 1,
     0.0, 0, null, null, null, "",
   ];
 
@@ -479,9 +479,7 @@ async function getTotalSize(dir: string): Promise<number> {
 async function copyDirectory(
   src: string,
   dest: string,
-  event: Electron.IpcMainInvokeEvent,
-  totalSize: number,
-  copiedSize: { value: number }
+  event: Electron.IpcMainInvokeEvent
 ) {
   await fs.promises.mkdir(dest, { recursive: true });
   const files = await fs.promises.readdir(src);
@@ -492,15 +490,9 @@ async function copyDirectory(
     const stats = await fs.promises.stat(srcPath);
 
     if (stats.isDirectory()) {
-      await copyDirectory(srcPath, destPath, event, totalSize, copiedSize);
+      await copyDirectory(srcPath, destPath, event);
     } else {
-      await copyFileWithProgress(
-        srcPath,
-        destPath,
-        event,
-        totalSize,
-        copiedSize
-      );
+      await copyFileWithProgress(srcPath, destPath, event);
     }
   }
 }
@@ -509,19 +501,15 @@ async function copyDirectory(
 async function copyFileWithProgress(
   src: string,
   dest: string,
-  event: Electron.IpcMainInvokeEvent,
-  totalSize: number,
-  copiedSize: { value: number }
+  event: Electron.IpcMainInvokeEvent
 ) {
   return new Promise<void>((resolve, reject) => {
     const readStream = fs.createReadStream(src);
     const writeStream = fs.createWriteStream(dest);
 
     readStream.on("data", (chunk) => {
-      copiedSize.value += chunk.length;
       event.sender.send("copy-progress", {
-        copied: copiedSize.value,
-        total: totalSize,
+        increment: chunk.length,
       });
     });
 

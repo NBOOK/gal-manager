@@ -154,15 +154,12 @@ function registerIpcMain() {
   ipcMain.handle('removeItem', (_event, path: string) => {
     return utils.removeItem(path)
   });
-  ipcMain.handle('start-copy', async (event, { source, destination }) => {
+  ipcMain.handle('start-copy', async (event, source, destination) => {
     try {
-        const totalSize = await utils.getTotalSize(source);
-        let copiedSize = { value: 0 };
-
         if ((await fs.promises.stat(source)).isDirectory()) {
-            await utils.copyDirectory(source, destination, event, totalSize, copiedSize);
+            await utils.copyDirectory(source, destination, event);
         } else {
-            await utils.copyFileWithProgress(source, destination, event, totalSize, copiedSize);
+            await utils.copyFileWithProgress(source, destination, event);
         }
 
         event.sender.send('copy-finished', { success: true });

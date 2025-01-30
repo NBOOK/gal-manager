@@ -16,6 +16,7 @@ const firstTime = ref(false);
 onMounted(async () => {
   console.log(await window.ipcRenderer.invoke("kuroshiroOp", "init"));
   gameStore.config.value = await window.ipcRenderer.invoke("fetchJsonConfig");
+  console.log("Config fetched:", gameStore.config.value);
   if (Object.keys(gameStore.config.value).length === 0) {
     firstTime.value = true;
   } else {
@@ -33,13 +34,13 @@ onMounted(async () => {
 
 <template>
   <v-app>
-    <AppBar v-if="!firstTime" />
-    <LoadingOverlay v-if="!firstTime" />
+    <AppBar v-if="gameStore.config.value" />
+    <LoadingOverlay v-if="gameStore.config.value" />
     <!-- <FirstTime v-if="firstTime" /> -->
-    <DBAdderCarousel v-if="!firstTime" />
+    <DBAdderCarousel v-if="gameStore.config.value" />
     <div v-if="firstTime" style="margin-top: 30vh">First Time!</div>
-    <GameList v-if="!firstTime" />
-    <StatusBar v-if="!firstTime" />
+    <GameList v-if="gameStore.config.value" />
+    <StatusBar v-if="gameStore.config.value" />
   </v-app>
 </template>
 

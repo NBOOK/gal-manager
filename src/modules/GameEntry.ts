@@ -122,6 +122,7 @@ class GameEntry {
       `${gameStore.config.value.gamesMainPath}/${this.folderName}`
     );
     this.linked = true;
+    this.linkedBasePath = this.basePath;
     this.basePath = gameStore.config.value.gamesMainPath;
     this.imageAssets.basePath = this.basePath;
   }
@@ -252,9 +253,26 @@ class GameEntry {
     // }
   }
 
-  async localMove(destination: string = "dummy") {
+  async downloadTo(target: string) {
+    const destination = `${target}/${this.folderName}`;
+    console.log(`Downloading ${this.gamePath} to ${destination}...`);
+    await window.ipcRenderer.invoke("start-copy", this.gamePath, destination);
+    console.log(`Downloaded ${this.gamePath} to ${destination}`);
+
+    if (target === gameStore.config.value.gamesDataPath) {
+      this.inDeck = true;
+    } else if (target === gameStore.config.value.gamesSDPath) {
+      this.inSDCard = true;
+    } else if (target === gameStore.config.value.gamesUSBPath) {
+      this.inUSB = true;
+    }
+
     if (this.linked) {
-      console.log(`Moving ${this.gamePath} to ${destination}...`);
+      await this.unlink();
+      await this.link();
+    } else {
+      this.basePath = target;
+      this.imageAssets.basePath = this.basePath;
     }
   }
 }

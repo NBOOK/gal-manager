@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useGameStore } from "@/store/global-store";
+import Download from "@/components/Download.vue";
 
 const gameStore = useGameStore();
 const sortConfig = gameStore.sort;
@@ -198,6 +199,26 @@ function checkAllFilteredGames() {
 function uncheckAllFilteredGames() {
   gameStore.filterSortedGames.forEach((game) => (game.selected = false));
 }
+
+function pushToDownloadList(target: string) {
+  gameStore.downloadList.push(
+    ...gameStore.selectedGames
+      .map((game) => ({
+        game: game,
+        source: game.linked ? game.linkedBasePath : game.basePath,
+        target: target,
+        progress: 0,
+      }))
+      .filter((item) => {
+        // 检查 game.gameName 是否已经在 downloadList 中存在
+        const isDuplicate = gameStore.downloadList.some(
+          (existingItem) => existingItem.game.gameName === item.game.gameName
+        );
+        // 如果不存在重复项，则保留该项
+        return !isDuplicate;
+      })
+  );
+}
 </script>
 
 <template>
@@ -254,6 +275,8 @@ function uncheckAllFilteredGames() {
           :close-on-content-click="false"
           scroll-strategy="close"
           transition="slide-y-transition"
+          location="bottom center"
+          origin="top center"
         >
           <v-sheet rounded="lg">
             <v-btn-toggle mandatory v-model="sortConfig.ascending">
@@ -303,6 +326,8 @@ function uncheckAllFilteredGames() {
           :close-on-content-click="false"
           scroll-strategy="close"
           transition="slide-y-transition"
+          location="bottom center"
+          origin="top center"
         >
           <v-sheet rounded="lg">
             <v-btn
@@ -412,13 +437,8 @@ function uncheckAllFilteredGames() {
 
       <template v-slot:append>
         <v-spacer></v-spacer>
-        <!-- <v-btn
-          :class="{ invisible: gameStore.selectedGames.length === 0 }"
-          icon
-          @click="gameStore.dbEditList.push(...gameStore.selectedGames)"
-        >
-          <v-icon icon="mdi-database-edit" />
-        </v-btn> -->
+        <Download v-if="gameStore.config.value" />
+        <!-- Dot menu -->
         <v-btn icon>
           <v-icon icon="mdi-dots-vertical" />
           <v-menu
@@ -426,6 +446,8 @@ function uncheckAllFilteredGames() {
             :close-on-content-click="false"
             scroll-strategy="close"
             transition="slide-y-transition"
+            location="bottom center"
+            origin="top center"
           >
             <v-sheet rounded="lg">
               <v-btn-group>
@@ -446,25 +468,6 @@ function uncheckAllFilteredGames() {
                 <v-btn
                   :readonly="
                     gameStore.selectedGames.length === 0 ||
-                    gameStore.selectedGames.some((game) => !game.linked)
-                  "
-                  @click="gameStore.dbEditList.push(...gameStore.selectedGames)"
-                >
-                  <v-icon
-                    :color="
-                      gameStore.selectedGames.length === 0 ||
-                      gameStore.selectedGames.some((game) => !game.linked)
-                        ? 'grey'
-                        : 'grey-darken-4'
-                    "
-                    size="x-large"
-                    >mdi-database-edit</v-icon
-                  >
-                </v-btn>
-
-                <v-btn
-                  :readonly="
-                    gameStore.selectedGames.length === 0 ||
                     gameStore.selectedGames.some(
                       (game) => game.inDeck || game.inSDCard || game.inUSB
                     )
@@ -481,6 +484,65 @@ function uncheckAllFilteredGames() {
                     "
                     size="x-large"
                     >mdi-cloud-download</v-icon
+                  >
+                  <v-menu
+                    activator="parent"
+                    scroll-strategy="close"
+                    transition="slide-x-reverse-transition"
+                    location="start center"
+                    origin="end center"
+                  >
+                    <v-sheet rounded="lg">
+                      <v-btn-group>
+                        <v-btn
+                          @click="
+                            pushToDownloadList(
+                              gameStore.config.value.gamesDataPath
+                            )
+                          "
+                        >
+                          <v-icon size="x-large">mdi-gamepad-square</v-icon>
+                        </v-btn>
+
+                        <v-btn
+                          @click="
+                            pushToDownloadList(
+                              gameStore.config.value.gamesSDPath
+                            )
+                          "
+                        >
+                          <v-icon size="x-large">mdi-micro-sd</v-icon>
+                        </v-btn>
+
+                        <v-btn
+                          @click="
+                            pushToDownloadList(
+                              gameStore.config.value.gamesUSBPath
+                            )
+                          "
+                        >
+                          <v-icon size="x-large">mdi-usb</v-icon>
+                        </v-btn>
+                      </v-btn-group>
+                    </v-sheet>
+                  </v-menu>
+                </v-btn>
+                <v-btn
+                  :readonly="
+                    gameStore.selectedGames.length === 0 ||
+                    gameStore.selectedGames.some((game) => !game.linked)
+                  "
+                  @click="gameStore.dbEditList.push(...gameStore.selectedGames)"
+                >
+                  <v-icon
+                    :color="
+                      gameStore.selectedGames.length === 0 ||
+                      gameStore.selectedGames.some((game) => !game.linked)
+                        ? 'grey'
+                        : 'grey-darken-4'
+                    "
+                    size="x-large"
+                    >mdi-database-edit</v-icon
                   >
                 </v-btn>
 
