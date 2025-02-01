@@ -1,224 +1,230 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useGameStore } from "@/store/global-store";
-import Download from "@/components/Download.vue";
+  import { computed } from "vue";
+  import { useGameStore } from "@/store/global-store";
+  import Download from "@/components/Download.vue";
 
-const gameStore = useGameStore();
-const sortConfig = gameStore.sort;
-const filterConfig = gameStore.filter;
+  const gameStore = useGameStore();
+  const sortConfig = gameStore.sort;
+  const filterConfig = gameStore.filter;
 
-const filterLinked = computed(() => {
-  const linked = filterConfig.linked;
-  if (linked.toggled) {
+  const filterLinked = computed(() => {
+    const linked = filterConfig.linked;
+    if (linked.toggled) {
+      return {
+        icon: linked.value ? "mdi-link" : "mdi-link-off",
+        color: linked.value ? "green" : "red",
+        action: () => {
+          linked.value = !linked.value;
+          linked.toggled = !linked.value;
+        },
+      };
+    }
     return {
-      icon: linked.value ? "mdi-link" : "mdi-link-off",
-      color: linked.value ? "green" : "red",
-      action: () => {
-        linked.value = !linked.value;
-        linked.toggled = !linked.value;
-      },
+      icon: "mdi-link",
+      color: "geay-darken-4",
+      action: () => (linked.toggled = true),
     };
-  }
-  return {
-    icon: "mdi-link",
-    color: "geay-darken-4",
-    action: () => (linked.toggled = true),
-  };
-});
+  });
 
-const filterDatabase = computed(() => {
-  const inDatabase = filterConfig.inDatabase;
-  if (inDatabase.toggled)
+  const filterDatabase = computed(() => {
+    const inDatabase = filterConfig.inDatabase;
+    if (inDatabase.toggled)
+      return {
+        icon: [
+          "mdi-database-remove",
+          "mdi-database-check",
+          "mdi-database-minus",
+        ][inDatabase.value],
+        color: ["red", "green", "orange"][inDatabase.value],
+        action: () => {
+          inDatabase.value = (inDatabase.value + 1) % 3;
+          inDatabase.toggled = inDatabase.value !== 1;
+        },
+      };
     return {
-      icon: ["mdi-database-remove", "mdi-database-check", "mdi-database-minus"][
-        inDatabase.value
-      ],
-      color: ["red", "green", "orange"][inDatabase.value],
-      action: () => {
-        inDatabase.value = (inDatabase.value + 1) % 3;
-        inDatabase.toggled = inDatabase.value !== 1;
-      },
-    };
-  return {
-    icon: "mdi-database",
-    color: "geay-darken-4",
-    action: () => {
-      inDatabase.toggled = true;
-    },
-  };
-});
-
-const filterImage = computed(() => {
-  const inAssets = filterConfig.inAssets;
-  if (inAssets.toggled)
-    return {
-      icon: ["mdi-image-remove", "mdi-image-check", "mdi-image-minus"][
-        inAssets.value
-      ],
-      color: ["red", "green", "orange"][inAssets.value],
-      action: () => {
-        inAssets.value = (inAssets.value + 1) % 3;
-        inAssets.toggled = inAssets.value !== 1;
-      },
-    };
-  return {
-    icon: "mdi-image",
-    color: "geay-darken-4",
-    action: () => {
-      inAssets.toggled = true;
-    },
-  };
-});
-
-// const filterStarred = computed(() => {
-//   const starred = filterConfig.starred;
-//   if (starred.toggled)
-//     return {
-//       icon: starred.value ? "mdi-star" : "mdi-star-outline",
-//       color: "amber",
-//       action: () => {
-//         starred.value = !starred.value;
-//         starred.toggled = !starred.value;
-//       },
-//     };
-//   return {
-//     icon: "mdi-star",
-//     color: "geay-darken-4",
-//     action: () => {
-//       starred.toggled = true;
-//     },
-//   };
-// });
-
-const filterSelected = computed(() => {
-  const selected = filterConfig.selected;
-  if (selected.toggled)
-    return {
-      icon: selected.value
-        ? "mdi-checkbox-marked"
-        : "mdi-checkbox-blank-outline",
+      icon: "mdi-database",
       color: "geay-darken-4",
       action: () => {
-        selected.value = !selected.value;
-        selected.toggled = !selected.value;
+        inDatabase.toggled = true;
       },
     };
-  return {
-    icon: "mdi-checkbox-blank-off-outline",
-    color: "geay-darken-4",
-    action: () => {
-      selected.toggled = true;
-    },
-  };
-});
+  });
 
-const filterCloud = computed(() => {
-  const inNetDisk = filterConfig.inNetDisk;
-  if (inNetDisk.toggled)
+  const filterImage = computed(() => {
+    const inAssets = filterConfig.inAssets;
+    if (inAssets.toggled)
+      return {
+        icon: ["mdi-image-remove", "mdi-image-check", "mdi-image-minus"][
+          inAssets.value
+        ],
+        color: ["red", "green", "orange"][inAssets.value],
+        action: () => {
+          inAssets.value = (inAssets.value + 1) % 3;
+          inAssets.toggled = inAssets.value !== 1;
+        },
+      };
+    return {
+      icon: "mdi-image",
+      color: "geay-darken-4",
+      action: () => {
+        inAssets.toggled = true;
+      },
+    };
+  });
+
+  // const filterStarred = computed(() => {
+  //   const starred = filterConfig.starred;
+  //   if (starred.toggled)
+  //     return {
+  //       icon: starred.value ? "mdi-star" : "mdi-star-outline",
+  //       color: "amber",
+  //       action: () => {
+  //         starred.value = !starred.value;
+  //         starred.toggled = !starred.value;
+  //       },
+  //     };
+  //   return {
+  //     icon: "mdi-star",
+  //     color: "geay-darken-4",
+  //     action: () => {
+  //       starred.toggled = true;
+  //     },
+  //   };
+  // });
+
+  const filterSelected = computed(() => {
+    const selected = filterConfig.selected;
+    if (selected.toggled)
+      return {
+        icon: selected.value
+          ? "mdi-checkbox-marked"
+          : "mdi-checkbox-blank-outline",
+        color: "geay-darken-4",
+        action: () => {
+          selected.value = !selected.value;
+          selected.toggled = !selected.value;
+        },
+      };
+    return {
+      icon: "mdi-checkbox-blank-off-outline",
+      color: "geay-darken-4",
+      action: () => {
+        selected.toggled = true;
+      },
+    };
+  });
+
+  const filterCloud = computed(() => {
+    const inNetDisk = filterConfig.inNetDisk;
+    if (inNetDisk.toggled)
+      return {
+        icon: "mdi-cloud",
+        color: inNetDisk.value ? "green" : "red",
+        action: () => {
+          inNetDisk.value = !inNetDisk.value;
+          inNetDisk.toggled = !inNetDisk.value;
+        },
+      };
     return {
       icon: "mdi-cloud",
-      color: inNetDisk.value ? "green" : "red",
+      color: "geay-darken-4",
       action: () => {
-        inNetDisk.value = !inNetDisk.value;
-        inNetDisk.toggled = !inNetDisk.value;
+        inNetDisk.toggled = true;
       },
     };
-  return {
-    icon: "mdi-cloud",
-    color: "geay-darken-4",
-    action: () => {
-      inNetDisk.toggled = true;
-    },
-  };
-});
+  });
 
-const filterDeck = computed(() => {
-  const inDeck = filterConfig.inDeck;
-  if (inDeck.toggled)
+  const filterDeck = computed(() => {
+    const inDeck = filterConfig.inDeck;
+    if (inDeck.toggled)
+      return {
+        icon: "mdi-gamepad-square",
+        color: inDeck.value ? "green" : "red",
+        action: () => {
+          inDeck.value = !inDeck.value;
+          inDeck.toggled = !inDeck.value;
+        },
+      };
     return {
       icon: "mdi-gamepad-square",
-      color: inDeck.value ? "green" : "red",
+      color: "geay-darken-4",
       action: () => {
-        inDeck.value = !inDeck.value;
-        inDeck.toggled = !inDeck.value;
+        inDeck.toggled = true;
       },
     };
-  return {
-    icon: "mdi-gamepad-square",
-    color: "geay-darken-4",
-    action: () => {
-      inDeck.toggled = true;
-    },
-  };
-});
+  });
 
-const filterSD = computed(() => {
-  const inSDCard = filterConfig.inSDCard;
-  if (inSDCard.toggled)
+  const filterSD = computed(() => {
+    const inSDCard = filterConfig.inSDCard;
+    if (inSDCard.toggled)
+      return {
+        icon: "mdi-micro-sd",
+        color: inSDCard.value ? "green" : "red",
+        action: () => {
+          inSDCard.value = !inSDCard.value;
+          inSDCard.toggled = !inSDCard.value;
+        },
+      };
     return {
       icon: "mdi-micro-sd",
-      color: inSDCard.value ? "green" : "red",
+      color: "geay-darken-4",
       action: () => {
-        inSDCard.value = !inSDCard.value;
-        inSDCard.toggled = !inSDCard.value;
+        inSDCard.toggled = true;
       },
     };
-  return {
-    icon: "mdi-micro-sd",
-    color: "geay-darken-4",
-    action: () => {
-      inSDCard.toggled = true;
-    },
-  };
-});
+  });
 
-const filterUSB = computed(() => {
-  const inUSB = filterConfig.inUSB;
-  if (inUSB.toggled)
+  const filterUSB = computed(() => {
+    const inUSB = filterConfig.inUSB;
+    if (inUSB.toggled)
+      return {
+        icon: "mdi-usb",
+        color: inUSB.value ? "green" : "red",
+        action: () => {
+          inUSB.value = !inUSB.value;
+          inUSB.toggled = !inUSB.value;
+        },
+      };
     return {
       icon: "mdi-usb",
-      color: inUSB.value ? "green" : "red",
+      color: "geay-darken-4",
       action: () => {
-        inUSB.value = !inUSB.value;
-        inUSB.toggled = !inUSB.value;
+        inUSB.toggled = true;
       },
     };
-  return {
-    icon: "mdi-usb",
-    color: "geay-darken-4",
-    action: () => {
-      inUSB.toggled = true;
-    },
-  };
-});
+  });
 
-function checkAllFilteredGames() {
-  gameStore.filterSortedGames.forEach((game) => (game.selected = true));
-}
+  function checkAllFilteredGames() {
+    gameStore.filterSortedGames.forEach((game) => (game.selected = true));
+  }
 
-function uncheckAllFilteredGames() {
-  gameStore.filterSortedGames.forEach((game) => (game.selected = false));
-}
+  function uncheckAllFilteredGames() {
+    gameStore.filterSortedGames.forEach((game) => (game.selected = false));
+  }
 
-function pushToDownloadList(target: string) {
-  gameStore.downloadList.push(
-    ...gameStore.selectedGames
-      .map((game) => ({
-        game: game,
-        source: game.linked ? game.linkedBasePath : game.basePath,
-        target: target,
-        progress: 0,
-      }))
-      .filter((item) => {
-        // 检查 game.gameName 是否已经在 downloadList 中存在
-        const isDuplicate = gameStore.downloadList.some(
-          (existingItem) => existingItem.game.gameName === item.game.gameName
-        );
-        // 如果不存在重复项，则保留该项
-        return !isDuplicate;
-      })
-  );
-}
+  function pushAllToDownloadList(target: string) {
+    gameStore.downloadList.push(
+      ...gameStore.selectedGames
+        .map((game) => ({
+          game: game,
+          source: game.linked ? game.linkedBasePath : game.basePath,
+          target: target,
+          progress: 0,
+        }))
+        .filter((item) => {
+          // 检查 game.gameName 是否已经在 downloadList 中存在
+          const isDuplicate = gameStore.downloadList.some(
+            (existingItem) => existingItem.game.gameName === item.game.gameName
+          );
+          // 如果不存在重复项，则保留该项
+          return !isDuplicate;
+        })
+    );
+  }
+
+  async function deleteAllSelectedGames() {
+    gameStore.selectedGames.forEach(async (game) => await game.deleteLocal());
+  }
 </script>
 
 <template>
@@ -315,10 +321,9 @@ function pushToDownloadList(target: string) {
       <!-- Filter -->
       <v-btn icon>
         <v-icon
-          :icon="
-            Object.values(filterConfig).some((filter: any) => filter.toggled)
-              ? 'mdi-filter'
-              : 'mdi-filter-outline'
+          :icon="Object.values(filterConfig).some((filter: any) => filter.toggled)
+            ? 'mdi-filter'
+            : 'mdi-filter-outline'
           "
         ></v-icon>
         <v-menu
@@ -496,7 +501,7 @@ function pushToDownloadList(target: string) {
                       <v-btn-group>
                         <v-btn
                           @click="
-                            pushToDownloadList(
+                            pushAllToDownloadList(
                               gameStore.config.value.gamesDataPath
                             )
                           "
@@ -506,7 +511,7 @@ function pushToDownloadList(target: string) {
 
                         <v-btn
                           @click="
-                            pushToDownloadList(
+                            pushAllToDownloadList(
                               gameStore.config.value.gamesSDPath
                             )
                           "
@@ -516,7 +521,7 @@ function pushToDownloadList(target: string) {
 
                         <v-btn
                           @click="
-                            pushToDownloadList(
+                            pushAllToDownloadList(
                               gameStore.config.value.gamesUSBPath
                             )
                           "
@@ -566,6 +571,47 @@ function pushToDownloadList(target: string) {
                     size="x-large"
                     >mdi-delete</v-icon
                   >
+                  <v-dialog activator="parent" max-width="500">
+                    <template v-slot:default="{ isActive }">
+                      <v-card
+                        prepend-icon="mdi-delete-empty"
+                        title="Free Local Storage"
+                      >
+                        <v-container
+                          max-height="200px"
+                          class="text-center game-list-container py-0"
+                        >
+                          <v-card-subtitle
+                            v-for="game in gameStore.selectedGames"
+                            >{{ game.gameName }}</v-card-subtitle
+                          >
+                        </v-container>
+                        <v-card-text>
+                          You're removing the games above from local storage.
+                          This can't be undone without a NetDisk backup.
+                        </v-card-text>
+                        <template v-slot:actions>
+                          <v-spacer></v-spacer>
+                          <v-btn
+                            class="ml-auto"
+                            text="yes"
+                            color="red"
+                            @click="
+                              async () => {
+                                await deleteAllSelectedGames();
+                                isActive.value = false;
+                              }
+                            "
+                          ></v-btn>
+                          <v-btn
+                            class="ml-auto"
+                            text="no"
+                            @click="isActive.value = false"
+                          ></v-btn>
+                        </template>
+                      </v-card>
+                    </template>
+                  </v-dialog>
                 </v-btn>
 
                 <v-btn :readonly="gameStore.selectedGames.length === 0">
@@ -589,19 +635,65 @@ function pushToDownloadList(target: string) {
 </template>
 
 <style>
-.grid2x2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  /* 2 列 */
-  height: 96px !important;
-}
+  .grid2x2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 列 */
+    height: 96px !important;
+  }
 
-.v-field__field:has(> #searchbox-no-border) ~ .v-field__outline {
-  /* border: red solid; */
-  visibility: hidden;
-}
+  .v-field__field:has(> #searchbox-no-border) ~ .v-field__outline {
+    /* border: red solid; */
+    visibility: hidden;
+  }
 
-.invisible {
-  visibility: hidden;
-}
+  .invisible {
+    visibility: hidden;
+  }
+
+  .game-list-container {
+    /* position: relative; */
+    overflow-y: scroll !important;
+    /* padding-right: calc(1em - 10px); */
+  }
+
+  .game-list-container::-webkit-scrollbar {
+    /* width: 10px;
+  height: 10px; */
+    display: none;
+  }
+
+  .game-list-container::-webkit-scrollbar-track {
+    background: #f0f0f0;
+  }
+
+  .game-list-container::-webkit-scrollbar-track:hover {
+    background: #f0f0f0;
+  }
+
+  .game-list-container::-webkit-scrollbar-thumb {
+    background-color: #cccccc;
+    border-radius: 10px;
+  }
+
+  .game-list-container::-webkit-scrollbar-thumb:hover {
+    background-color: #888888;
+  }
+
+  .cover-mask {
+    position: absolute;
+    background: #fff;
+    /* pointer-events: none; */
+    height: 100%;
+    top: 0;
+    right: 0;
+    width: 10px;
+    transition: all 0.5s;
+    opacity: 1;
+  }
+
+  .cover-mask.hidden {
+    pointer-events: none;
+    opacity: 0;
+  }
 </style>

@@ -70,7 +70,7 @@ const games = computed(() => gameStore.filterSortedGames);
   padding-top: 18px;
   padding-right: calc(1em - 10px);
   /* position: relative; */
-  overflow-y: scroll;
+  overflow-y: scroll !important;
 }
 
 .v-virtual-scroll::-webkit-scrollbar {

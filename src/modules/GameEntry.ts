@@ -139,11 +139,13 @@ class GameEntry {
     } else if (this.inUSB) {
       this.basePath = gameStore.config.value.gamesUSBPath;
     } else if (this.inNetDisk) {
-      this.basePath = gameStore.config.value.gamesMainPath;
+      this.basePath = gameStore.config.value.gamesExternalPath;
     } else {
-      throw new Error("Game not found in any disk");
+      // throw new Error("Game not found in any disk");
+      console.log("Game not found in any disk");
     }
     this.imageAssets.basePath = this.basePath;
+    this.linkedBasePath = "";
   }
 
   async addDB(gameConfig: GameConnfig) {
@@ -183,8 +185,6 @@ class GameEntry {
   }
 
   async removeDB() {
-    //@TODO
-    //placeholder, maybe should create a new DB class?
     if (this.inLutrisDB) {
       console.log(`Removing ${this.folderName} from LutrisDB...`);
       await gameStore.lutrisDB.removeGame(this);
@@ -307,6 +307,53 @@ class GameEntry {
     } else {
       this.basePath = target;
       this.imageAssets.basePath = this.basePath;
+    }
+  }
+
+  async deleteLocal() {
+    const basePath = this.linked ? this.linkedBasePath : this.basePath;
+    if (basePath === gameStore.config.value.gamesExternalPath) {
+      console.log("Cannot delete game from external mount point");
+      return;
+    }
+    const target = `${basePath}/${this.folderName}`;
+    console.log(`Deleting ${target}...`);
+    await window.ipcRenderer.invoke("removeItem", target);
+    console.log(`Deleted ${target}`);
+
+    if (basePath === gameStore.config.value.gamesDataPath) {
+      this.inDeck = false;
+    } else if (basePath === gameStore.config.value.gamesSDPath) {
+      this.inSDCard = false;
+    } else if (basePath === gameStore.config.value.gamesUSBPath) {
+      this.inUSB = false;
+    }
+
+    if (this.linked) {
+      await this.unlink();
+      if (this.inNetDisk) {
+        await this.link();
+      } else {
+        // game not exists in any disk, remove from db and delete
+        if (this.inDatabase > 0) {
+          await this.removeDB();
+        }
+        const assetsTarget = `${gameStore.config.value.gamesAssetsPath}/${this.folderName}`;
+        console.log(`Deleting ${assetsTarget}...`);
+        await window.ipcRenderer.invoke("removeItem", assetsTarget);
+        console.log(`Deleted ${assetsTarget}`);
+        delete gameStore.games[this.gameName];
+      }
+    } else {
+      if (this.inNetDisk) {
+        await this.unlink(); // set basePath and linkedBasePath
+      } else {
+        const assetsTarget = `${gameStore.config.value.gamesAssetsPath}/${this.folderName}`;
+        console.log(`Deleting ${assetsTarget}...`);
+        await window.ipcRenderer.invoke("removeItem", assetsTarget);
+        console.log(`Deleted ${assetsTarget}`);
+        delete gameStore.games[this.gameName];
+      }
     }
   }
 }

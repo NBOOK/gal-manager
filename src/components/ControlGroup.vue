@@ -1,210 +1,231 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import GameEntry from "@/modules/GameEntry";
-import { useGameStore } from "@/store/global-store";
+  import { computed } from "vue";
+  import GameEntry from "@/modules/GameEntry";
+  import { useGameStore } from "@/store/global-store";
 
-const gameStore = useGameStore();
+  const gameStore = useGameStore();
 
-const props = defineProps<{ game: GameEntry }>(); // use props.game to access the game object
+  const props = defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 
-const linkBtn = computed(() => {
-  if (props.game.linked) {
-    return {
-      icon: "mdi-link",
-      color: "green",
-      readonly: props.game.inLutrisDB || props.game.inSteamDB,
-      action: () => props.game.unlink(),
-    };
-  } else {
-    return {
-      icon: "mdi-link-off",
-      color: "red",
-      readonly: false,
-      action: () => props.game.link(),
-    };
-  }
-});
-
-const databaseBtn = computed(() => {
-  if (props.game.linked) {
-    console.log(
-      props.game.gameName,
-      "Lutris: ",
-      props.game.inLutrisDB,
-      ", Steam: ",
-      props.game.inSteamDB
-    );
-    if (props.game.inLutrisDB && props.game.inSteamDB) {
+  const linkBtn = computed(() => {
+    if (props.game.linked) {
       return {
-        icon: "mdi-database",
-        iconHover: "mdi-database-edit",
+        icon: "mdi-link",
         color: "green",
-        readonly: false,
-        // action: () => props.game.removeDB(),
-        action: () => gameStore.dbEditList.push(props.game),
-      };
-    } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
-      return {
-        icon: "mdi-database-minus",
-        iconHover: "mdi-database-edit",
-        color: "orange",
-        readonly: false,
-        action: () => gameStore.dbEditList.push(props.game),
+        readonly: props.game.inLutrisDB || props.game.inSteamDB,
+        action: () => props.game.unlink(),
       };
     } else {
       return {
-        icon: "mdi-database-remove",
-        iconHover: "mdi-database-edit",
+        icon: "mdi-link-off",
         color: "red",
         readonly: false,
-        action: () => gameStore.dbEditList.push(props.game),
+        action: () => props.game.link(),
       };
     }
-  } else {
-    return {
-      icon: "mdi-database-off",
-      color: "blue-grey",
-      readonly: true,
-      action: () => {},
-    };
-  }
-});
+  });
 
-const imageBtn = computed(() => {
-  if (props.game.imageAssets.assetsCount == 5) {
-    return {
-      icon: "mdi-image-check",
-      iconHover: "mdi-folder-open",
-      color: "green",
-      action: () => props.game.imageAssets.openImageOrGameFolder(),
-    };
-  } else if (props.game.imageAssets.assetsCount > 0) {
-    return {
-      icon: "mdi-image-minus",
-      iconHover: "mdi-folder-open",
-      color: "orange",
-      action: () => props.game.imageAssets.openImageOrGameFolder(),
-    };
-  } else {
-    return {
-      icon: "mdi-image-remove",
-      iconHover: "mdi-folder-open",
-      color: "red",
-      action: () => props.game.imageAssets.openImageOrGameFolder(),
-    };
-  }
-});
-
-const cloudBtn = computed(() => {
-  if (!gameStore.netDiskOnline) {
-    return {
-      icon: "mdi-cloud-off",
-      color: "grey-darken-4",
-      readonly: true,
-      action: () => {},
-    };
-  } else if (props.game.inNetDisk) {
-    if (props.game.inDeck || props.game.inSDCard) {
-      return {
-        icon: "mdi-cloud",
-        color: "green",
-        readonly: true,
-        action: () => {},
-      };
+  const databaseBtn = computed(() => {
+    if (props.game.linked) {
+      console.log(
+        props.game.gameName,
+        "Lutris: ",
+        props.game.inLutrisDB,
+        ", Steam: ",
+        props.game.inSteamDB
+      );
+      if (props.game.inLutrisDB && props.game.inSteamDB) {
+        return {
+          icon: "mdi-database",
+          iconHover: "mdi-database-edit",
+          color: "green",
+          readonly: false,
+          // action: () => props.game.removeDB(),
+          action: () => gameStore.dbEditList.push(props.game),
+        };
+      } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
+        return {
+          icon: "mdi-database-minus",
+          iconHover: "mdi-database-edit",
+          color: "orange",
+          readonly: false,
+          action: () => gameStore.dbEditList.push(props.game),
+        };
+      } else {
+        return {
+          icon: "mdi-database-remove",
+          iconHover: "mdi-database-edit",
+          color: "red",
+          readonly: false,
+          action: () => gameStore.dbEditList.push(props.game),
+        };
+      }
     } else {
       return {
-        icon: "mdi-cloud-download",
-        color: "green",
-        readonly: false,
-        action: () => {}, //@TODO: 下载到本地
-      };
-    }
-  } else {
-    if (props.game.inDeck || props.game.inSDCard) {
-      return {
-        icon: "mdi-cloud-upload",
-        color: "orange",
-        readonly: false,
-        action: () => (props.game.inNetDisk = true), // @TODO: 上传到云端
-      };
-    } else {
-      // not in cloud or local storage, means the link is broken or name is changed
-      return {
-        icon: "mdi-cloud",
+        icon: "mdi-database-off",
         color: "blue-grey",
         readonly: true,
         action: () => {},
       };
     }
+  });
+
+  const imageBtn = computed(() => {
+    if (props.game.imageAssets.assetsCount == 5) {
+      return {
+        icon: "mdi-image-check",
+        iconHover: "mdi-folder-open",
+        color: "green",
+        action: () => props.game.imageAssets.openImageOrGameFolder(),
+      };
+    } else if (props.game.imageAssets.assetsCount > 0) {
+      return {
+        icon: "mdi-image-minus",
+        iconHover: "mdi-folder-open",
+        color: "orange",
+        action: () => props.game.imageAssets.openImageOrGameFolder(),
+      };
+    } else {
+      return {
+        icon: "mdi-image-remove",
+        iconHover: "mdi-folder-open",
+        color: "red",
+        action: () => props.game.imageAssets.openImageOrGameFolder(),
+      };
+    }
+  });
+
+  const cloudBtn = computed(() => {
+    if (!gameStore.netDiskOnline) {
+      return {
+        icon: "mdi-cloud-off",
+        color: "grey-darken-4",
+        readonly: true,
+        action: () => {},
+      };
+    } else if (props.game.inNetDisk) {
+      if (props.game.inDeck || props.game.inSDCard) {
+        return {
+          icon: "mdi-cloud",
+          color: "green",
+          readonly: true,
+          action: () => {},
+        };
+      } else {
+        return {
+          icon: "mdi-cloud-download",
+          color: "green",
+          readonly: false,
+          action: () => {},
+        };
+      }
+    } else {
+      if (props.game.inDeck || props.game.inSDCard) {
+        return {
+          icon: "mdi-cloud",
+          color: "red",
+          readonly: false,
+          // action: () => (props.game.inNetDisk = true), // @TODO: 上传到云端
+          action: () => {},
+        };
+      } else {
+        // not in cloud or local storage, means the link is broken or name is changed
+        return {
+          icon: "mdi-cloud",
+          color: "blue-grey",
+          readonly: true,
+          action: () => {},
+        };
+      }
+    }
+  });
+
+  const storageBtn = computed(() => {
+    if (props.game.inSDCard) {
+      return {
+        icon: "mdi-micro-sd",
+        iconHover: "mdi-delete-empty",
+        color: "green",
+        hoverColor: "red",
+        readonly: false,
+        action: () => {}, // handled by dialog action
+        // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
+      };
+    } else if (props.game.inDeck) {
+      return {
+        icon: "mdi-gamepad-square",
+        iconHover: "mdi-delete-empty",
+        color: "green",
+        hoverColor: "red",
+        readonly: false,
+        action: () => {},
+        // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
+      };
+    } else {
+      return {
+        icon: "mdi-content-save-off",
+        iconHover: "mdi-content-save-off",
+        color: "blue-grey",
+        hoverColor: "blue-grey",
+        readonly: true,
+        action: () => {},
+      };
+    }
+  });
+
+  const moveBtn = computed(() => {
+    if (props.game.inDeck || props.game.inSDCard) {
+      return {
+        icon: "mdi-folder-move",
+        color: "green",
+        readonly: false,
+        action: () => {},
+      };
+    } else {
+      return {
+        icon: "mdi-folder-move",
+        color: "blue-grey",
+        readonly: true,
+        action: () => {},
+      };
+    }
+  });
+
+  const selectBtn = computed(() => {
+    return {
+      icon: props.game.selected
+        ? "mdi-checkbox-marked"
+        : "mdi-checkbox-blank-outline",
+      color: props.game.selected ? "grey-darken-4" : "grey",
+      action: () => (props.game.selected = !props.game.selected),
+    };
+  });
+
+  const starBtn = computed(() => {
+    return {
+      icon: props.game.starred ? "mdi-star" : "mdi-star-outline",
+      color: "amber",
+      action: () => (props.game.starred = !props.game.starred),
+    };
+  });
+
+  function pushToDownloadList(target: string) {
+    if (
+      gameStore.downloadList.some(
+        (item) => item.game.gameName === props.game.gameName
+      )
+    ) {
+      return; // already in the list
+    }
+    gameStore.downloadList.push({
+      game: props.game,
+      source: props.game.linked
+        ? props.game.linkedBasePath
+        : props.game.basePath,
+      target: target,
+      progress: 0,
+    });
   }
-});
-
-const storageBtn = computed(() => {
-  if (props.game.inSDCard) {
-    return {
-      icon: "mdi-micro-sd",
-      iconHover: "mdi-delete-empty",
-      color: "green",
-      hoverColor: "red",
-      readonly: false,
-      action: () => (props.game.inSDCard = false), // @TODO: 移除本地存储
-    };
-  } else if (props.game.inDeck) {
-    return {
-      icon: "mdi-gamepad-square",
-      iconHover: "mdi-delete-empty",
-      color: "green",
-      hoverColor: "red",
-      readonly: false,
-      action: () => (props.game.inDeck = false), // @TODO: 移除本地存储
-    };
-  } else {
-    return {
-      icon: "mdi-content-save-off",
-      iconHover: "mdi-content-save-off",
-      color: "blue-grey",
-      hoverColor: "blue-grey",
-      readonly: true,
-      action: () => {},
-    };
-  }
-});
-
-const moveBtn = computed(() => {
-  if (props.game.inDeck || props.game.inSDCard) {
-    return {
-      icon: "mdi-folder-move",
-      color: "green",
-      readonly: false,
-      action: () => {},
-    };
-  } else {
-    return {
-      icon: "mdi-folder-move",
-      color: "blue-grey",
-      readonly: true,
-      action: () => {},
-    };
-  }
-});
-
-const selectBtn = computed(() => {
-  return {
-    icon: props.game.selected
-      ? "mdi-checkbox-marked"
-      : "mdi-checkbox-blank-outline",
-    color: props.game.selected ? "grey-darken-4" : "grey",
-    action: () => (props.game.selected = !props.game.selected),
-  };
-});
-
-const starBtn = computed(() => {
-  return {
-    icon: props.game.starred ? "mdi-star" : "mdi-star-outline",
-    color: "amber",
-    action: () => (props.game.starred = !props.game.starred),
-  };
-});
 </script>
 
 <template>
@@ -299,11 +320,37 @@ const starBtn = computed(() => {
       :readonly="cloudBtn.readonly"
       @click="cloudBtn.action"
     >
-      <v-icon
-        :icon="cloudBtn.icon"
-        :color="cloudBtn.color"
-        size="x-large"
-      ></v-icon>
+      <v-icon :icon="cloudBtn.icon" :color="cloudBtn.color" size="x-large">
+      </v-icon>
+      <v-menu
+        activator="parent"
+        scroll-strategy="close"
+        transition="slide-x-reverse-transition"
+        location="start center"
+        origin="end center"
+      >
+        <v-sheet rounded="lg">
+          <v-btn-group density="compact">
+            <v-btn
+              @click="pushToDownloadList(gameStore.config.value.gamesDataPath)"
+            >
+              <v-icon variant="text">mdi-gamepad-square</v-icon>
+            </v-btn>
+
+            <v-btn
+              @click="pushToDownloadList(gameStore.config.value.gamesSDPath)"
+            >
+              <v-icon variant="text">mdi-micro-sd</v-icon>
+            </v-btn>
+
+            <v-btn
+              @click="pushToDownloadList(gameStore.config.value.gamesUSBPath)"
+            >
+              <v-icon variant="text">mdi-usb</v-icon>
+            </v-btn>
+          </v-btn-group>
+        </v-sheet>
+      </v-menu>
     </v-btn>
 
     <!-- Storage Button -->
@@ -315,13 +362,48 @@ const starBtn = computed(() => {
           size="x-small"
           variant="text"
           :readonly="storageBtn.readonly"
-          @click="storageBtn.action"
         >
+          <!-- @click="storageBtn.action" -->
           <v-icon
             :icon="isHovering ? storageBtn.iconHover : storageBtn.icon"
             :color="isHovering ? storageBtn.hoverColor : storageBtn.color"
             size="x-large"
           ></v-icon>
+          <v-dialog activator="parent" max-width="500">
+            <template v-slot:default="{ isActive }">
+              <v-card
+                prepend-icon="mdi-delete-empty"
+                title="Free Local Storage"
+              >
+                <v-container class="text-center py-0">
+                  <v-card-subtitle>{{ game.gameName }}</v-card-subtitle>
+                </v-container>
+                <v-card-text>
+                  Your're removing the game from local storage. This can't be
+                  undone without a NetDisk backup.
+                </v-card-text>
+                <template v-slot:actions>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    class="ml-auto"
+                    text="Remove"
+                    color="red"
+                    @click="
+                      async () => {
+                        await game.deleteLocal();
+                        isActive.value = false;
+                      }
+                    "
+                  ></v-btn>
+                  <v-btn
+                    class="ml-auto"
+                    text="Cancel"
+                    @click="isActive.value = false"
+                  ></v-btn>
+                </template>
+              </v-card>
+            </template>
+          </v-dialog>
         </v-btn>
       </template>
     </v-hover>
@@ -344,39 +426,39 @@ const starBtn = computed(() => {
 </template>
 
 <style scoped>
-/* 右侧按钮样式 */
-.game-controls {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-self: flex-end;
-  justify-content: space-evenly;
-  /* gap: 5px; */
-  margin-left: 10px;
-  width: 100px;
-  min-width: 100px;
-  margin-bottom: 10px;
-}
+  /* 右侧按钮样式 */
+  .game-controls {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-self: flex-end;
+    justify-content: space-evenly;
+    /* gap: 5px; */
+    margin-left: 10px;
+    width: 100px;
+    min-width: 100px;
+    margin-bottom: 10px;
+  }
 
-.func-btns {
-  width: 20px;
-  min-width: 20px;
-  height: 20px;
-  /* border: none; */
-  /* border-radius: 5px; */
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
-  margin: 0;
-}
+  .func-btns {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    /* border: none; */
+    /* border-radius: 5px; */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+  }
 
-.func-btns img {
-  height: 100%;
-}
+  .func-btns img {
+    height: 100%;
+  }
 
-.invisible {
-  visibility: hidden;
-}
+  .invisible {
+    visibility: hidden;
+  }
 </style>

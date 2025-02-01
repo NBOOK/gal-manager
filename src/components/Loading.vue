@@ -114,7 +114,7 @@ watch(
     class="align-center justify-center"
     style="backdrop-filter: blur(1rem)"
   >
-    <v-container width="100vw" max-height="100vh">
+    <v-container width="80vw" max-height="100vh">
       <div v-if="processedGames === 0">
         <div
           class="mb-5 text-center align-content-center text-h5 font-weight-bold"

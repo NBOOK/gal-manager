@@ -265,7 +265,8 @@ async function createSymbolicLink(
     await fs.promises.unlink(target); // 删除现有目标
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-      throw error; // 忽略 ENOENT 错误（目标不存在）
+      // throw error; // 忽略 ENOENT 错误（目标不存在）
+      console.error("Error unlinking target:", error);
     }
   }
   try {
@@ -273,7 +274,8 @@ async function createSymbolicLink(
     // console.log(`Symbolic link created from ${source} to ${target}`);
   } catch (error) {
     // console.error('Error creating symbolic link:', error);
-    throw error;
+    // throw error;
+    console.error("Error creating symbolic link:", error);
   }
 }
 
@@ -282,7 +284,8 @@ async function removeSymbolicLink(target: string): Promise<void> {
     await fs.promises.unlink(target);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-      throw error;
+      // throw error;
+      console.error("Error removing symbolic link:", error);
     }
   }
 }
@@ -443,7 +446,7 @@ async function removeItem(itemPath: string): Promise<void> {
   try {
     const stats = await fs.promises.stat(itemPath);
     if (stats.isDirectory()) {
-      await fs.promises.rmdir(itemPath, { recursive: true });
+      await fs.promises.rm(itemPath, { recursive: true });
     } else {
       await fs.promises.unlink(itemPath);
     }
