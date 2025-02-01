@@ -16,7 +16,7 @@
     height="100"
     style="margin: 5px 0"
     min-width="550px"
-    @contextmenu="game.selected = !game.selected"
+    @contextmenu.prevent="game.selected = !game.selected"
   >
     <div class="game-item">
       <!-- 左侧图片 -->

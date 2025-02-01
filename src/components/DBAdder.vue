@@ -534,22 +534,6 @@ async function removeGameFromDB() {
   background-color: #888888;
 }
 
-.cover-mask {
-  position: absolute;
-  background: #fff;
-  /* pointer-events: none; */
-  height: 100%;
-  top: 0;
-  right: 0;
-  width: 10px;
-  transition: all 0.5s;
-  opacity: 1;
-}
-
-.cover-mask.hidden {
-  pointer-events: none;
-  opacity: 0;
-}
 
 .lutris-config-spacer {
   width: 100%;

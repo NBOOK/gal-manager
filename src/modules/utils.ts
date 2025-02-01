@@ -338,21 +338,15 @@ function filterGamesByQuery(
 ): GameEntry[] {
   if (searchQuery) {
     searchQuery = searchQuery.toLowerCase();
-    if (searchQuery.includes("@name=")) {
-      const nameQuery = searchQuery
-        .split("@name=")[1]
-        .split("@brand=")[0]
-        .trim();
+    if (searchQuery.includes("@n=")) {
+      const nameQuery = searchQuery.split("@n=")[1].split("@b=")[0].trim();
       games = games.filter(
         (game) =>
           game.gameName.toLowerCase().includes(nameQuery) ||
           game.gameNameEN.toLowerCase().includes(nameQuery)
       );
-    } else if (searchQuery.includes("@brand=")) {
-      const brandQuery = searchQuery
-        .split("@brand=")[1]
-        .split("@name=")[0]
-        .trim();
+    } else if (searchQuery.includes("@b=")) {
+      const brandQuery = searchQuery.split("@b=")[1].split("@n=")[0].trim();
       games = games.filter(
         (game) =>
           game.gameBrand.toLowerCase().includes(brandQuery) ||
@@ -399,8 +393,9 @@ function filterGamesByFilter(
   toggledKeys = Object.entries(filterConfig)
     .filter(
       ([key, value]) =>
-        ["inNetDisk", "inSDCard", "inDeck", "inUSB"].includes(key) &&
-        value.toggled
+        ["inNetDisk", "inSDCard", "inDeck", "inUSB", "inAssetsBackup"].includes(
+          key
+        ) && value.toggled
     )
     .map(([key]) => key as keyof GameEntry);
   if (toggledKeys.length) {

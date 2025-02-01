@@ -20,17 +20,12 @@ class ImageAssets {
   capsuleSDName: string = "";
   headerSDName: string = "";
   heroSDName: string = "";
-  // iconPath: string = "";
-  // logoPath: string = "";
-  // headerPath: string = "";
-  // capsulePath: string = "";
-  // heroPath: string = "";
-  // headerSDPath: string = "";
-  // capsuleSDPath: string = "";
-  // heroSDPath: string = "";
 
+  get gameFolderName() {
+    return `${this.gameBrand}${this.splitter}${this.gameName}`;
+  }
   get gameFolderPath() {
-    return `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}`;
+    return `${this.basePath}/${this.gameFolderName}`;
   }
   get assetsFolderPath() {
     return `${this.gameFolderPath}/${gameStore.config.value.assetsFolderName}`;
@@ -135,6 +130,7 @@ class ImageAssets {
       heroSDName: ["webp", "jpg"],
     };
 
+    // get assets extension
     await Promise.all(
       Object.entries(assetNames).map(async ([key, assetName]) => {
         for (const format of formats[key]) {
@@ -152,6 +148,7 @@ class ImageAssets {
       })
     );
 
+    // resize low resolution images
     await Promise.all([
       (async () => {
         if (this.capsuleName && !this.capsuleSDName) {
@@ -184,6 +181,31 @@ class ImageAssets {
         }
       })(),
     ]);
+
+    // copy to AssetsBackup folder
+    // const exclude = [this.assetsFolderPath];
+    // const include = [
+    //   this.capsulePath,
+    //   this.headerPath,
+    //   this.heroPath,
+    //   this.logoPath,
+    //   this.iconPath,
+    //   this.capsuleSDPath,
+    //   this.headerSDPath,
+    //   this.heroSDPath,
+    // ].filter((path) => path !== "");
+
+    await Promise.all(
+      this.validAssetsNames.map(async (assetName) => {
+        const sourcePath = `${this.assetsFolderPath}/${assetName}`;
+        const targetPath = `${gameStore.config.value.gamesAssetsPath}/${this.gameFolderName}/${gameStore.config.value.assetsFolderName}/${assetName}`;
+        if (sourcePath === targetPath) return;
+        if (!(await window.ipcRenderer.invoke("fileExists", targetPath))) {
+          // console.log("copy assets: ", sourcePath, targetPath);
+          await window.ipcRenderer.invoke("start-copy", sourcePath, targetPath);
+        }
+      })
+    );
   }
 
   async openImageOrGameFolder() {
@@ -211,6 +233,19 @@ class ImageAssets {
     if (this.capsulePath) count++;
     if (this.heroPath) count++;
     return count;
+  }
+
+  get validAssetsNames(): string[] {
+    return [
+      this.iconName,
+      this.logoName,
+      this.capsuleName,
+      this.headerName,
+      this.heroName,
+      this.capsuleSDName,
+      this.headerSDName,
+      this.heroSDName,
+    ].filter((name) => name !== "");
   }
 }
 

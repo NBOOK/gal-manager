@@ -25,8 +25,9 @@ class GameEntry {
   linkedBasePath: string = "";
   inNetDisk: boolean = false;
   inSDCard: boolean = false;
-  inUSB: boolean = false; // @TODO : add USB support
   inDeck: boolean = false;
+  inUSB: boolean = false; // @TODO : add USB support
+  inAssetsBackup: boolean = false;
   inLutrisDB: boolean = false;
   inSteamDB: boolean = false;
   starred: boolean = false;
@@ -101,6 +102,9 @@ class GameEntry {
 
     this.diskUsage = diskUsage;
     this.imageAssets = imageAssets;
+    if (this.imageAssets.assetsCount > 0) {
+      this.inAssetsBackup = true;
+    }
 
     this.inLutrisDB = gameStore.lutrisDB.inDB(this);
     if (this.inLutrisDB) {

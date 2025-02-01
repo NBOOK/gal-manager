@@ -22,6 +22,7 @@ export const useGameStore = defineStore("globalStore", () => {
     inSDCard: { toggled: false, value: true },
     inDeck: { toggled: false, value: true },
     inUSB: { toggled: false, value: true },
+    inAssetsBackup: { toggled: false, value: true },
   });
 
   const filterOperator = reactive({ group1: true, group2: true });

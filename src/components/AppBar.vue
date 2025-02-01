@@ -2,6 +2,7 @@
   import { useGameStore } from "@/store/global-store";
   import Download from "@/components/Download.vue";
   import GameFilter from "@/components/GameFilter.vue";
+  import BatchMenu from "@/components/BatchMenu.vue";
 
   const gameStore = useGameStore();
   const sortConfig = gameStore.sort;
@@ -87,7 +88,11 @@
 
       <!-- Sort -->
       <v-btn icon>
-        <v-icon icon="mdi-sort"></v-icon>
+        <v-icon
+          :icon="
+            sortConfig.ascending ? 'mdi-sort-ascending' : 'mdi-sort-descending'
+          "
+        ></v-icon>
         <v-menu
           activator="parent"
           :close-on-content-click="false"
@@ -136,193 +141,9 @@
       <template v-slot:append>
         <v-spacer></v-spacer>
         <Download v-if="gameStore.config.value" />
+
         <!-- Dot menu -->
-        <v-btn icon>
-          <v-icon icon="mdi-dots-vertical" />
-          <v-menu
-            activator="parent"
-            :close-on-content-click="false"
-            scroll-strategy="close"
-            transition="slide-y-transition"
-            location="bottom center"
-            origin="top center"
-          >
-            <v-sheet rounded="lg">
-              <v-btn-group>
-                <v-btn @click="checkAllFilteredGames">
-                  <v-icon size="x-large">mdi-checkbox-multiple-marked</v-icon>
-                </v-btn>
-
-                <v-btn @click="uncheckAllFilteredGames">
-                  <v-icon size="x-large"
-                    >mdi-checkbox-multiple-blank-outline</v-icon
-                  >
-                </v-btn>
-              </v-btn-group>
-
-              <v-divider></v-divider>
-
-              <v-btn-group class="grid2x2">
-                <v-btn
-                  :readonly="
-                    gameStore.selectedGames.length === 0 ||
-                    gameStore.selectedGames.some(
-                      (game) => game.inDeck || game.inSDCard || game.inUSB
-                    )
-                  "
-                >
-                  <v-icon
-                    :color="
-                      gameStore.selectedGames.length === 0 ||
-                      gameStore.selectedGames.some(
-                        (game) => game.inDeck || game.inSDCard || game.inUSB
-                      )
-                        ? 'grey'
-                        : 'grey-darken-4'
-                    "
-                    size="x-large"
-                    >mdi-cloud-download</v-icon
-                  >
-                  <v-menu
-                    activator="parent"
-                    scroll-strategy="close"
-                    transition="slide-x-reverse-transition"
-                    location="start center"
-                    origin="end center"
-                  >
-                    <v-sheet rounded="lg">
-                      <v-btn-group>
-                        <v-btn
-                          @click="
-                            pushAllToDownloadList(
-                              gameStore.config.value.gamesDataPath
-                            )
-                          "
-                        >
-                          <v-icon size="x-large">mdi-gamepad-square</v-icon>
-                        </v-btn>
-
-                        <v-btn
-                          @click="
-                            pushAllToDownloadList(
-                              gameStore.config.value.gamesSDPath
-                            )
-                          "
-                        >
-                          <v-icon size="x-large">mdi-micro-sd</v-icon>
-                        </v-btn>
-
-                        <v-btn
-                          @click="
-                            pushAllToDownloadList(
-                              gameStore.config.value.gamesUSBPath
-                            )
-                          "
-                        >
-                          <v-icon size="x-large">mdi-usb</v-icon>
-                        </v-btn>
-                      </v-btn-group>
-                    </v-sheet>
-                  </v-menu>
-                </v-btn>
-                <v-btn
-                  :readonly="
-                    gameStore.selectedGames.length === 0 ||
-                    gameStore.selectedGames.some((game) => !game.linked)
-                  "
-                  @click="gameStore.dbEditList.push(...gameStore.selectedGames)"
-                >
-                  <v-icon
-                    :color="
-                      gameStore.selectedGames.length === 0 ||
-                      gameStore.selectedGames.some((game) => !game.linked)
-                        ? 'grey'
-                        : 'grey-darken-4'
-                    "
-                    size="x-large"
-                    >mdi-database-edit</v-icon
-                  >
-                </v-btn>
-
-                <v-btn
-                  :readonly="
-                    gameStore.selectedGames.length === 0 ||
-                    !gameStore.selectedGames.every(
-                      (game) => game.inDeck || game.inSDCard || game.inUSB
-                    )
-                  "
-                >
-                  <v-icon
-                    :color="
-                      gameStore.selectedGames.length === 0 ||
-                      !gameStore.selectedGames.every(
-                        (game) => game.inDeck || game.inSDCard || game.inUSB
-                      )
-                        ? 'grey'
-                        : 'grey-darken-4'
-                    "
-                    size="x-large"
-                    >mdi-delete</v-icon
-                  >
-                  <v-dialog activator="parent" max-width="522">
-                    <template v-slot:default="{ isActive }">
-                      <v-card
-                        prepend-icon="mdi-delete-empty"
-                        title="Free Local Storage"
-                      >
-                        <v-container
-                          max-height="200px"
-                          class="text-center game-list-container py-0"
-                        >
-                          <v-card-subtitle
-                            v-for="game in gameStore.selectedGames"
-                            >{{ game.gameName }}</v-card-subtitle
-                          >
-                        </v-container>
-                        <v-card-text>
-                          You're removing the games listed above from local
-                          storage. This action is irreversible without a NetDisk
-                          backup.
-                        </v-card-text>
-                        <template v-slot:actions>
-                          <v-spacer></v-spacer>
-                          <v-btn
-                            class="ml-auto"
-                            text="yes"
-                            color="red"
-                            @click="
-                              async () => {
-                                await deleteAllSelectedGames();
-                                isActive.value = false;
-                              }
-                            "
-                          ></v-btn>
-                          <v-btn
-                            class="ml-auto"
-                            text="no"
-                            @click="isActive.value = false"
-                          ></v-btn>
-                        </template>
-                      </v-card>
-                    </template>
-                  </v-dialog>
-                </v-btn>
-
-                <v-btn :readonly="gameStore.selectedGames.length === 0">
-                  <v-icon
-                    :color="
-                      gameStore.selectedGames.length === 0
-                        ? 'grey'
-                        : 'grey-darken-4'
-                    "
-                    size="x-large"
-                    >mdi-chart-pie-outline</v-icon
-                  >
-                </v-btn>
-              </v-btn-group>
-            </v-sheet>
-          </v-menu>
-        </v-btn>
+        <BatchMenu />
       </template>
     </v-app-bar>
   </v-container>
@@ -372,22 +193,5 @@
 
   .game-list-container::-webkit-scrollbar-thumb:hover {
     background-color: #888888;
-  }
-
-  .cover-mask {
-    position: absolute;
-    background: #fff;
-    /* pointer-events: none; */
-    height: 100%;
-    top: 0;
-    right: 0;
-    width: 10px;
-    transition: all 0.5s;
-    opacity: 1;
-  }
-
-  .cover-mask.hidden {
-    pointer-events: none;
-    opacity: 0;
   }
 </style>

@@ -399,10 +399,15 @@ async function sqliteDBOp(op: string, params: any): Promise<any> {
 async function kuroshiroOp(op: string, params: any): Promise<string> {
   switch (op) {
     case "init":
-      await kuroshiro.init(
-        new KuromojiAnalyzer({ dictPath: path.join(MAIN_DIST, "dict") })
-      );
-      return "Kuroshiro initialized.";
+      try {
+        await kuroshiro.init(
+          new KuromojiAnalyzer({ dictPath: path.join(MAIN_DIST, "dict") })
+        );
+        return "Kuroshiro initialized.";
+      } catch (error) {
+        // throw error;
+        return `Error initializing Kuroshiro: ${error}`;
+      }
 
     case "convert":
       return await kuroshiro.convert(params.text, {
@@ -452,7 +457,7 @@ async function removeItem(itemPath: string): Promise<void> {
     }
   } catch (error) {
     console.error("Error removing item:", error);
-    throw error;
+    // throw error;
   }
 }
 
@@ -515,6 +520,7 @@ async function copyFileWithProgress(
   dest: string,
   event: Electron.IpcMainInvokeEvent
 ) {
+  await fs.promises.mkdir(path.dirname(dest), { recursive: true });
   return new Promise<void>((resolve, reject) => {
     const readStream = fs.createReadStream(src);
     const writeStream = fs.createWriteStream(dest);

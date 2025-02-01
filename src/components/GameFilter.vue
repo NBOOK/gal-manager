@@ -132,6 +132,26 @@
     };
   });
 
+  const filterAssetsBackup = computed(() => {
+    const inAssetsBackup = filterConfig.inAssetsBackup;
+    if (inAssetsBackup.toggled)
+      return {
+        icon: "mdi-folder-image",
+        color: inAssetsBackup.value ? "green" : "red",
+        action: () => {
+          inAssetsBackup.value = !inAssetsBackup.value;
+          inAssetsBackup.toggled = !inAssetsBackup.value;
+        },
+      };
+    return {
+      icon: "mdi-folder-image",
+      color: "geay-darken-4",
+      action: () => {
+        inAssetsBackup.toggled = true;
+      },
+    };
+  });
+
   const filterDeck = computed(() => {
     const inDeck = filterConfig.inDeck;
     if (inDeck.toggled)
@@ -204,12 +224,17 @@
       inDeck: { toggled: false, value: true },
       inUSB: { toggled: false, value: true },
     });
+
+    Object.assign(gameStore.filterOperator, {
+      group1: true,
+      group2: true,
+    });
   }
 </script>
 
 <template>
   <!-- Filter -->
-  <v-btn icon>
+  <v-btn icon @contextmenu.prevent="resetFilters">
     <v-icon
       :icon="Object.values(filterConfig).some((filter: any) => filter.toggled)
             ? 'mdi-filter'
@@ -308,6 +333,14 @@
                 ></v-icon>
               </v-btn>
 
+              <v-btn @click="filterAssetsBackup.action">
+                <v-icon
+                  :icon="filterAssetsBackup.icon"
+                  :color="filterAssetsBackup.color"
+                  size="x-large"
+                ></v-icon>
+              </v-btn>
+
               <v-btn @click="filterDeck.action">
                 <v-icon
                   :icon="filterDeck.icon"
@@ -324,18 +357,18 @@
                 ></v-icon>
               </v-btn>
 
-              <v-btn @click="filterUSB.action">
+              <!-- <v-btn @click="filterUSB.action">
                 <v-icon
                   :icon="filterUSB.icon"
                   :color="filterUSB.color"
                   size="x-large"
                 ></v-icon>
-              </v-btn>
+              </v-btn> -->
             </v-btn-group>
           </div>
         </div>
 
-        <v-divider></v-divider>
+        <!-- <v-divider></v-divider>
 
         <v-btn
           width="100%"
@@ -345,7 +378,7 @@
           @click="resetFilters"
         >
           Clear
-        </v-btn>
+        </v-btn> -->
       </v-sheet>
     </v-menu>
   </v-btn>

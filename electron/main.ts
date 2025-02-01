@@ -154,7 +154,7 @@ function registerIpcMain() {
   ipcMain.handle('removeItem', (_event, path: string) => {
     return utils.removeItem(path)
   });
-  ipcMain.handle('start-copy', async (event, source:string, destination:string, include:string[], exclude:string[]) => {
+  ipcMain.handle('start-copy', async (event, source:string, destination:string, include:string[]=[], exclude:string[]=[]) => {
     try {
       if ((await fs.promises.stat(source)).isDirectory()) {
         await utils.copyDirectory(source, destination, include, exclude, event);
