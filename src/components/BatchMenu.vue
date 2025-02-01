@@ -50,7 +50,7 @@
 
 <template>
   <v-btn icon>
-    <v-icon icon="mdi-dots-vertical" />
+    <v-icon icon="mdi-select-multiple" />
     <v-menu
       activator="parent"
       :close-on-content-click="false"

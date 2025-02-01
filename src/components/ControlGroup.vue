@@ -1,7 +1,8 @@
 <script setup lang="ts">
-  import { computed } from "vue";
+  import { computed, readonly } from "vue";
   import GameEntry from "@/modules/GameEntry";
   import { useGameStore } from "@/store/global-store";
+  import { el } from "vuetify/locale";
 
   const gameStore = useGameStore();
 
@@ -99,40 +100,50 @@
     if (!gameStore.netDiskOnline) {
       return {
         icon: "mdi-cloud-off",
+        iconHover: "mdi-cloud-off",
         color: "grey-darken-4",
+        colorHover: "grey-darken-4",
         readonly: true,
         action: () => {},
       };
     } else if (props.game.inNetDisk) {
       if (props.game.inDeck || props.game.inSDCard) {
         return {
-          icon: "mdi-cloud",
+          icon: "mdi-cloud-check-variant",
+          iconHover: "mdi-download-off",
           color: "green",
-          readonly: true,
-          action: () => {},
+          colorHover: "red",
+          readonly: false,
+          action: () => {}, // delete local handled by dialog action
         };
       } else {
         return {
           icon: "mdi-cloud-download",
+          iconHover: "mdi-cloud-download",
           color: "green",
+          colorHover: "green",
           readonly: false,
-          action: () => {},
+          action: () => {}, // download handled by menu btngroup
         };
       }
     } else {
       if (props.game.inDeck || props.game.inSDCard) {
         return {
-          icon: "mdi-cloud",
+          icon: "mdi-cloud-alert",
+          iconHover: "mdi-cloud-alert",
           color: "red",
-          readonly: false,
+          colorHover: "red",
+          readonly: true,
           // action: () => (props.game.inNetDisk = true), // @TODO: 上传到云端
           action: () => {},
         };
       } else {
         // not in cloud or local storage, means the link is broken or name is changed
         return {
-          icon: "mdi-cloud",
+          icon: "mdi-cloud-off",
+          iconHover: "mdi-cloud-off",
           color: "blue-grey",
+          colorHover: "blue-grey",
           readonly: true,
           action: () => {},
         };
@@ -144,9 +155,9 @@
     if (props.game.inSDCard) {
       return {
         icon: "mdi-micro-sd",
-        iconHover: "mdi-delete-empty",
+        iconHover: "mdi-folder-move",
         color: "green",
-        hoverColor: "red",
+        hoverColor: "green",
         readonly: false,
         action: () => {}, // handled by dialog action
         // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
@@ -154,9 +165,9 @@
     } else if (props.game.inDeck) {
       return {
         icon: "mdi-gamepad-square",
-        iconHover: "mdi-delete-empty",
+        iconHover: "mdi-folder-move",
         color: "green",
-        hoverColor: "red",
+        hoverColor: "green",
         readonly: false,
         action: () => {},
         // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
@@ -207,6 +218,24 @@
       color: "amber",
       action: () => (props.game.starred = !props.game.starred),
     };
+  });
+
+  const syncBtn = computed(() => {
+    if (props.game.inNetDisk && (props.game.inDeck || props.game.inSDCard)) {
+      return {
+        icon: "mdi-sync",
+        color: "green",
+        readonly: false,
+        action: () => {}, // sync handled by dialog action
+      };
+    } else {
+      return {
+        icon: "mdi-sync-off",
+        color: "blue-grey",
+        readonly: true,
+        action: () => {},
+      };
+    }
   });
 
   function pushToDownloadList(target: string) {
@@ -313,63 +342,63 @@
     </v-hover>
 
     <!-- Cloud Button -->
-    <v-btn
-      icon
-      size="x-small"
-      variant="text"
-      :readonly="cloudBtn.readonly"
-      @click="cloudBtn.action"
-    >
-      <v-icon :icon="cloudBtn.icon" :color="cloudBtn.color" size="x-large">
-      </v-icon>
-      <v-menu
-        activator="parent"
-        scroll-strategy="close"
-        transition="slide-x-reverse-transition"
-        location="start center"
-        origin="end center"
-      >
-        <v-sheet rounded="lg">
-          <v-btn-group density="compact">
-            <v-btn
-              @click="pushToDownloadList(gameStore.config.value.gamesDataPath)"
-            >
-              <v-icon variant="text">mdi-gamepad-square</v-icon>
-            </v-btn>
-
-            <v-btn
-              @click="pushToDownloadList(gameStore.config.value.gamesSDPath)"
-            >
-              <v-icon variant="text">mdi-micro-sd</v-icon>
-            </v-btn>
-
-            <v-btn
-              @click="pushToDownloadList(gameStore.config.value.gamesUSBPath)"
-            >
-              <v-icon variant="text">mdi-usb</v-icon>
-            </v-btn>
-          </v-btn-group>
-        </v-sheet>
-      </v-menu>
-    </v-btn>
-
-    <!-- Storage Button -->
     <v-hover>
       <template v-slot:default="{ isHovering, props }">
         <v-btn
-          v-bind="props"
           icon
           size="x-small"
           variant="text"
-          :readonly="storageBtn.readonly"
+          :readonly="cloudBtn.readonly"
+          @click="cloudBtn.action"
+          v-bind="props"
         >
-          <!-- @click="storageBtn.action" -->
           <v-icon
-            :icon="isHovering ? storageBtn.iconHover : storageBtn.icon"
-            :color="isHovering ? storageBtn.hoverColor : storageBtn.color"
+            :icon="isHovering ? cloudBtn.iconHover : cloudBtn.icon"
+            :color="isHovering ? cloudBtn.colorHover : cloudBtn.color"
             size="x-large"
-          ></v-icon>
-          <v-dialog activator="parent" max-width="522">
+          >
+          </v-icon>
+          <v-menu
+            v-if="cloudBtn.icon === 'mdi-cloud-download'"
+            activator="parent"
+            scroll-strategy="close"
+            transition="slide-x-reverse-transition"
+            location="start center"
+            origin="end center"
+          >
+            <v-sheet rounded="lg">
+              <v-btn-group density="compact">
+                <v-btn
+                  @click="
+                    pushToDownloadList(gameStore.config.value.gamesDataPath)
+                  "
+                >
+                  <v-icon variant="text">mdi-gamepad-square</v-icon>
+                </v-btn>
+
+                <v-btn
+                  @click="
+                    pushToDownloadList(gameStore.config.value.gamesSDPath)
+                  "
+                >
+                  <v-icon variant="text">mdi-micro-sd</v-icon>
+                </v-btn>
+
+                <!-- <v-btn
+                  @click="
+                    pushToDownloadList(gameStore.config.value.gamesUSBPath)
+                  "
+                >
+                  <v-icon variant="text">mdi-usb</v-icon>
+                </v-btn> -->
+              </v-btn-group>
+            </v-sheet>
+          </v-menu>
+          <v-dialog
+            v-if="cloudBtn.icon === 'mdi-cloud-check-variant'"
+            activator="parent"
+            max-width="522"
+          >
             <template v-slot:default="{ isActive }">
               <v-card
                 prepend-icon="mdi-delete-empty"
@@ -408,8 +437,81 @@
       </template>
     </v-hover>
 
+    <!-- Storage Button -->
+    <v-hover>
+      <template v-slot:default="{ isHovering, props }">
+        <v-btn
+          v-bind="props"
+          icon
+          size="x-small"
+          variant="text"
+          :readonly="storageBtn.readonly"
+        >
+          <!-- @click="storageBtn.action" -->
+          <v-icon
+            :icon="isHovering ? storageBtn.iconHover : storageBtn.icon"
+            :color="isHovering ? storageBtn.hoverColor : storageBtn.color"
+            size="x-large"
+          ></v-icon>
+          <v-menu
+            activator="parent"
+            scroll-strategy="close"
+            transition="slide-x-reverse-transition"
+            location="start center"
+            origin="end center"
+          >
+            <v-sheet rounded="lg">
+              <v-btn-group density="compact">
+                <v-btn
+                  v-if="!game.inDeck"
+                  @click="
+                    pushToDownloadList(gameStore.config.value.gamesDataPath)
+                  "
+                >
+                  <v-icon variant="text">mdi-gamepad-square</v-icon>
+                </v-btn>
+
+                <v-btn
+                  v-if="!game.inSDCard"
+                  @click="
+                    pushToDownloadList(gameStore.config.value.gamesSDPath)
+                  "
+                >
+                  <v-icon variant="text">mdi-micro-sd</v-icon>
+                </v-btn>
+
+                <!-- <v-btn
+                  v-if="!game.inUSB"
+                  @click="
+                    pushToDownloadList(gameStore.config.value.gamesUSBPath)
+                  "
+                >
+                  <v-icon variant="text">mdi-usb</v-icon>
+                </v-btn> -->
+              </v-btn-group>
+            </v-sheet>
+          </v-menu>
+        </v-btn>
+      </template>
+    </v-hover>
+
+    <!-- Sync Button -->
+    <v-btn
+      icon
+      size="x-small"
+      variant="text"
+      :readonly="syncBtn.readonly"
+      @click="syncBtn.action"
+    >
+      <v-icon
+        :icon="syncBtn.icon"
+        :color="syncBtn.color"
+        size="x-large"
+      ></v-icon>
+    </v-btn>
+
     <!-- Move Button -->
-    <v-btn icon size="x-small" variant="text" :readonly="moveBtn.readonly">
+    <!-- <v-btn icon size="x-small" variant="text" :readonly="moveBtn.readonly">
       <v-icon
         :icon="moveBtn.icon"
         :color="moveBtn.color"
@@ -447,7 +549,7 @@
           </v-btn-group>
         </v-sheet>
       </v-menu>
-    </v-btn>
+    </v-btn> -->
   </div>
 </template>
 
