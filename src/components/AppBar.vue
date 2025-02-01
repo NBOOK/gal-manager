@@ -6,38 +6,6 @@
 
   const gameStore = useGameStore();
   const sortConfig = gameStore.sort;
-
-  function checkAllFilteredGames() {
-    gameStore.filterSortedGames.forEach((game) => (game.selected = true));
-  }
-
-  function uncheckAllFilteredGames() {
-    gameStore.filterSortedGames.forEach((game) => (game.selected = false));
-  }
-
-  function pushAllToDownloadList(target: string) {
-    gameStore.downloadList.push(
-      ...gameStore.selectedGames
-        .map((game) => ({
-          game: game,
-          source: game.linked ? game.linkedBasePath : game.basePath,
-          target: target,
-          progress: 0,
-        }))
-        .filter((item) => {
-          // 检查 game.gameName 是否已经在 downloadList 中存在
-          const isDuplicate = gameStore.downloadList.some(
-            (existingItem) => existingItem.game.gameName === item.game.gameName
-          );
-          // 如果不存在重复项，则保留该项
-          return !isDuplicate;
-        })
-    );
-  }
-
-  async function deleteAllSelectedGames() {
-    gameStore.selectedGames.forEach(async (game) => await game.deleteLocal());
-  }
 </script>
 
 <template>
@@ -87,7 +55,10 @@
       ></v-text-field>
 
       <!-- Sort -->
-      <v-btn icon>
+      <v-btn
+        icon
+        @contextmenu.prevent="sortConfig.ascending = !sortConfig.ascending"
+      >
         <v-icon
           :icon="
             sortConfig.ascending ? 'mdi-sort-ascending' : 'mdi-sort-descending'

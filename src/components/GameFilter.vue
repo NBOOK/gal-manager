@@ -9,7 +9,7 @@
     const linked = filterConfig.linked;
     if (linked.toggled) {
       return {
-        icon: linked.value ? "mdi-link" : "mdi-link-off",
+        icon: linked.value ? "mdi-link-variant" : "mdi-link-variant-off",
         color: linked.value ? "green" : "red",
         action: () => {
           linked.value = !linked.value;
@@ -18,7 +18,7 @@
       };
     }
     return {
-      icon: "mdi-link",
+      icon: "mdi-link-variant",
       color: "geay-darken-4",
       action: () => (linked.toggled = true),
     };
@@ -223,6 +223,7 @@
       inSDCard: { toggled: false, value: true },
       inDeck: { toggled: false, value: true },
       inUSB: { toggled: false, value: true },
+      inAssetsBackup: { toggled: false, value: true },
     });
 
     Object.assign(gameStore.filterOperator, {

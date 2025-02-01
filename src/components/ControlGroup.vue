@@ -11,14 +11,14 @@
   const linkBtn = computed(() => {
     if (props.game.linked) {
       return {
-        icon: "mdi-link",
+        icon: "mdi-link-variant",
         color: "green",
         readonly: props.game.inLutrisDB || props.game.inSteamDB,
         action: () => props.game.unlink(),
       };
     } else {
       return {
-        icon: "mdi-link-off",
+        icon: "mdi-link-variant-off",
         color: "red",
         readonly: false,
         action: () => props.game.link(),

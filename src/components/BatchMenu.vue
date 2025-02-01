@@ -49,7 +49,7 @@
 </script>
 
 <template>
-  <v-btn icon>
+  <v-btn icon @contextmenu.prevent="uncheckAllFilteredGames">
     <v-icon icon="mdi-select-multiple" />
     <v-menu
       activator="parent"
@@ -85,6 +85,11 @@
                   ))
               )
             "
+            @click="
+              linkAllSelectedGames(
+                gameStore.selectedGames.every((game) => !game.linked)
+              )
+            "
           >
             <v-icon
               :color="
@@ -99,14 +104,15 @@
                   : 'grey-darken-4'
               "
               :icon="
-                gameStore.selectedGames.every((game) => !game.linked)
-                  ? 'mdi-link'
-                  : 'mdi-link-off'
-              "
-              @click="
-                linkAllSelectedGames(
-                  gameStore.selectedGames.every((game) => !game.linked)
-                )
+                gameStore.selectedGames.length === 0
+                  ? 'mdi-link-variant'
+                  : gameStore.selectedGames.every((game) => !game.linked)
+                  ? 'mdi-link-variant-plus'
+                  : gameStore.selectedGames.every(
+                      (game) => game.linked && game.inDatabase === 0
+                    )
+                  ? 'mdi-link-variant-minus'
+                  : 'mdi-link-variant'
               "
               size="x-large"
             ></v-icon>
