@@ -293,6 +293,8 @@ class GameEntry {
     );
     console.log(`Downloaded ${assetsSource} to ${assetsDestination}`);
 
+    await this.deleteLocal(); // delete using old status
+
     if (target === gameStore.config.value.gamesDataPath) {
       this.inDeck = true;
     } else if (target === gameStore.config.value.gamesSDPath) {

@@ -446,7 +446,7 @@ async function removeItem(itemPath: string): Promise<void> {
   try {
     const stats = await fs.promises.stat(itemPath);
     if (stats.isDirectory()) {
-      await fs.promises.rm(itemPath, { recursive: true });
+      await fs.promises.rm(itemPath, { recursive: true, force: true });
     } else {
       await fs.promises.unlink(itemPath);
     }

@@ -409,18 +409,44 @@
     </v-hover>
 
     <!-- Move Button -->
-    <v-btn
-      icon
-      size="x-small"
-      variant="text"
-      :readonly="moveBtn.readonly"
-      @click="moveBtn.action"
-    >
+    <v-btn icon size="x-small" variant="text" :readonly="moveBtn.readonly">
       <v-icon
         :icon="moveBtn.icon"
         :color="moveBtn.color"
         size="x-large"
       ></v-icon>
+      <v-menu
+        activator="parent"
+        scroll-strategy="close"
+        transition="slide-x-reverse-transition"
+        location="start center"
+        origin="end center"
+      >
+        <v-sheet rounded="lg">
+          <v-btn-group density="compact">
+            <v-btn
+              v-if="!game.inDeck"
+              @click="pushToDownloadList(gameStore.config.value.gamesDataPath)"
+            >
+              <v-icon variant="text">mdi-gamepad-square</v-icon>
+            </v-btn>
+
+            <v-btn
+              v-if="!game.inSDCard"
+              @click="pushToDownloadList(gameStore.config.value.gamesSDPath)"
+            >
+              <v-icon variant="text">mdi-micro-sd</v-icon>
+            </v-btn>
+
+            <v-btn
+              v-if="!game.inUSB"
+              @click="pushToDownloadList(gameStore.config.value.gamesUSBPath)"
+            >
+              <v-icon variant="text">mdi-usb</v-icon>
+            </v-btn>
+          </v-btn-group>
+        </v-sheet>
+      </v-menu>
     </v-btn>
   </div>
 </template>
