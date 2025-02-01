@@ -369,7 +369,7 @@
             :color="isHovering ? storageBtn.hoverColor : storageBtn.color"
             size="x-large"
           ></v-icon>
-          <v-dialog activator="parent" max-width="500">
+          <v-dialog activator="parent" max-width="522">
             <template v-slot:default="{ isActive }">
               <v-card
                 prepend-icon="mdi-delete-empty"
@@ -379,8 +379,8 @@
                   <v-card-subtitle>{{ game.gameName }}</v-card-subtitle>
                 </v-container>
                 <v-card-text>
-                  Your're removing the game from local storage. This can't be
-                  undone without a NetDisk backup.
+                  Your're removing the game listed above from local storage.
+                  This action is irreversible without a NetDisk backup.
                 </v-card-text>
                 <template v-slot:actions>
                   <v-spacer></v-spacer>

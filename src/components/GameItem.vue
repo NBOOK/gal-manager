@@ -1,11 +1,11 @@
 <script setup lang="ts">
-// import { reactive, computed } from "vue";
-import GameEntry from "@/modules/GameEntry";
-import GameImgThumb from "@/components/GameImgThumb.vue";
-import GameInfo from "@/components/GameInfo.vue";
-import ControlGroup from "@/components/ControlGroup.vue";
+  // import { reactive, computed } from "vue";
+  import GameEntry from "@/modules/GameEntry";
+  import GameImgThumb from "@/components/GameImgThumb.vue";
+  import GameInfo from "@/components/GameInfo.vue";
+  import ControlGroup from "@/components/ControlGroup.vue";
 
-defineProps<{ game: GameEntry }>(); // use props.game to access the game object
+  defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 </script>
 
 <template>
@@ -16,6 +16,7 @@ defineProps<{ game: GameEntry }>(); // use props.game to access the game object
     height="100"
     style="margin: 5px 0"
     min-width="550px"
+    @contextmenu="game.selected = !game.selected"
   >
     <div class="game-item">
       <!-- 左侧图片 -->
@@ -31,10 +32,10 @@ defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 </template>
 
 <style scoped>
-.game-item {
-  display: flex;
-  align-items: flex-start;
-  max-width: 100%;
-  flex-wrap: nowrap;
-}
+  .game-item {
+    display: flex;
+    align-items: flex-start;
+    max-width: 100%;
+    flex-wrap: nowrap;
+  }
 </style>

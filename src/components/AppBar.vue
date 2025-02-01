@@ -1,198 +1,10 @@
 <script setup lang="ts">
-  import { computed } from "vue";
   import { useGameStore } from "@/store/global-store";
   import Download from "@/components/Download.vue";
+  import GameFilter from "@/components/GameFilter.vue";
 
   const gameStore = useGameStore();
   const sortConfig = gameStore.sort;
-  const filterConfig = gameStore.filter;
-
-  const filterLinked = computed(() => {
-    const linked = filterConfig.linked;
-    if (linked.toggled) {
-      return {
-        icon: linked.value ? "mdi-link" : "mdi-link-off",
-        color: linked.value ? "green" : "red",
-        action: () => {
-          linked.value = !linked.value;
-          linked.toggled = !linked.value;
-        },
-      };
-    }
-    return {
-      icon: "mdi-link",
-      color: "geay-darken-4",
-      action: () => (linked.toggled = true),
-    };
-  });
-
-  const filterDatabase = computed(() => {
-    const inDatabase = filterConfig.inDatabase;
-    if (inDatabase.toggled)
-      return {
-        icon: [
-          "mdi-database-remove",
-          "mdi-database-check",
-          "mdi-database-minus",
-        ][inDatabase.value],
-        color: ["red", "green", "orange"][inDatabase.value],
-        action: () => {
-          inDatabase.value = (inDatabase.value + 1) % 3;
-          inDatabase.toggled = inDatabase.value !== 1;
-        },
-      };
-    return {
-      icon: "mdi-database",
-      color: "geay-darken-4",
-      action: () => {
-        inDatabase.toggled = true;
-      },
-    };
-  });
-
-  const filterImage = computed(() => {
-    const inAssets = filterConfig.inAssets;
-    if (inAssets.toggled)
-      return {
-        icon: ["mdi-image-remove", "mdi-image-check", "mdi-image-minus"][
-          inAssets.value
-        ],
-        color: ["red", "green", "orange"][inAssets.value],
-        action: () => {
-          inAssets.value = (inAssets.value + 1) % 3;
-          inAssets.toggled = inAssets.value !== 1;
-        },
-      };
-    return {
-      icon: "mdi-image",
-      color: "geay-darken-4",
-      action: () => {
-        inAssets.toggled = true;
-      },
-    };
-  });
-
-  // const filterStarred = computed(() => {
-  //   const starred = filterConfig.starred;
-  //   if (starred.toggled)
-  //     return {
-  //       icon: starred.value ? "mdi-star" : "mdi-star-outline",
-  //       color: "amber",
-  //       action: () => {
-  //         starred.value = !starred.value;
-  //         starred.toggled = !starred.value;
-  //       },
-  //     };
-  //   return {
-  //     icon: "mdi-star",
-  //     color: "geay-darken-4",
-  //     action: () => {
-  //       starred.toggled = true;
-  //     },
-  //   };
-  // });
-
-  const filterSelected = computed(() => {
-    const selected = filterConfig.selected;
-    if (selected.toggled)
-      return {
-        icon: selected.value
-          ? "mdi-checkbox-marked"
-          : "mdi-checkbox-blank-outline",
-        color: "geay-darken-4",
-        action: () => {
-          selected.value = !selected.value;
-          selected.toggled = !selected.value;
-        },
-      };
-    return {
-      icon: "mdi-checkbox-blank-off-outline",
-      color: "geay-darken-4",
-      action: () => {
-        selected.toggled = true;
-      },
-    };
-  });
-
-  const filterCloud = computed(() => {
-    const inNetDisk = filterConfig.inNetDisk;
-    if (inNetDisk.toggled)
-      return {
-        icon: "mdi-cloud",
-        color: inNetDisk.value ? "green" : "red",
-        action: () => {
-          inNetDisk.value = !inNetDisk.value;
-          inNetDisk.toggled = !inNetDisk.value;
-        },
-      };
-    return {
-      icon: "mdi-cloud",
-      color: "geay-darken-4",
-      action: () => {
-        inNetDisk.toggled = true;
-      },
-    };
-  });
-
-  const filterDeck = computed(() => {
-    const inDeck = filterConfig.inDeck;
-    if (inDeck.toggled)
-      return {
-        icon: "mdi-gamepad-square",
-        color: inDeck.value ? "green" : "red",
-        action: () => {
-          inDeck.value = !inDeck.value;
-          inDeck.toggled = !inDeck.value;
-        },
-      };
-    return {
-      icon: "mdi-gamepad-square",
-      color: "geay-darken-4",
-      action: () => {
-        inDeck.toggled = true;
-      },
-    };
-  });
-
-  const filterSD = computed(() => {
-    const inSDCard = filterConfig.inSDCard;
-    if (inSDCard.toggled)
-      return {
-        icon: "mdi-micro-sd",
-        color: inSDCard.value ? "green" : "red",
-        action: () => {
-          inSDCard.value = !inSDCard.value;
-          inSDCard.toggled = !inSDCard.value;
-        },
-      };
-    return {
-      icon: "mdi-micro-sd",
-      color: "geay-darken-4",
-      action: () => {
-        inSDCard.toggled = true;
-      },
-    };
-  });
-
-  const filterUSB = computed(() => {
-    const inUSB = filterConfig.inUSB;
-    if (inUSB.toggled)
-      return {
-        icon: "mdi-usb",
-        color: inUSB.value ? "green" : "red",
-        action: () => {
-          inUSB.value = !inUSB.value;
-          inUSB.toggled = !inUSB.value;
-        },
-      };
-    return {
-      icon: "mdi-usb",
-      color: "geay-darken-4",
-      action: () => {
-        inUSB.toggled = true;
-      },
-    };
-  });
 
   function checkAllFilteredGames() {
     gameStore.filterSortedGames.forEach((game) => (game.selected = true));
@@ -319,126 +131,7 @@
       </v-btn>
 
       <!-- Filter -->
-      <v-btn icon>
-        <v-icon
-          :icon="Object.values(filterConfig).some((filter: any) => filter.toggled)
-            ? 'mdi-filter'
-            : 'mdi-filter-outline'
-          "
-        ></v-icon>
-        <v-menu
-          activator="parent"
-          :close-on-content-click="false"
-          scroll-strategy="close"
-          transition="slide-y-transition"
-          location="bottom center"
-          origin="top center"
-        >
-          <v-sheet rounded="lg">
-            <v-btn
-              width="100%"
-              variant="flat"
-              density="compact"
-              v-model="gameStore.filterOperator.group1"
-              @click="
-                gameStore.filterOperator.group1 =
-                  !gameStore.filterOperator.group1
-              "
-            >
-              {{ gameStore.filterOperator.group1 ? "AND" : "OR" }}
-            </v-btn>
-            <v-btn-group class="grid2x2">
-              <v-btn @click="filterLinked.action">
-                <v-icon
-                  :icon="filterLinked.icon"
-                  :color="filterLinked.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-
-              <v-btn @click="filterDatabase.action">
-                <v-icon
-                  :icon="filterDatabase.icon"
-                  :color="filterDatabase.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-
-              <v-btn @click="filterImage.action">
-                <v-icon
-                  :icon="filterImage.icon"
-                  :color="filterImage.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-
-              <!-- <v-btn @click="filterStarred.action">
-                <v-icon
-                  :icon="filterStarred.icon"
-                  :color="filterStarred.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn> -->
-
-              <v-btn @click="filterSelected.action">
-                <v-icon
-                  :icon="filterSelected.icon"
-                  :color="filterSelected.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-            </v-btn-group>
-
-            <v-divider></v-divider>
-
-            <v-btn
-              width="100%"
-              variant="flat"
-              density="compact"
-              v-model="gameStore.filterOperator.group2"
-              @click="
-                gameStore.filterOperator.group2 =
-                  !gameStore.filterOperator.group2
-              "
-            >
-              {{ gameStore.filterOperator.group2 ? "AND" : "OR" }}
-            </v-btn>
-            <v-btn-group class="grid2x2">
-              <v-btn @click="filterCloud.action">
-                <v-icon
-                  :icon="filterCloud.icon"
-                  :color="filterCloud.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-
-              <v-btn @click="filterDeck.action">
-                <v-icon
-                  :icon="filterDeck.icon"
-                  :color="filterDeck.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-
-              <v-btn @click="filterSD.action">
-                <v-icon
-                  :icon="filterSD.icon"
-                  :color="filterSD.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-
-              <v-btn @click="filterUSB.action">
-                <v-icon
-                  :icon="filterUSB.icon"
-                  :color="filterUSB.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-            </v-btn-group>
-          </v-sheet>
-        </v-menu>
-      </v-btn>
+      <GameFilter />
 
       <template v-slot:append>
         <v-spacer></v-spacer>
@@ -571,7 +264,7 @@
                     size="x-large"
                     >mdi-delete</v-icon
                   >
-                  <v-dialog activator="parent" max-width="500">
+                  <v-dialog activator="parent" max-width="522">
                     <template v-slot:default="{ isActive }">
                       <v-card
                         prepend-icon="mdi-delete-empty"
@@ -587,8 +280,9 @@
                           >
                         </v-container>
                         <v-card-text>
-                          You're removing the games above from local storage.
-                          This can't be undone without a NetDisk backup.
+                          You're removing the games listed above from local
+                          storage. This action is irreversible without a NetDisk
+                          backup.
                         </v-card-text>
                         <template v-slot:actions>
                           <v-spacer></v-spacer>
