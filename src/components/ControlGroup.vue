@@ -3,6 +3,7 @@
   import GameEntry from "@/modules/GameEntry";
   import { useGameStore } from "@/store/global-store";
   import { el } from "vuetify/locale";
+  import { c } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 
   const gameStore = useGameStore();
 
@@ -12,14 +13,18 @@
     if (props.game.linked) {
       return {
         icon: "mdi-link-variant",
+        iconHover: "mdi-link-variant-minus",
         color: "green",
+        colorHover: "red",
         readonly: props.game.inLutrisDB || props.game.inSteamDB,
         action: () => props.game.unlink(),
       };
     } else {
       return {
         icon: "mdi-link-variant-off",
+        iconHover: "mdi-link-variant-plus",
         color: "red",
+        colorHover: "green",
         readonly: false,
         action: () => props.game.link(),
       };
@@ -110,7 +115,7 @@
       if (props.game.inDeck || props.game.inSDCard) {
         return {
           icon: "mdi-cloud-check-variant",
-          iconHover: "mdi-download-off",
+          iconHover: "mdi-content-save-minus",
           color: "green",
           colorHover: "red",
           readonly: false,
@@ -288,19 +293,24 @@
     </v-btn>
 
     <!-- Link Button -->
-    <v-btn
-      icon
-      size="x-small"
-      variant="text"
-      :readonly="linkBtn.readonly"
-      @click="linkBtn.action"
-    >
-      <v-icon
-        :icon="linkBtn.icon"
-        :color="linkBtn.color"
-        size="x-large"
-      ></v-icon>
-    </v-btn>
+    <v-hover>
+      <template v-slot:default="{ isHovering, props }">
+        <v-btn
+          icon
+          size="x-small"
+          variant="text"
+          v-bind="props"
+          :readonly="linkBtn.readonly"
+          @click="linkBtn.action"
+        >
+          <v-icon
+            :icon="isHovering ? linkBtn.iconHover : linkBtn.icon"
+            :color="isHovering ? linkBtn.colorHover : linkBtn.color"
+            size="x-large"
+          ></v-icon>
+        </v-btn>
+      </template>
+    </v-hover>
 
     <!-- Database Button -->
     <v-hover>
