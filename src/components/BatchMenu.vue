@@ -50,7 +50,7 @@
 
 <template>
   <v-btn icon @contextmenu.prevent="uncheckAllFilteredGames">
-    <v-icon icon="mdi-select-multiple" />
+    <v-icon icon="$mdiSelectMultiple" />
     <v-menu
       activator="parent"
       :close-on-content-click="false"
@@ -63,11 +63,11 @@
         <!-- Select, Unselect -->
         <v-btn-group>
           <v-btn @click="checkAllFilteredGames">
-            <v-icon size="x-large">mdi-checkbox-multiple-marked</v-icon>
+            <v-icon size="x-large">$mdiCheckboxMultipleMarked</v-icon>
           </v-btn>
 
           <v-btn @click="uncheckAllFilteredGames">
-            <v-icon size="x-large">mdi-checkbox-multiple-blank-outline</v-icon>
+            <v-icon size="x-large">$mdiCheckboxMultipleBlankOutline</v-icon>
           </v-btn>
         </v-btn-group>
 
@@ -105,14 +105,14 @@
               "
               :icon="
                 gameStore.selectedGames.length === 0
-                  ? 'mdi-link-variant'
+                  ? '$mdiLinkVariant'
                   : gameStore.selectedGames.every((game) => !game.linked)
-                  ? 'mdi-link-variant-plus'
+                  ? '$mdiLinkVariantPlus'
                   : gameStore.selectedGames.every(
                       (game) => game.linked && game.inDatabase === 0
                     )
-                  ? 'mdi-link-variant-minus'
-                  : 'mdi-link-variant'
+                  ? '$mdiLinkVariantMinus'
+                  : '$mdiLinkVariant'
               "
               size="x-large"
             ></v-icon>
@@ -134,7 +134,7 @@
                   : 'grey-darken-4'
               "
               size="x-large"
-              >mdi-database-edit</v-icon
+              >$mdiDatabaseEdit</v-icon
             >
           </v-btn>
 
@@ -157,7 +157,7 @@
                   : 'grey-darken-4'
               "
               size="x-large"
-              >mdi-cloud-download</v-icon
+              >$mdiCloudDownload</v-icon
             >
             <v-menu
               activator="parent"
@@ -175,7 +175,7 @@
                       )
                     "
                   >
-                    <v-icon size="x-large">mdi-gamepad-square</v-icon>
+                    <v-icon size="x-large">$mdiGamepadSquare</v-icon>
                   </v-btn>
 
                   <v-btn
@@ -183,16 +183,16 @@
                       pushAllToDownloadList(gameStore.config.value.gamesSDPath)
                     "
                   >
-                    <v-icon size="x-large">mdi-micro-sd</v-icon>
+                    <v-icon size="x-large">$mdiMicroSd</v-icon>
                   </v-btn>
 
-                  <v-btn
+                  <!-- <v-btn
                     @click="
                       pushAllToDownloadList(gameStore.config.value.gamesUSBPath)
                     "
                   >
-                    <v-icon size="x-large">mdi-usb</v-icon>
-                  </v-btn>
+                    <v-icon size="x-large">$mdiUsb</v-icon>
+                  </v-btn> -->
                 </v-btn-group>
               </v-sheet>
             </v-menu>
@@ -218,7 +218,7 @@
                   : 'grey-darken-4'
               "
               size="x-large"
-              >mdi-folder-move
+              >$mdiFolderMove
             </v-icon>
             <v-menu
               activator="parent"
@@ -237,7 +237,7 @@
                       )
                     "
                   >
-                    <v-icon size="x-large">mdi-gamepad-square</v-icon>
+                    <v-icon size="x-large">$mdiGamepadSquare</v-icon>
                   </v-btn>
 
                   <v-btn
@@ -248,7 +248,7 @@
                       pushAllToDownloadList(gameStore.config.value.gamesSDPath)
                     "
                   >
-                    <v-icon size="x-large">mdi-micro-sd</v-icon>
+                    <v-icon size="x-large">$mdiMicroSd</v-icon>
                   </v-btn>
 
                   <!-- <v-btn
@@ -256,7 +256,7 @@
                       pushAllToDownloadList(gameStore.config.value.gamesUSBPath)
                     "
                   >
-                    <v-icon size="x-large">mdi-usb</v-icon>
+                    <v-icon size="x-large">$mdiUsb</v-icon>
                   </v-btn> -->
                 </v-btn-group>
               </v-sheet>
@@ -287,7 +287,7 @@
                   : 'grey-darken-4'
               "
               size="x-large"
-              >mdi-sync</v-icon
+              >$mdiSync</v-icon
             >
           </v-btn>
 
@@ -310,12 +310,12 @@
                   : 'grey-darken-4'
               "
               size="x-large"
-              >mdi-delete</v-icon
+              >$mdiDelete</v-icon
             >
             <v-dialog activator="parent" max-width="522">
               <template v-slot:default="{ isActive }">
                 <v-card
-                  prepend-icon="mdi-delete-empty"
+                  prepend-icon="$mdiDeleteEmpty"
                   title="Free Local Storage"
                 >
                   <v-container

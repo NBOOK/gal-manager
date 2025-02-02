@@ -23,7 +23,7 @@
           @click="gameStore.loading = true"
         >
           <v-icon
-            :icon="gameStore.totalGames ? 'mdi-reload' : 'mdi-magnify-scan'"
+            :icon="gameStore.totalGames ? '$mdiReload' : '$mdiMagnifyScan'"
           />
           <v-tooltip
             activator="parent"
@@ -43,9 +43,9 @@
         variant="outlined"
         hide-details
         clearable
-        clear-icon="mdi-backspace-outline"
+        clear-icon="$mdiBackspaceOutline"
         :placeholder="`Search ${gameStore.totalGames} games (JP/EN)`"
-        prepend-inner-icon="mdi-magnify"
+        prepend-inner-icon="$mdiMagnify"
         single-line
         max-width="51%"
         rounded="lg"
@@ -61,7 +61,7 @@
       >
         <v-icon
           :icon="
-            sortConfig.ascending ? 'mdi-sort-ascending' : 'mdi-sort-descending'
+            sortConfig.ascending ? '$mdiSortAscending' : '$mdiSortDescending'
           "
         ></v-icon>
         <v-menu
@@ -75,11 +75,11 @@
           <v-sheet rounded="lg">
             <v-btn-toggle mandatory v-model="sortConfig.ascending">
               <v-btn :value="true">
-                <v-icon size="x-large">mdi-sort-ascending</v-icon>
+                <v-icon size="x-large">$mdiSortAscending</v-icon>
               </v-btn>
 
               <v-btn :value="false">
-                <v-icon size="x-large">mdi-sort-descending</v-icon>
+                <v-icon size="x-large">$mdiSortDescending</v-icon>
               </v-btn>
             </v-btn-toggle>
 
@@ -87,19 +87,19 @@
 
             <v-btn-toggle mandatory class="grid2x2" v-model="sortConfig.by">
               <v-btn value="gameName">
-                <v-icon size="x-large">mdi-alphabetical-variant</v-icon>
+                <v-icon size="x-large">$mdiAlphabeticalVariant</v-icon>
               </v-btn>
 
               <v-btn value="gameBrand">
-                <v-icon size="x-large">mdi-domain</v-icon>
+                <v-icon size="x-large">$mdiDomain</v-icon>
               </v-btn>
 
               <v-btn value="modifiedTime">
-                <v-icon size="x-large">mdi-calendar-month-outline</v-icon>
+                <v-icon size="x-large">$mdiCalendarMonthOutline</v-icon>
               </v-btn>
 
               <v-btn value="diskUsage">
-                <v-icon size="x-large">mdi-chart-pie-outline</v-icon>
+                <v-icon size="x-large">$mdiChartPieOutline</v-icon>
               </v-btn>
             </v-btn-toggle>
           </v-sheet>

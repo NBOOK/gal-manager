@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import GameEntry from "@/modules/GameEntry";
+  import { ref } from "vue";
+  import GameEntry from "@/modules/GameEntry";
 
-defineProps<{ game: GameEntry }>(); // use props.game to access the game object
-const overlay = ref(false);
-const page = ref(0);
+  defineProps<{ game: GameEntry }>(); // use props.game to access the game object
+  const overlay = ref(false);
+  const page = ref(0);
 
-function toggleOverlay() {
-  overlay.value = !overlay.value;
-}
+  function toggleOverlay() {
+    overlay.value = !overlay.value;
+  }
 </script>
 
 <template>
@@ -59,12 +59,12 @@ function toggleOverlay() {
       <br />
       <div class="d-flex justify-space-evenly align-center">
         <v-btn
-          icon="mdi-chevron-left"
+          icon="$mdiChevronLeft"
           @click.stop="page = (page + 5 - 1) % 5"
         ></v-btn>
         <!-- <div class="text-h5" style="color: white">{{ page }}</div> -->
         <v-btn
-          icon="mdi-chevron-right"
+          icon="$mdiChevronRight"
           @click.stop="page = (page + 1) % 5"
         ></v-btn>
       </div>
@@ -73,27 +73,27 @@ function toggleOverlay() {
 </template>
 
 <style scoped>
-.game-image {
-  height: 100px;
-  border-radius: 5px;
-  margin-right: 10px;
-  aspect-ratio: 92 / 43;
-}
+  .game-image {
+    height: 100px;
+    border-radius: 5px;
+    margin-right: 10px;
+    aspect-ratio: 92 / 43;
+  }
 
-.game-image img {
-  height: 100px;
-  object-fit: cover;
-  border-radius: 5px;
-  margin-right: 10px;
-  aspect-ratio: 92 / 43;
-  cursor: pointer;
-}
+  .game-image img {
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 10px;
+    aspect-ratio: 92 / 43;
+    cursor: pointer;
+  }
 
-.game-image-placeholder {
-  height: 100px;
-  border-radius: 5px;
-  background-color: #f0f0f0;
-  margin-right: 10px;
-  aspect-ratio: 92 / 43;
-}
+  .game-image-placeholder {
+    height: 100px;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+    margin-right: 10px;
+    aspect-ratio: 92 / 43;
+  }
 </style>

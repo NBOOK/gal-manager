@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed } from "vue";
+  import { computed, ref, watch } from "vue";
   import { useGameStore } from "@/store/global-store";
 
   const gameStore = useGameStore();
@@ -9,7 +9,7 @@
     const linked = filterConfig.linked;
     if (linked.toggled) {
       return {
-        icon: linked.value ? "mdi-link-variant" : "mdi-link-variant-off",
+        icon: linked.value ? "$mdiLinkVariant" : "$mdiLinkVariantOff",
         color: linked.value ? "green" : "red",
         action: () => {
           linked.value = !linked.value;
@@ -18,7 +18,7 @@
       };
     }
     return {
-      icon: "mdi-link-variant",
+      icon: "$mdiLinkVariant",
       color: "geay-darken-4",
       action: () => (linked.toggled = true),
     };
@@ -28,11 +28,9 @@
     const inDatabase = filterConfig.inDatabase;
     if (inDatabase.toggled)
       return {
-        icon: [
-          "mdi-database-remove",
-          "mdi-database-check",
-          "mdi-database-minus",
-        ][inDatabase.value],
+        icon: ["$mdiDatabaseRemove", "$mdiDatabaseCheck", "$mdiDatabaseMinus"][
+          inDatabase.value
+        ],
         color: ["red", "green", "orange"][inDatabase.value],
         action: () => {
           inDatabase.value = (inDatabase.value + 1) % 3;
@@ -40,7 +38,7 @@
         },
       };
     return {
-      icon: "mdi-database",
+      icon: "$mdiDatabase",
       color: "geay-darken-4",
       action: () => {
         inDatabase.toggled = true;
@@ -52,7 +50,7 @@
     const inAssets = filterConfig.inAssets;
     if (inAssets.toggled)
       return {
-        icon: ["mdi-image-remove", "mdi-image-check", "mdi-image-minus"][
+        icon: ["$mdiImageRemove", "$mdiImageCheck", "$mdiImageMinus"][
           inAssets.value
         ],
         color: ["red", "green", "orange"][inAssets.value],
@@ -62,7 +60,7 @@
         },
       };
     return {
-      icon: "mdi-image",
+      icon: "$mdiImage",
       color: "geay-darken-4",
       action: () => {
         inAssets.toggled = true;
@@ -70,33 +68,13 @@
     };
   });
 
-  // const filterStarred = computed(() => {
-  //   const starred = filterConfig.starred;
-  //   if (starred.toggled)
-  //     return {
-  //       icon: starred.value ? "mdi-star" : "mdi-star-outline",
-  //       color: "amber",
-  //       action: () => {
-  //         starred.value = !starred.value;
-  //         starred.toggled = !starred.value;
-  //       },
-  //     };
-  //   return {
-  //     icon: "mdi-star",
-  //     color: "geay-darken-4",
-  //     action: () => {
-  //       starred.toggled = true;
-  //     },
-  //   };
-  // });
-
   const filterSelected = computed(() => {
     const selected = filterConfig.selected;
     if (selected.toggled)
       return {
         icon: selected.value
-          ? "mdi-checkbox-marked"
-          : "mdi-checkbox-blank-outline",
+          ? "$mdiCheckboxMarked"
+          : "$mdiCheckboxBlankOutline",
         color: "geay-darken-4",
         action: () => {
           selected.value = !selected.value;
@@ -104,7 +82,7 @@
         },
       };
     return {
-      icon: "mdi-checkbox-blank-off-outline",
+      icon: "$mdiCheckboxBlankOffOutline",
       color: "geay-darken-4",
       action: () => {
         selected.toggled = true;
@@ -116,7 +94,7 @@
     const inNetDisk = filterConfig.inNetDisk;
     if (inNetDisk.toggled)
       return {
-        icon: "mdi-cloud",
+        icon: "$mdiCloud",
         color: inNetDisk.value ? "green" : "red",
         action: () => {
           inNetDisk.value = !inNetDisk.value;
@@ -124,31 +102,10 @@
         },
       };
     return {
-      icon: "mdi-cloud",
+      icon: "$mdiCloud",
       color: "geay-darken-4",
       action: () => {
         inNetDisk.toggled = true;
-      },
-    };
-  });
-
-  // use lutrisdb rnner/prefix/locale filter instead
-  const filterAssetsBackup = computed(() => {
-    const inAssetsBackup = filterConfig.inAssetsBackup;
-    if (inAssetsBackup.toggled)
-      return {
-        icon: "mdi-folder-image",
-        color: inAssetsBackup.value ? "green" : "red",
-        action: () => {
-          inAssetsBackup.value = !inAssetsBackup.value;
-          inAssetsBackup.toggled = !inAssetsBackup.value;
-        },
-      };
-    return {
-      icon: "mdi-folder-image",
-      color: "geay-darken-4",
-      action: () => {
-        inAssetsBackup.toggled = true;
       },
     };
   });
@@ -157,7 +114,7 @@
     const inDeck = filterConfig.inDeck;
     if (inDeck.toggled)
       return {
-        icon: "mdi-gamepad-square",
+        icon: "$mdiGamepadSquare",
         color: inDeck.value ? "green" : "red",
         action: () => {
           inDeck.value = !inDeck.value;
@@ -165,7 +122,7 @@
         },
       };
     return {
-      icon: "mdi-gamepad-square",
+      icon: "$mdiGamepadSquare",
       color: "geay-darken-4",
       action: () => {
         inDeck.toggled = true;
@@ -177,7 +134,7 @@
     const inSDCard = filterConfig.inSDCard;
     if (inSDCard.toggled)
       return {
-        icon: "mdi-micro-sd",
+        icon: "$mdiMicroSd",
         color: inSDCard.value ? "green" : "red",
         action: () => {
           inSDCard.value = !inSDCard.value;
@@ -185,7 +142,7 @@
         },
       };
     return {
-      icon: "mdi-micro-sd",
+      icon: "$mdiMicroSd",
       color: "geay-darken-4",
       action: () => {
         inSDCard.toggled = true;
@@ -193,25 +150,27 @@
     };
   });
 
-  //   const filterUSB = computed(() => {
-  //     const inUSB = filterConfig.inUSB;
-  //     if (inUSB.toggled)
-  //       return {
-  //         icon: "mdi-usb",
-  //         color: inUSB.value ? "green" : "red",
-  //         action: () => {
-  //           inUSB.value = !inUSB.value;
-  //           inUSB.toggled = !inUSB.value;
-  //         },
-  //       };
-  //     return {
-  //       icon: "mdi-usb",
-  //       color: "geay-darken-4",
-  //       action: () => {
-  //         inUSB.toggled = true;
-  //       },
-  //     };
-  //   });
+  const wineRunnerFilter = ref<string[]>([]);
+  watch(wineRunnerFilter, (newValue) => {
+    if (newValue.length === 0) {
+      filterConfig.wineRunner.toggled = false;
+      filterConfig.wineRunner.value = "";
+    } else {
+      filterConfig.wineRunner.toggled = true;
+      filterConfig.wineRunner.value = newValue[0];
+    }
+  });
+
+  const winePrefixFilter = ref<string[]>([]);
+  watch(winePrefixFilter, (newValue) => {
+    if (newValue.length === 0) {
+      filterConfig.winePrefix.toggled = false;
+      filterConfig.winePrefix.value = "";
+    } else {
+      filterConfig.winePrefix.toggled = true;
+      filterConfig.winePrefix.value = newValue[0];
+    }
+  });
 
   function resetFilters() {
     Object.assign(filterConfig, {
@@ -242,8 +201,8 @@
   <v-btn icon @contextmenu.prevent="resetFilters">
     <v-icon
       :icon="Object.values(filterConfig).some((filter: any) => filter.toggled)
-            ? 'mdi-filter'
-            : 'mdi-filter-outline'
+            ? '$mdiFilter'
+            : '$mdiFilterOutline'
           "
     ></v-icon>
     <v-menu
@@ -328,11 +287,68 @@
           </v-btn>
 
           <v-btn>
-            <!-- <v-icon
-              :icon="filterAssetsBackup.icon"
-              :color="filterAssetsBackup.color"
+            <v-icon
+              :icon="
+                wineRunnerFilter.length === 0
+                  ? '$customWineEmpty'
+                  : '$customWineHalf'
+              "
               size="x-large"
-            ></v-icon> -->
+            ></v-icon>
+            <v-menu
+              activator="parent"
+              scroll-strategy="close"
+              transition="slide-y-transition"
+              location="bottom center"
+              origin="top center"
+              :close-on-content-click="false"
+            >
+              <v-sheet rounded="lg">
+                <v-list selectable v-model:selected="wineRunnerFilter">
+                  <v-list-item
+                    v-for="runner in gameStore.lutrisDB.wineRunners"
+                    :key="runner"
+                    :value="runner"
+                  >
+                    <v-list-item-title>{{ runner }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-sheet>
+            </v-menu>
+          </v-btn>
+
+          <v-btn>
+            <v-icon
+              :icon="
+                winePrefixFilter.length === 0
+                  ? '$mdiPackageVariantClosed'
+                  : '$mdiPackageVariant'
+              "
+              :color="
+                winePrefixFilter.length === 0 ? 'grey-darken-4' : '#A57046'
+              "
+              size="x-large"
+            ></v-icon>
+            <v-menu
+              activator="parent"
+              scroll-strategy="close"
+              transition="slide-y-transition"
+              location="bottom center"
+              origin="top center"
+              :close-on-content-click="false"
+            >
+              <v-sheet rounded="lg">
+                <v-list selectable v-model:selected="winePrefixFilter">
+                  <v-list-item
+                    v-for="prefix in gameStore.lutrisDB.winePrefixes"
+                    :key="prefix"
+                    :value="prefix"
+                  >
+                    <v-list-item-title>{{ prefix }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-sheet>
+            </v-menu>
           </v-btn>
         </v-btn-group>
 
@@ -382,7 +398,7 @@
         <!-- </div>
         </div> -->
 
-        <v-divider></v-divider>
+        <!-- <v-divider></v-divider>
         <v-btn
           width="100%"
           variant="flat"
@@ -391,7 +407,7 @@
           @click="resetFilters"
         >
           Clear
-        </v-btn>
+        </v-btn> -->
       </v-sheet>
     </v-menu>
   </v-btn>

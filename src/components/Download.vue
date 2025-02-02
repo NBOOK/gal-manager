@@ -23,12 +23,12 @@
   const currentGame = computed(() => currentItem.value?.game);
 
   const pathIconMap: { [key: string]: string } = {
-    [gameStore.config.value.gamesMainPath]: "mdi-home",
-    [gameStore.config.value.gamesDataPath]: "mdi-gamepad-square",
-    [gameStore.config.value.gamesSDPath]: "mdi-micro-sd",
-    [gameStore.config.value.gamesUSBPath]: "mdi-usb",
-    [gameStore.config.value.gamesNetPath]: "mdi-cloud",
-    [gameStore.config.value.gamesExternalPath]: "mdi-cloud",
+    [gameStore.config.value.gamesMainPath]: "$mdiHome",
+    [gameStore.config.value.gamesDataPath]: "$mdiGamepadSquare",
+    [gameStore.config.value.gamesSDPath]: "$mdiMicroSd",
+    [gameStore.config.value.gamesUSBPath]: "$mdiUsb",
+    [gameStore.config.value.gamesNetPath]: "$mdiCloud",
+    [gameStore.config.value.gamesExternalPath]: "$mdiCloud",
   };
 
   window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
@@ -136,9 +136,9 @@
     :model-value="(totalDownloadedSize / totalSize) * 100"
   >
     <v-btn icon :readonly="gameStore.downloadList.length === 0">
-      <v-icon v-if="gameStore.downloadList.length" icon="mdi-download" />
+      <v-icon v-if="gameStore.downloadList.length" icon="$mdiDownload" />
       <!-- <v-btn icon>
-      <v-icon icon="mdi-download" /> -->
+      <v-icon icon="$mdiDownload" /> -->
       <v-menu
         v-if="gameStore.downloadList.length"
         activator="parent"

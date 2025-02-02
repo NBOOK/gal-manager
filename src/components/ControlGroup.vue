@@ -10,8 +10,8 @@
   const linkBtn = computed(() => {
     if (props.game.linked) {
       return {
-        icon: "mdi-link-variant",
-        iconHover: "mdi-link-variant-minus",
+        icon: "$mdiLinkVariant",
+        iconHover: "$mdiLinkVariantMinus",
         color: "green",
         colorHover: "red",
         readonly: props.game.inLutrisDB || props.game.inSteamDB,
@@ -19,8 +19,8 @@
       };
     } else {
       return {
-        icon: "mdi-link-variant-off",
-        iconHover: "mdi-link-variant-plus",
+        icon: "$mdiLinkVariantOff",
+        iconHover: "$mdiLinkVariantPlus",
         color: "red",
         colorHover: "green",
         readonly: false,
@@ -40,8 +40,8 @@
       );
       if (props.game.inLutrisDB && props.game.inSteamDB) {
         return {
-          icon: "mdi-database",
-          iconHover: "mdi-database-edit",
+          icon: "$mdiDatabase",
+          iconHover: "$mdiDatabaseEdit",
           color: "green",
           readonly: false,
           // action: () => props.game.removeDB(),
@@ -49,16 +49,16 @@
         };
       } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
         return {
-          icon: "mdi-database-minus",
-          iconHover: "mdi-database-edit",
+          icon: "$mdiDatabaseMinus",
+          iconHover: "$mdiDatabaseEdit",
           color: "orange",
           readonly: false,
           action: () => gameStore.dbEditList.push(props.game),
         };
       } else {
         return {
-          icon: "mdi-database-remove",
-          iconHover: "mdi-database-edit",
+          icon: "$mdiDatabaseRemove",
+          iconHover: "$mdiDatabaseEdit",
           color: "red",
           readonly: false,
           action: () => gameStore.dbEditList.push(props.game),
@@ -66,7 +66,7 @@
       }
     } else {
       return {
-        icon: "mdi-database-off",
+        icon: "$mdiDatabaseOff",
         color: "blue-grey",
         readonly: true,
         action: () => {},
@@ -77,22 +77,22 @@
   const imageBtn = computed(() => {
     if (props.game.imageAssets.assetsCount == 5) {
       return {
-        icon: "mdi-image-check",
-        iconHover: "mdi-folder-open",
+        icon: "$mdiImageCheck",
+        iconHover: "$mdiFolderOpen",
         color: "green",
         action: () => props.game.imageAssets.openImageOrGameFolder(),
       };
     } else if (props.game.imageAssets.assetsCount > 0) {
       return {
-        icon: "mdi-image-minus",
-        iconHover: "mdi-folder-open",
+        icon: "$mdiImageMinus",
+        iconHover: "$mdiFolderOpen",
         color: "orange",
         action: () => props.game.imageAssets.openImageOrGameFolder(),
       };
     } else {
       return {
-        icon: "mdi-image-remove",
-        iconHover: "mdi-folder-open",
+        icon: "$mdiImageRemove",
+        iconHover: "$mdiFolderOpen",
         color: "red",
         action: () => props.game.imageAssets.openImageOrGameFolder(),
       };
@@ -102,8 +102,8 @@
   const cloudBtn = computed(() => {
     if (!gameStore.netDiskOnline) {
       return {
-        icon: "mdi-cloud-off",
-        iconHover: "mdi-cloud-off",
+        icon: "$mdiCloudOff",
+        iconHover: "$mdiCloudOff",
         color: "grey-darken-4",
         colorHover: "grey-darken-4",
         readonly: true,
@@ -112,8 +112,8 @@
     } else if (props.game.inNetDisk) {
       if (props.game.inDeck || props.game.inSDCard) {
         return {
-          icon: "mdi-cloud-check-variant",
-          iconHover: "mdi-content-save-minus",
+          icon: "$mdiCloudCheckVariant",
+          iconHover: "$mdiContentSaveMinus",
           color: "green",
           colorHover: "red",
           readonly: false,
@@ -121,8 +121,8 @@
         };
       } else {
         return {
-          icon: "mdi-cloud-download",
-          iconHover: "mdi-cloud-download",
+          icon: "$mdiCloudDownload",
+          iconHover: "$mdiCloudDownload",
           color: "green",
           colorHover: "green",
           readonly: false,
@@ -132,8 +132,8 @@
     } else {
       if (props.game.inDeck || props.game.inSDCard) {
         return {
-          icon: "mdi-cloud-alert",
-          iconHover: "mdi-cloud-alert",
+          icon: "$mdiCloudAlert",
+          iconHover: "$mdiCloudAlert",
           color: "red",
           colorHover: "red",
           readonly: true,
@@ -143,8 +143,8 @@
       } else {
         // not in cloud or local storage, means the link is broken or name is changed
         return {
-          icon: "mdi-cloud-off",
-          iconHover: "mdi-cloud-off",
+          icon: "$mdiCloudOff",
+          iconHover: "$mdiCloudOff",
           color: "blue-grey",
           colorHover: "blue-grey",
           readonly: true,
@@ -157,8 +157,8 @@
   const storageBtn = computed(() => {
     if (props.game.inSDCard) {
       return {
-        icon: "mdi-micro-sd",
-        iconHover: "mdi-folder-move",
+        icon: "$mdiMicroSd",
+        iconHover: "$mdiFolderMove",
         color: "green",
         hoverColor: "green",
         readonly: false,
@@ -167,8 +167,8 @@
       };
     } else if (props.game.inDeck) {
       return {
-        icon: "mdi-gamepad-square",
-        iconHover: "mdi-folder-move",
+        icon: "$mdiGamepadSquare",
+        iconHover: "$mdiFolderMove",
         color: "green",
         hoverColor: "green",
         readonly: false,
@@ -177,8 +177,8 @@
       };
     } else {
       return {
-        icon: "mdi-content-save-off",
-        iconHover: "mdi-content-save-off",
+        icon: "$mdiContentSaveOff",
+        iconHover: "$mdiContentSaveOff",
         color: "blue-grey",
         hoverColor: "blue-grey",
         readonly: true,
@@ -190,14 +190,14 @@
   // const moveBtn = computed(() => {
   //   if (props.game.inDeck || props.game.inSDCard) {
   //     return {
-  //       icon: "mdi-folder-move",
+  //       icon: "$mdiFolderMove",
   //       color: "green",
   //       readonly: false,
   //       action: () => {},
   //     };
   //   } else {
   //     return {
-  //       icon: "mdi-folder-move",
+  //       icon: "$mdiFolderMove",
   //       color: "blue-grey",
   //       readonly: true,
   //       action: () => {},
@@ -208,8 +208,8 @@
   const selectBtn = computed(() => {
     return {
       icon: props.game.selected
-        ? "mdi-checkbox-marked"
-        : "mdi-checkbox-blank-outline",
+        ? "$mdiCheckboxMarked"
+        : "$mdiCheckboxBlankOutline",
       color: props.game.selected ? "grey-darken-4" : "grey",
       action: () => (props.game.selected = !props.game.selected),
     };
@@ -217,7 +217,7 @@
 
   const starBtn = computed(() => {
     return {
-      icon: props.game.starred ? "mdi-star" : "mdi-star-outline",
+      icon: props.game.starred ? "$mdiStar" : "$mdiStarOutline",
       color: "amber",
       action: () => (props.game.starred = !props.game.starred),
     };
@@ -226,14 +226,14 @@
   const syncBtn = computed(() => {
     if (props.game.inNetDisk && (props.game.inDeck || props.game.inSDCard)) {
       return {
-        icon: "mdi-sync",
+        icon: "$mdiSync",
         color: "green",
         readonly: false,
         action: () => {}, // sync handled by dialog action
       };
     } else {
       return {
-        icon: "mdi-sync-off",
+        icon: "$mdiSyncOff",
         color: "blue-grey",
         readonly: true,
         action: () => {},
@@ -265,9 +265,10 @@
   <div class="game-controls">
     <!-- Dummy Placeholder -->
     <v-btn icon size="x-small" variant="text" class="invisible"></v-btn>
+    <v-btn icon size="x-small" variant="text" class="invisible"></v-btn>
 
     <!-- Star Button -->
-    <v-btn
+    <!-- <v-btn
       class="invisible"
       icon
       size="x-small"
@@ -279,7 +280,7 @@
         :color="starBtn.color"
         size="x-large"
       ></v-icon>
-    </v-btn>
+    </v-btn> -->
 
     <!-- Select Button -->
     <v-btn icon size="x-small" variant="text" @click="selectBtn.action">
@@ -367,7 +368,7 @@
           >
           </v-icon>
           <v-menu
-            v-if="cloudBtn.icon === 'mdi-cloud-download'"
+            v-if="cloudBtn.icon === '$mdiCloudDownload'"
             activator="parent"
             scroll-strategy="close"
             transition="slide-x-reverse-transition"
@@ -381,7 +382,7 @@
                     pushToDownloadList(gameStore.config.value.gamesDataPath)
                   "
                 >
-                  <v-icon variant="text">mdi-gamepad-square</v-icon>
+                  <v-icon variant="text">$mdiGamepadSquare</v-icon>
                 </v-btn>
 
                 <v-btn
@@ -389,7 +390,7 @@
                     pushToDownloadList(gameStore.config.value.gamesSDPath)
                   "
                 >
-                  <v-icon variant="text">mdi-micro-sd</v-icon>
+                  <v-icon variant="text">$mdiMicroSd</v-icon>
                 </v-btn>
 
                 <!-- <v-btn
@@ -397,21 +398,18 @@
                     pushToDownloadList(gameStore.config.value.gamesUSBPath)
                   "
                 >
-                  <v-icon variant="text">mdi-usb</v-icon>
+                  <v-icon variant="text">$mdiUsb</v-icon>
                 </v-btn> -->
               </v-btn-group>
             </v-sheet>
           </v-menu>
           <v-dialog
-            v-if="cloudBtn.icon === 'mdi-cloud-check-variant'"
+            v-if="cloudBtn.icon === '$mdiCloudCheckVariant'"
             activator="parent"
             max-width="522"
           >
             <template v-slot:default="{ isActive }">
-              <v-card
-                prepend-icon="mdi-delete-empty"
-                title="Free Local Storage"
-              >
+              <v-card prepend-icon="$mdiDeleteEmpty" title="Free Local Storage">
                 <v-container class="text-center py-0">
                   <v-card-subtitle>{{ game.gameName }}</v-card-subtitle>
                 </v-container>
@@ -476,7 +474,7 @@
                     pushToDownloadList(gameStore.config.value.gamesDataPath)
                   "
                 >
-                  <v-icon variant="text">mdi-gamepad-square</v-icon>
+                  <v-icon variant="text">$mdiGamepadSquare</v-icon>
                 </v-btn>
 
                 <v-btn
@@ -485,7 +483,7 @@
                     pushToDownloadList(gameStore.config.value.gamesSDPath)
                   "
                 >
-                  <v-icon variant="text">mdi-micro-sd</v-icon>
+                  <v-icon variant="text">$mdiMicroSd</v-icon>
                 </v-btn>
 
                 <!-- <v-btn
@@ -494,7 +492,7 @@
                     pushToDownloadList(gameStore.config.value.gamesUSBPath)
                   "
                 >
-                  <v-icon variant="text">mdi-usb</v-icon>
+                  <v-icon variant="text">$mdiUsb</v-icon>
                 </v-btn> -->
               </v-btn-group>
             </v-sheet>
@@ -538,21 +536,21 @@
               v-if="!game.inDeck"
               @click="pushToDownloadList(gameStore.config.value.gamesDataPath)"
             >
-              <v-icon variant="text">mdi-gamepad-square</v-icon>
+              <v-icon variant="text">$mdiGamepadSquare</v-icon>
             </v-btn>
 
             <v-btn
               v-if="!game.inSDCard"
               @click="pushToDownloadList(gameStore.config.value.gamesSDPath)"
             >
-              <v-icon variant="text">mdi-micro-sd</v-icon>
+              <v-icon variant="text">$mdiMicroSd</v-icon>
             </v-btn>
 
             <v-btn
               v-if="!game.inUSB"
               @click="pushToDownloadList(gameStore.config.value.gamesUSBPath)"
             >
-              <v-icon variant="text">mdi-usb</v-icon>
+              <v-icon variant="text">$mdiUsb</v-icon>
             </v-btn>
           </v-btn-group>
         </v-sheet>
