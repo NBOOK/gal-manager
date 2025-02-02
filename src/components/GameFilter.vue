@@ -132,6 +132,7 @@
     };
   });
 
+  // use lutrisdb rnner/prefix/locale filter instead
   const filterAssetsBackup = computed(() => {
     const inAssetsBackup = filterConfig.inAssetsBackup;
     if (inAssetsBackup.toggled)
@@ -192,25 +193,25 @@
     };
   });
 
-  const filterUSB = computed(() => {
-    const inUSB = filterConfig.inUSB;
-    if (inUSB.toggled)
-      return {
-        icon: "mdi-usb",
-        color: inUSB.value ? "green" : "red",
-        action: () => {
-          inUSB.value = !inUSB.value;
-          inUSB.toggled = !inUSB.value;
-        },
-      };
-    return {
-      icon: "mdi-usb",
-      color: "geay-darken-4",
-      action: () => {
-        inUSB.toggled = true;
-      },
-    };
-  });
+  //   const filterUSB = computed(() => {
+  //     const inUSB = filterConfig.inUSB;
+  //     if (inUSB.toggled)
+  //       return {
+  //         icon: "mdi-usb",
+  //         color: inUSB.value ? "green" : "red",
+  //         action: () => {
+  //           inUSB.value = !inUSB.value;
+  //           inUSB.toggled = !inUSB.value;
+  //         },
+  //       };
+  //     return {
+  //       icon: "mdi-usb",
+  //       color: "geay-darken-4",
+  //       action: () => {
+  //         inUSB.toggled = true;
+  //       },
+  //     };
+  //   });
 
   function resetFilters() {
     Object.assign(filterConfig, {
@@ -224,6 +225,9 @@
       inDeck: { toggled: false, value: true },
       inUSB: { toggled: false, value: true },
       inAssetsBackup: { toggled: false, value: true },
+
+      wineRunner: { toggled: false, value: "" },
+      winePrefix: { toggled: false, value: "" },
     });
 
     Object.assign(gameStore.filterOperator, {
@@ -251,9 +255,9 @@
       origin="top center"
     >
       <v-sheet rounded="lg">
-        <div class="d-flex">
-          <div>
-            <v-btn
+        <!-- <div class="d-flex">
+          <div> -->
+        <!-- <v-btn
               width="100%"
               variant="flat"
               density="compact"
@@ -265,33 +269,74 @@
             >
               {{ gameStore.filterOperator.group1 ? "AND" : "OR" }}
             </v-btn>
-            <v-divider></v-divider>
-            <v-btn-group class="grid2x2">
-              <v-btn @click="filterLinked.action">
-                <v-icon
-                  :icon="filterLinked.icon"
-                  :color="filterLinked.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
+            <v-divider></v-divider> -->
+        <v-btn-group class="grid3x3">
+          <v-btn @click="filterLinked.action">
+            <v-icon
+              :icon="filterLinked.icon"
+              :color="filterLinked.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
 
-              <v-btn @click="filterDatabase.action">
-                <v-icon
-                  :icon="filterDatabase.icon"
-                  :color="filterDatabase.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
+          <v-btn @click="filterSelected.action">
+            <v-icon
+              :icon="filterSelected.icon"
+              :color="filterSelected.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
 
-              <v-btn @click="filterImage.action">
-                <v-icon
-                  :icon="filterImage.icon"
-                  :color="filterImage.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
+          <v-btn @click="filterImage.action">
+            <v-icon
+              :icon="filterImage.icon"
+              :color="filterImage.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
 
-              <!-- <v-btn @click="filterStarred.action">
+          <v-btn @click="filterCloud.action">
+            <v-icon
+              :icon="filterCloud.icon"
+              :color="filterCloud.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
+
+          <v-btn @click="filterDeck.action">
+            <v-icon
+              :icon="filterDeck.icon"
+              :color="filterDeck.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
+
+          <v-btn @click="filterSD.action">
+            <v-icon
+              :icon="filterSD.icon"
+              :color="filterSD.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
+
+          <v-btn @click="filterDatabase.action">
+            <v-icon
+              :icon="filterDatabase.icon"
+              :color="filterDatabase.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
+
+          <v-btn>
+            <!-- <v-icon
+              :icon="filterAssetsBackup.icon"
+              :color="filterAssetsBackup.color"
+              size="x-large"
+            ></v-icon> -->
+          </v-btn>
+        </v-btn-group>
+
+        <!-- <v-btn @click="filterStarred.action">
                 <v-icon
                   :icon="filterStarred.icon"
                   :color="filterStarred.color"
@@ -299,20 +344,19 @@
                 ></v-icon>
               </v-btn> -->
 
-              <v-btn @click="filterSelected.action">
-                <v-icon
-                  :icon="filterSelected.icon"
-                  :color="filterSelected.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-            </v-btn-group>
-          </div>
+        <!-- <v-btn @click="filterAssetsBackup.action">
+            <v-icon
+              :icon="filterAssetsBackup.icon"
+              :color="filterAssetsBackup.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn> -->
+        <!-- </div> -->
 
-          <v-divider vertical></v-divider>
+        <!-- <v-divider vertical></v-divider> -->
 
-          <div>
-            <v-btn
+        <!-- <div> -->
+        <!-- <v-btn
               width="100%"
               variant="flat"
               density="compact"
@@ -324,53 +368,21 @@
             >
               {{ gameStore.filterOperator.group2 ? "AND" : "OR" }}
             </v-btn>
-            <v-divider></v-divider>
-            <v-btn-group class="grid2x2">
-              <v-btn @click="filterCloud.action">
-                <v-icon
-                  :icon="filterCloud.icon"
-                  :color="filterCloud.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
+            <v-divider></v-divider> -->
 
-              <v-btn @click="filterAssetsBackup.action">
-                <v-icon
-                  :icon="filterAssetsBackup.icon"
-                  :color="filterAssetsBackup.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-
-              <v-btn @click="filterDeck.action">
-                <v-icon
-                  :icon="filterDeck.icon"
-                  :color="filterDeck.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-
-              <v-btn @click="filterSD.action">
-                <v-icon
-                  :icon="filterSD.icon"
-                  :color="filterSD.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn>
-
-              <!-- <v-btn @click="filterUSB.action">
+        <!-- <v-btn-group class="grid2x2"> -->
+        <!-- <v-btn @click="filterUSB.action">
                 <v-icon
                   :icon="filterUSB.icon"
                   :color="filterUSB.color"
                   size="x-large"
                 ></v-icon>
               </v-btn> -->
-            </v-btn-group>
-          </div>
-        </div>
+        <!-- </v-btn-group> -->
+        <!-- </div>
+        </div> -->
 
-        <!-- <v-divider></v-divider>
-
+        <v-divider></v-divider>
         <v-btn
           width="100%"
           variant="flat"
@@ -379,7 +391,7 @@
           @click="resetFilters"
         >
           Clear
-        </v-btn> -->
+        </v-btn>
       </v-sheet>
     </v-menu>
   </v-btn>
@@ -391,5 +403,10 @@
     grid-template-columns: repeat(2, 1fr);
     /* 2 列 */
     height: 96px !important;
+  }
+  .grid3x3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    height: 144px !important;
   }
 </style>

@@ -23,6 +23,9 @@ export const useGameStore = defineStore("globalStore", () => {
     inDeck: { toggled: false, value: true },
     inUSB: { toggled: false, value: true },
     inAssetsBackup: { toggled: false, value: true },
+
+    wineRunner: { toggled: false, value: "" },
+    winePrefix: { toggled: false, value: "" },
   });
 
   const filterOperator = reactive({ group1: true, group2: true });

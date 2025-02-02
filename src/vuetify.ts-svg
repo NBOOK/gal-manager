@@ -1,0 +1,20 @@
+import { createVuetify } from "vuetify";
+import { aliases, mdi } from "vuetify/iconsets/mdi-svg";
+// import { mdiAccount } from "@mdi/js";
+import customWineEmpty from "./icons/customWineEmpty.vue";
+import customWineFill from "./icons/customWineFill.vue";
+
+export default createVuetify({
+  icons: {
+    defaultSet: "mdi",
+    aliases: {
+      ...aliases,
+      //   account: mdiAccount,
+      //   customWineEmpty,
+      //   customWineFill,
+    },
+    sets: {
+      mdi,
+    },
+  },
+});

@@ -1,9 +1,7 @@
 <script setup lang="ts">
-  import { computed, readonly } from "vue";
+  import { computed } from "vue";
   import GameEntry from "@/modules/GameEntry";
   import { useGameStore } from "@/store/global-store";
-  import { el } from "vuetify/locale";
-  import { c } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 
   const gameStore = useGameStore();
 
@@ -189,23 +187,23 @@
     }
   });
 
-  const moveBtn = computed(() => {
-    if (props.game.inDeck || props.game.inSDCard) {
-      return {
-        icon: "mdi-folder-move",
-        color: "green",
-        readonly: false,
-        action: () => {},
-      };
-    } else {
-      return {
-        icon: "mdi-folder-move",
-        color: "blue-grey",
-        readonly: true,
-        action: () => {},
-      };
-    }
-  });
+  // const moveBtn = computed(() => {
+  //   if (props.game.inDeck || props.game.inSDCard) {
+  //     return {
+  //       icon: "mdi-folder-move",
+  //       color: "green",
+  //       readonly: false,
+  //       action: () => {},
+  //     };
+  //   } else {
+  //     return {
+  //       icon: "mdi-folder-move",
+  //       color: "blue-grey",
+  //       readonly: true,
+  //       action: () => {},
+  //     };
+  //   }
+  // });
 
   const selectBtn = computed(() => {
     return {
