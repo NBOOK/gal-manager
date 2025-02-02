@@ -13,7 +13,7 @@
     let updateLock = Promise.resolve();
     async function processEntries( // for creating game entries and assigning flags
       entries: DirEntry[],
-      flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk" | "inAssetsBackup"
+      flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk"
     ) {
       const batchTasks = entries.map(async (entry) => {
         //.slice(0, 10)
@@ -98,7 +98,6 @@
     await processEntries(deckEntries, "inDeck");
     await processEntries(sdCardEntries, "inSDCard");
     await processEntries(netDiskEntries, "inNetDisk");
-    await processEntries(assetsEntries, "inAssetsBackup");
 
     // console.log("Game list:", gameStore.games);
     gameStore.loading = false;

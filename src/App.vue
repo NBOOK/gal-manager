@@ -20,14 +20,15 @@ onMounted(async () => {
   if (Object.keys(gameStore.config.value).length === 0) {
     firstTime.value = true;
   } else {
-    await gameStore.steamDB.setup(gameStore.config.value);
-    await gameStore.lutrisDB.setup(gameStore.config.value);
     const externalLinkTarget = await window.ipcRenderer.invoke(
       "readlink",
       gameStore.config.value.gamesExternalPath
     );
     gameStore.netDiskOnline =
       externalLinkTarget === gameStore.config.value.gamesNetPath;
+
+    await gameStore.steamDB.setup(gameStore.config.value);
+    await gameStore.lutrisDB.setup(gameStore.config.value);
   }
 });
 </script>

@@ -173,26 +173,21 @@
   });
 
   function resetFilters() {
+    wineRunnerFilter.value = [];
+    winePrefixFilter.value = [];
     Object.assign(filterConfig, {
       linked: { toggled: false, value: true },
       inDatabase: { toggled: false, value: 1 },
       inAssets: { toggled: false, value: 1 },
-      starred: { toggled: false, value: true },
       selected: { toggled: false, value: true },
       inNetDisk: { toggled: false, value: true },
       inSDCard: { toggled: false, value: true },
       inDeck: { toggled: false, value: true },
-      inUSB: { toggled: false, value: true },
-      inAssetsBackup: { toggled: false, value: true },
 
       wineRunner: { toggled: false, value: "" },
       winePrefix: { toggled: false, value: "" },
     });
-
-    Object.assign(gameStore.filterOperator, {
-      group1: true,
-      group2: true,
-    });
+    gameStore.filterOperator = true;
   }
 </script>
 
@@ -216,19 +211,17 @@
       <v-sheet rounded="lg">
         <!-- <div class="d-flex">
           <div> -->
-        <!-- <v-btn
-              width="100%"
-              variant="flat"
-              density="compact"
-              v-model="gameStore.filterOperator.group1"
-              @click="
-                gameStore.filterOperator.group1 =
-                  !gameStore.filterOperator.group1
-              "
-            >
-              {{ gameStore.filterOperator.group1 ? "AND" : "OR" }}
-            </v-btn>
-            <v-divider></v-divider> -->
+        <v-btn
+          width="100%"
+          variant="flat"
+          density="compact"
+          v-model="gameStore.filterOperator"
+          @click="gameStore.filterOperator = !gameStore.filterOperator"
+        >
+          {{ gameStore.filterOperator ? "AND" : "OR" }}
+        </v-btn>
+        <v-divider></v-divider>
+
         <v-btn-group class="grid3x3">
           <v-btn @click="filterLinked.action">
             <v-icon
@@ -304,7 +297,11 @@
               :close-on-content-click="false"
             >
               <v-sheet rounded="lg">
-                <v-list selectable v-model:selected="wineRunnerFilter">
+                <v-list
+                  density="compact"
+                  selectable
+                  v-model:selected="wineRunnerFilter"
+                >
                   <v-list-item
                     v-for="runner in gameStore.lutrisDB.wineRunners"
                     :key="runner"
@@ -338,7 +335,11 @@
               :close-on-content-click="false"
             >
               <v-sheet rounded="lg">
-                <v-list selectable v-model:selected="winePrefixFilter">
+                <v-list
+                  density="compact"
+                  selectable
+                  v-model:selected="winePrefixFilter"
+                >
                   <v-list-item
                     v-for="prefix in gameStore.lutrisDB.winePrefixes"
                     :key="prefix"
@@ -351,63 +352,6 @@
             </v-menu>
           </v-btn>
         </v-btn-group>
-
-        <!-- <v-btn @click="filterStarred.action">
-                <v-icon
-                  :icon="filterStarred.icon"
-                  :color="filterStarred.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn> -->
-
-        <!-- <v-btn @click="filterAssetsBackup.action">
-            <v-icon
-              :icon="filterAssetsBackup.icon"
-              :color="filterAssetsBackup.color"
-              size="x-large"
-            ></v-icon>
-          </v-btn> -->
-        <!-- </div> -->
-
-        <!-- <v-divider vertical></v-divider> -->
-
-        <!-- <div> -->
-        <!-- <v-btn
-              width="100%"
-              variant="flat"
-              density="compact"
-              v-model="gameStore.filterOperator.group2"
-              @click="
-                gameStore.filterOperator.group2 =
-                  !gameStore.filterOperator.group2
-              "
-            >
-              {{ gameStore.filterOperator.group2 ? "AND" : "OR" }}
-            </v-btn>
-            <v-divider></v-divider> -->
-
-        <!-- <v-btn-group class="grid2x2"> -->
-        <!-- <v-btn @click="filterUSB.action">
-                <v-icon
-                  :icon="filterUSB.icon"
-                  :color="filterUSB.color"
-                  size="x-large"
-                ></v-icon>
-              </v-btn> -->
-        <!-- </v-btn-group> -->
-        <!-- </div>
-        </div> -->
-
-        <!-- <v-divider></v-divider>
-        <v-btn
-          width="100%"
-          variant="flat"
-          density="compact"
-          v-model="gameStore.filterOperator.group1"
-          @click="resetFilters"
-        >
-          Clear
-        </v-btn> -->
       </v-sheet>
     </v-menu>
   </v-btn>
@@ -424,5 +368,9 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     height: 144px !important;
+  }
+  .grid3x3 svg.icon {
+    width: 24px;
+    height: 24px;
   }
 </style>

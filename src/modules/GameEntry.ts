@@ -26,11 +26,8 @@ class GameEntry {
   inNetDisk: boolean = false;
   inSDCard: boolean = false;
   inDeck: boolean = false;
-  inUSB: boolean = false; // @TODO : add USB support
-  inAssetsBackup: boolean = false;
-  inLutrisDB: boolean = false;
-  inSteamDB: boolean = false;
-  starred: boolean = false;
+  // inLutrisDB: boolean = false;
+  // inSteamDB: boolean = false;
   imageAssets!: ImageAssets;
   splitter: string = " - ";
 
@@ -40,6 +37,14 @@ class GameEntry {
 
   get gamePath(): string {
     return `${this.basePath}/${this.folderName}`;
+  }
+
+  get inLutrisDB(): boolean {
+    return gameStore.lutrisDB.inDB(this);
+  }
+
+  get inSteamDB(): boolean {
+    return gameStore.steamDB.inDB(this);
   }
 
   get inDatabase(): number {
@@ -52,6 +57,23 @@ class GameEntry {
     if (this.imageAssets.assetsCount === 5) return 1;
     else if (this.imageAssets.assetsCount > 0) return 2;
     else return 0;
+  }
+
+  get wineRunner(): string {
+    if (!this.inLutrisDB) return "";
+    const perGameConfig = gameStore.lutrisDB.getPerGameConfig(this);
+    // console.log("perGameConfig of ", this.gameName, perGameConfig);
+    if (perGameConfig.wine && perGameConfig.wine.version) {
+      return perGameConfig.wine.version;
+    } else {
+      return "default";
+    }
+  }
+
+  get winePrefix(): string {
+    if (!this.inLutrisDB) return "";
+    const perGameConfig = gameStore.lutrisDB.getPerGameConfig(this);
+    return perGameConfig.game.prefix.replace(/\/$/, "").split("/").pop();
   }
 
   // performance is not good
@@ -102,11 +124,8 @@ class GameEntry {
 
     this.diskUsage = diskUsage;
     this.imageAssets = imageAssets;
-    if (this.imageAssets.assetsCount > 0) {
-      this.inAssetsBackup = true;
-    }
 
-    this.inLutrisDB = gameStore.lutrisDB.inDB(this);
+    // this.inLutrisDB = gameStore.lutrisDB.inDB(this);
     if (this.inLutrisDB) {
       const gameProperties = await gameStore.lutrisDB.getGameProperties(this);
       this.gameNameEN = gameProperties.gameNameEN;
@@ -115,7 +134,7 @@ class GameEntry {
       this.gameNameEN = await utils.romanize(this.gameName);
       this.gameNameSlug = utils.slugify(this.gameNameEN);
     }
-    this.inSteamDB = gameStore.steamDB.inDB(this);
+    // this.inSteamDB = gameStore.steamDB.inDB(this);
   }
 
   async link() {
@@ -140,8 +159,6 @@ class GameEntry {
       this.basePath = gameStore.config.value.gamesDataPath;
     } else if (this.inSDCard) {
       this.basePath = gameStore.config.value.gamesSDPath;
-    } else if (this.inUSB) {
-      this.basePath = gameStore.config.value.gamesUSBPath;
     } else if (this.inNetDisk) {
       this.basePath = gameStore.config.value.gamesExternalPath;
     } else {
@@ -177,13 +194,13 @@ class GameEntry {
     if (!this.inLutrisDB) {
       console.log(`Adding ${this.folderName} to LutrisDB...`);
       await gameStore.lutrisDB.addGame(this, gameConfig);
-      this.inLutrisDB = true;
+      // this.inLutrisDB = true;
       console.log(`${this.folderName} added to LutrisDB`);
     }
     if (!this.inSteamDB) {
       console.log(`Adding ${this.folderName} to SteamDB...`);
       await gameStore.steamDB.addGame(this);
-      this.inSteamDB = true;
+      // this.inSteamDB = true;
       console.log(`${this.folderName} added to SteamDB`);
     }
   }
@@ -192,13 +209,13 @@ class GameEntry {
     if (this.inLutrisDB) {
       console.log(`Removing ${this.folderName} from LutrisDB...`);
       await gameStore.lutrisDB.removeGame(this);
-      this.inLutrisDB = false;
+      // this.inLutrisDB = false;
     }
 
     if (this.inSteamDB) {
       console.log(`Removing ${this.folderName} from SteamDB...`);
       await gameStore.steamDB.removeGame(this);
-      this.inSteamDB = false;
+      // this.inSteamDB = false;
     }
   }
 
@@ -303,8 +320,6 @@ class GameEntry {
       this.inDeck = true;
     } else if (target === gameStore.config.value.gamesSDPath) {
       this.inSDCard = true;
-    } else if (target === gameStore.config.value.gamesUSBPath) {
-      this.inUSB = true;
     }
 
     if (this.linked) {
@@ -331,8 +346,6 @@ class GameEntry {
       this.inDeck = false;
     } else if (basePath === gameStore.config.value.gamesSDPath) {
       this.inSDCard = false;
-    } else if (basePath === gameStore.config.value.gamesUSBPath) {
-      this.inUSB = false;
     }
 
     if (this.linked) {

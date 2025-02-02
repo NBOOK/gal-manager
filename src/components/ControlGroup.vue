@@ -215,13 +215,13 @@
     };
   });
 
-  const starBtn = computed(() => {
-    return {
-      icon: props.game.starred ? "$mdiStar" : "$mdiStarOutline",
-      color: "amber",
-      action: () => (props.game.starred = !props.game.starred),
-    };
-  });
+  // const starBtn = computed(() => {
+  //   return {
+  //     icon: props.game.starred ? "$mdiStar" : "$mdiStarOutline",
+  //     color: "amber",
+  //     action: () => (props.game.starred = !props.game.starred),
+  //   };
+  // });
 
   const syncBtn = computed(() => {
     if (props.game.inNetDisk && (props.game.inDeck || props.game.inSDCard)) {
@@ -485,15 +485,6 @@
                 >
                   <v-icon variant="text">$mdiMicroSd</v-icon>
                 </v-btn>
-
-                <!-- <v-btn
-                  v-if="!game.inUSB"
-                  @click="
-                    pushToDownloadList(gameStore.config.value.gamesUSBPath)
-                  "
-                >
-                  <v-icon variant="text">$mdiUsb</v-icon>
-                </v-btn> -->
               </v-btn-group>
             </v-sheet>
           </v-menu>

@@ -143,7 +143,7 @@
             :readonly="
               gameStore.selectedGames.length === 0 ||
               gameStore.selectedGames.some(
-                (game) => game.inDeck || game.inSDCard || game.inUSB
+                (game) => game.inDeck || game.inSDCard
               )
             "
           >
@@ -151,7 +151,7 @@
               :color="
                 gameStore.selectedGames.length === 0 ||
                 gameStore.selectedGames.some(
-                  (game) => game.inDeck || game.inSDCard || game.inUSB
+                  (game) => game.inDeck || game.inSDCard
                 )
                   ? 'grey'
                   : 'grey-darken-4'
@@ -203,7 +203,7 @@
             :readonly="
               gameStore.selectedGames.length === 0 ||
               !gameStore.selectedGames.every(
-                (game) => game.inDeck || game.inSDCard || game.inUSB
+                (game) => game.inDeck || game.inSDCard
               )
             "
           >
@@ -296,7 +296,7 @@
             :readonly="
               gameStore.selectedGames.length === 0 ||
               !gameStore.selectedGames.every(
-                (game) => game.inDeck || game.inSDCard || game.inUSB
+                (game) => game.inDeck || game.inSDCard
               )
             "
           >
@@ -304,7 +304,7 @@
               :color="
                 gameStore.selectedGames.length === 0 ||
                 !gameStore.selectedGames.every(
-                  (game) => game.inDeck || game.inSDCard || game.inUSB
+                  (game) => game.inDeck || game.inSDCard
                 )
                   ? 'grey'
                   : 'grey-darken-4'

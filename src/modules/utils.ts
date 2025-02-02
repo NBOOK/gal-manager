@@ -2,6 +2,163 @@ import { toRomaji, toKana, isKana } from "wanakana";
 import GameEntry from "@/modules/GameEntry";
 const collator = new Intl.Collator("ja");
 
+type Token =
+  | { type: "term"; value: string }
+  | { type: "operator"; value: string };
+type ASTNode =
+  | { type: "term"; value: string }
+  | { type: "not"; expr: ASTNode }
+  | { type: "and"; left: ASTNode; right: ASTNode }
+  | { type: "or"; left: ASTNode; right: ASTNode };
+
+function filterGamesByQuery(
+  games: GameEntry[],
+  searchQuery: string
+): GameEntry[] {
+  while ([" ", "|"].includes(searchQuery[0]))
+    searchQuery = searchQuery.slice(1);
+  while ([" ", "|", "!"].includes(searchQuery[searchQuery.length - 1]))
+    searchQuery = searchQuery.slice(0, -1);
+
+  if (!searchQuery.trim()) return games;
+
+  const tokens = tokenize(searchQuery);
+  const parser = new Parser(tokens);
+  let ast: ASTNode;
+  try {
+    ast = parser.parse();
+  } catch (e) {
+    return [];
+  }
+  const evaluator = compileAST(ast);
+  return games.filter((game) => evaluator(game));
+}
+
+function tokenize(searchQuery: string): Token[] {
+  const tokens: Token[] = [];
+  let i = 0;
+  const len = searchQuery.length;
+
+  while (i < len) {
+    const c = searchQuery[i];
+    if (["<", ">", "!", "|"].includes(c)) {
+      tokens.push({ type: "operator", value: c });
+      i++;
+    } else if (c === " ") {
+      tokens.push({ type: "operator", value: " " });
+      while (i < len && searchQuery[i] === " ") i++;
+    } else {
+      let term = "";
+      while (i < len && !["<", ">", "!", "|", " "].includes(searchQuery[i])) {
+        term += searchQuery[i++];
+      }
+      if (term) tokens.push({ type: "term", value: term });
+    }
+  }
+  return tokens;
+}
+
+class Parser {
+  private current = 0;
+  constructor(private tokens: Token[]) {}
+
+  parse(): ASTNode {
+    return this.parseOrExpression();
+  }
+
+  private parseOrExpression(): ASTNode {
+    let left = this.parseAndExpression();
+    while (this.match("operator", "|")) {
+      this.consume();
+      left = { type: "or", left, right: this.parseAndExpression() };
+    }
+    return left;
+  }
+
+  private parseAndExpression(): ASTNode {
+    let left = this.parseNotExpression();
+    while (this.match("operator", " ")) {
+      this.consume();
+      left = { type: "and", left, right: this.parseNotExpression() };
+    }
+    return left;
+  }
+
+  private parseNotExpression(): ASTNode {
+    if (this.match("operator", "!")) {
+      this.consume();
+      return { type: "not", expr: this.parseNotExpression() };
+    }
+    return this.parsePrimary();
+  }
+
+  private parsePrimary(): ASTNode {
+    if (this.match("operator", "<")) {
+      this.consume();
+      const expr = this.parseOrExpression();
+      if (!this.match("operator", ">")) throw new Error();
+      this.consume();
+      return expr;
+    }
+    const token = this.consume();
+    if (token.type === "term") return { type: "term", value: token.value };
+    throw new Error();
+  }
+
+  private consume(): Token {
+    if (this.current >= this.tokens.length) throw new Error();
+    return this.tokens[this.current++];
+  }
+
+  private match(type: "operator" | "term", value?: string): boolean {
+    const token = this.tokens[this.current];
+    return (
+      token?.type === type && (value === undefined || token.value === value)
+    );
+  }
+}
+
+function compileAST(node: ASTNode): (game: GameEntry) => boolean {
+  switch (node.type) {
+    case "term":
+      const matcher = createTermMatcher(node.value);
+      return (game) => matcher(game);
+    case "not":
+      const exprFn = compileAST(node.expr);
+      return (game) => !exprFn(game);
+    case "and":
+      const leftAnd = compileAST(node.left);
+      const rightAnd = compileAST(node.right);
+      return (game) => leftAnd(game) && rightAnd(game);
+    case "or":
+      const leftOr = compileAST(node.left);
+      const rightOr = compileAST(node.right);
+      return (game) => leftOr(game) || rightOr(game);
+  }
+}
+
+function createTermMatcher(term: string): (game: GameEntry) => boolean {
+  let fields: (keyof GameEntry)[];
+  let searchTerm = term.toLowerCase();
+
+  if (term.startsWith("@n=")) {
+    fields = ["gameName", "gameNameEN"];
+    searchTerm = term.slice(3).toLowerCase();
+  } else if (term.startsWith("@b=")) {
+    fields = ["gameBrand", "gameBrandEN"];
+    searchTerm = term.slice(3).toLowerCase();
+  } else {
+    fields = ["gameName", "gameNameEN", "gameBrand", "gameBrandEN"];
+  }
+
+  return (game: GameEntry) =>
+    fields.some((field) =>
+      (game[field] as string).toLowerCase().includes(searchTerm)
+    );
+}
+
+// -------------------------------------------------------------------------------
+
 function cleanAndCapitalize(input: string): string {
   const cleaned = input
     .replace(
@@ -332,54 +489,49 @@ function sortGames(
   });
 }
 
-function filterGamesByQuery(
-  games: GameEntry[],
-  searchQuery: string
-): GameEntry[] {
-  if (searchQuery) {
-    searchQuery = searchQuery.toLowerCase();
-    if (searchQuery.includes("@n=")) {
-      const nameQuery = searchQuery.split("@n=")[1].split("@b=")[0].trim();
-      games = games.filter(
-        (game) =>
-          game.gameName.toLowerCase().includes(nameQuery) ||
-          game.gameNameEN.toLowerCase().includes(nameQuery)
-      );
-    } else if (searchQuery.includes("@b=")) {
-      const brandQuery = searchQuery.split("@b=")[1].split("@n=")[0].trim();
-      games = games.filter(
-        (game) =>
-          game.gameBrand.toLowerCase().includes(brandQuery) ||
-          game.gameBrandEN.toLowerCase().includes(brandQuery)
-      );
-    } else {
-      games = games.filter(
-        (game) =>
-          game.gameName.toLowerCase().includes(searchQuery) ||
-          game.gameNameEN.toLowerCase().includes(searchQuery) ||
-          game.gameBrand.toLowerCase().includes(searchQuery) ||
-          game.gameBrandEN.toLowerCase().includes(searchQuery)
-      );
-    }
-  }
-  return games;
-}
+// function filterGamesByQuery(
+//   games: GameEntry[],
+//   searchQuery: string
+// ): GameEntry[] {
+//   if (searchQuery) {
+//     searchQuery = searchQuery.toLowerCase();
+//     if (searchQuery.includes("@n=")) {
+//       const nameQuery = searchQuery.split("@n=")[1].split("@b=")[0].trim();
+//       games = games.filter(
+//         (game) =>
+//           game.gameName.toLowerCase().includes(nameQuery) ||
+//           game.gameNameEN.toLowerCase().includes(nameQuery)
+//       );
+//     } else if (searchQuery.includes("@b=")) {
+//       const brandQuery = searchQuery.split("@b=")[1].split("@n=")[0].trim();
+//       games = games.filter(
+//         (game) =>
+//           game.gameBrand.toLowerCase().includes(brandQuery) ||
+//           game.gameBrandEN.toLowerCase().includes(brandQuery)
+//       );
+//     } else {
+//       games = games.filter(
+//         (game) =>
+//           game.gameName.toLowerCase().includes(searchQuery) ||
+//           game.gameNameEN.toLowerCase().includes(searchQuery) ||
+//           game.gameBrand.toLowerCase().includes(searchQuery) ||
+//           game.gameBrandEN.toLowerCase().includes(searchQuery)
+//       );
+//     }
+//   }
+//   return games;
+// }
 
 function filterGamesByFilter(
   games: GameEntry[],
   filterConfig: Record<string, { toggled: boolean; value: any }>,
-  filterOperator: Record<string, boolean>
+  filterOperator: boolean
 ): GameEntry[] {
-  let operator = filterOperator.group1
+  let operator = filterOperator
     ? (list: boolean[]) => list.every(Boolean)
     : (list: boolean[]) => list.some(Boolean);
   let toggledKeys = Object.entries(filterConfig)
-    .filter(
-      ([key, value]) =>
-        ["linked", "inDatabase", "inAssets", "starred", "selected"].includes(
-          key
-        ) && value.toggled
-    )
+    .filter(([_key, value]) => value.toggled)
     .map(([key]) => key as keyof GameEntry);
   if (toggledKeys.length) {
     games = games.filter((game) =>
@@ -387,22 +539,6 @@ function filterGamesByFilter(
     );
   }
 
-  operator = filterOperator.group2
-    ? (list: boolean[]) => list.every(Boolean)
-    : (list: boolean[]) => list.some(Boolean);
-  toggledKeys = Object.entries(filterConfig)
-    .filter(
-      ([key, value]) =>
-        ["inNetDisk", "inSDCard", "inDeck", "inUSB", "inAssetsBackup"].includes(
-          key
-        ) && value.toggled
-    )
-    .map(([key]) => key as keyof GameEntry);
-  if (toggledKeys.length) {
-    games = games.filter((game) =>
-      operator(toggledKeys.map((key) => game[key] === filterConfig[key].value))
-    );
-  }
   return games;
 }
 
@@ -410,7 +546,7 @@ function filterSortGames(
   games: GameEntry[],
   searchQuery: string,
   filterConfig: Record<string, { toggled: boolean; value: any }>,
-  filterOperator: Record<string, boolean>,
+  filterOperator: boolean,
   sortBy: keyof GameEntry,
   ascending: boolean
 ): GameEntry[] {

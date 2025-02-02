@@ -15,20 +15,18 @@ export const useGameStore = defineStore("globalStore", () => {
     linked: { toggled: false, value: true },
     inDatabase: { toggled: false, value: 1 },
     inAssets: { toggled: false, value: 1 },
-    starred: { toggled: false, value: true },
     selected: { toggled: false, value: true },
 
     inNetDisk: { toggled: false, value: true },
     inSDCard: { toggled: false, value: true },
     inDeck: { toggled: false, value: true },
-    inUSB: { toggled: false, value: true },
-    inAssetsBackup: { toggled: false, value: true },
 
     wineRunner: { toggled: false, value: "" },
     winePrefix: { toggled: false, value: "" },
   });
 
-  const filterOperator = reactive({ group1: true, group2: true });
+  // const filterOperator = reactive({ group1: true, group2: true });
+  const filterOperator = ref(true);
 
   const totalGames = computed(() => Object.keys(games).length);
   const filterSortedGames = computed(() =>
@@ -36,16 +34,13 @@ export const useGameStore = defineStore("globalStore", () => {
       Object.values(games),
       searchQuery.value,
       filter,
-      filterOperator,
+      filterOperator.value,
       sort.by,
       sort.ascending
     )
   );
   const selectedGames = computed(() =>
     filterSortedGames.value.filter((game) => game.selected)
-  );
-  const starredGames = computed(() =>
-    filterSortedGames.value.filter((game) => game.starred)
   );
   const selectedDiskUsage = computed(() => {
     return selectedGames.value.reduce((sum, game) => sum + game.diskUsage, 0);
@@ -78,7 +73,6 @@ export const useGameStore = defineStore("globalStore", () => {
     totalGames,
     filterSortedGames,
     selectedGames,
-    starredGames,
     totalDiskUsage,
     selectedDiskUsage,
     searchQuery,
