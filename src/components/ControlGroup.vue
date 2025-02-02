@@ -1,263 +1,261 @@
 <script setup lang="ts">
-  import { computed } from "vue";
-  import GameEntry from "@/modules/GameEntry";
-  import { useGameStore } from "@/store/global-store";
+import { computed } from "vue";
+import GameEntry from "@/modules/GameEntry";
+import { useGameStore } from "@/store/global-store";
 
-  const gameStore = useGameStore();
+const gameStore = useGameStore();
 
-  const props = defineProps<{ game: GameEntry }>(); // use props.game to access the game object
+const props = defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 
-  const linkBtn = computed(() => {
-    if (props.game.linked) {
+const linkBtn = computed(() => {
+  if (props.game.linked) {
+    return {
+      icon: "$mdiLinkVariant",
+      iconHover: "$mdiLinkVariantMinus",
+      color: "green",
+      colorHover: "red",
+      readonly: props.game.inLutrisDB || props.game.inSteamDB,
+      action: () => props.game.unlink(),
+    };
+  } else {
+    return {
+      icon: "$mdiLinkVariantOff",
+      iconHover: "$mdiLinkVariantPlus",
+      color: "red",
+      colorHover: "green",
+      readonly: false,
+      action: () => props.game.link(),
+    };
+  }
+});
+
+const databaseBtn = computed(() => {
+  if (props.game.linked) {
+    // console.log(
+    //   props.game.gameName,
+    //   "Lutris: ",
+    //   props.game.inLutrisDB,
+    //   ", Steam: ",
+    //   props.game.inSteamDB
+    // );
+    if (props.game.inLutrisDB && props.game.inSteamDB) {
       return {
-        icon: "$mdiLinkVariant",
-        iconHover: "$mdiLinkVariantMinus",
+        icon: "$mdiDatabase",
+        iconHover: "$mdiDatabaseEdit",
+        color: "green",
+        readonly: false,
+        // action: () => props.game.removeDB(),
+        action: () => gameStore.dbEditList.push(props.game),
+      };
+    } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
+      return {
+        icon: "$mdiDatabaseMinus",
+        iconHover: "$mdiDatabaseEdit",
+        color: "orange",
+        readonly: false,
+        action: () => gameStore.dbEditList.push(props.game),
+      };
+    } else {
+      return {
+        icon: "$mdiDatabaseRemove",
+        iconHover: "$mdiDatabaseEdit",
+        color: "red",
+        readonly: false,
+        action: () => gameStore.dbEditList.push(props.game),
+      };
+    }
+  } else {
+    return {
+      icon: "$mdiDatabaseOff",
+      color: "blue-grey",
+      readonly: true,
+      action: () => {},
+    };
+  }
+});
+
+const imageBtn = computed(() => {
+  if (props.game.imageAssets.assetsCount == 5) {
+    return {
+      icon: "$mdiImageCheck",
+      iconHover: "$mdiFolderOpen",
+      color: "green",
+      action: () => props.game.imageAssets.openImageOrGameFolder(),
+    };
+  } else if (props.game.imageAssets.assetsCount > 0) {
+    return {
+      icon: "$mdiImageMinus",
+      iconHover: "$mdiFolderOpen",
+      color: "orange",
+      action: () => props.game.imageAssets.openImageOrGameFolder(),
+    };
+  } else {
+    return {
+      icon: "$mdiImageRemove",
+      iconHover: "$mdiFolderOpen",
+      color: "red",
+      action: () => props.game.imageAssets.openImageOrGameFolder(),
+    };
+  }
+});
+
+const cloudBtn = computed(() => {
+  if (!gameStore.netDiskOnline) {
+    return {
+      icon: "$mdiCloudOff",
+      iconHover: "$mdiCloudOff",
+      color: "grey-darken-4",
+      colorHover: "grey-darken-4",
+      readonly: true,
+      action: () => {},
+    };
+  } else if (props.game.inNetDisk) {
+    if (props.game.inDeck || props.game.inSDCard) {
+      return {
+        icon: "$mdiCloudCheckVariant",
+        iconHover: "$mdiContentSaveMinus",
         color: "green",
         colorHover: "red",
-        readonly: props.game.inLutrisDB || props.game.inSteamDB,
-        action: () => props.game.unlink(),
+        readonly: false,
+        action: () => {}, // delete local handled by dialog action
       };
     } else {
       return {
-        icon: "$mdiLinkVariantOff",
-        iconHover: "$mdiLinkVariantPlus",
-        color: "red",
+        icon: "$mdiCloudDownload",
+        iconHover: "$mdiCloudDownload",
+        color: "green",
         colorHover: "green",
         readonly: false,
-        action: () => props.game.link(),
+        action: () => {}, // download handled by menu btngroup
       };
     }
-  });
-
-  const databaseBtn = computed(() => {
-    if (props.game.linked) {
-      console.log(
-        props.game.gameName,
-        "Lutris: ",
-        props.game.inLutrisDB,
-        ", Steam: ",
-        props.game.inSteamDB
-      );
-      if (props.game.inLutrisDB && props.game.inSteamDB) {
-        return {
-          icon: "$mdiDatabase",
-          iconHover: "$mdiDatabaseEdit",
-          color: "green",
-          readonly: false,
-          // action: () => props.game.removeDB(),
-          action: () => gameStore.dbEditList.push(props.game),
-        };
-      } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
-        return {
-          icon: "$mdiDatabaseMinus",
-          iconHover: "$mdiDatabaseEdit",
-          color: "orange",
-          readonly: false,
-          action: () => gameStore.dbEditList.push(props.game),
-        };
-      } else {
-        return {
-          icon: "$mdiDatabaseRemove",
-          iconHover: "$mdiDatabaseEdit",
-          color: "red",
-          readonly: false,
-          action: () => gameStore.dbEditList.push(props.game),
-        };
-      }
-    } else {
+  } else {
+    if (props.game.inDeck || props.game.inSDCard) {
       return {
-        icon: "$mdiDatabaseOff",
-        color: "blue-grey",
+        icon: "$mdiCloudAlert",
+        iconHover: "$mdiCloudAlert",
+        color: "red",
+        colorHover: "red",
         readonly: true,
+        // action: () => (props.game.inNetDisk = true), // @TODO: 上传到云端
         action: () => {},
       };
-    }
-  });
-
-  const imageBtn = computed(() => {
-    if (props.game.imageAssets.assetsCount == 5) {
-      return {
-        icon: "$mdiImageCheck",
-        iconHover: "$mdiFolderOpen",
-        color: "green",
-        action: () => props.game.imageAssets.openImageOrGameFolder(),
-      };
-    } else if (props.game.imageAssets.assetsCount > 0) {
-      return {
-        icon: "$mdiImageMinus",
-        iconHover: "$mdiFolderOpen",
-        color: "orange",
-        action: () => props.game.imageAssets.openImageOrGameFolder(),
-      };
     } else {
-      return {
-        icon: "$mdiImageRemove",
-        iconHover: "$mdiFolderOpen",
-        color: "red",
-        action: () => props.game.imageAssets.openImageOrGameFolder(),
-      };
-    }
-  });
-
-  const cloudBtn = computed(() => {
-    if (!gameStore.netDiskOnline) {
+      // not in cloud or local storage, means the link is broken or name is changed
       return {
         icon: "$mdiCloudOff",
         iconHover: "$mdiCloudOff",
-        color: "grey-darken-4",
-        colorHover: "grey-darken-4",
-        readonly: true,
-        action: () => {},
-      };
-    } else if (props.game.inNetDisk) {
-      if (props.game.inDeck || props.game.inSDCard) {
-        return {
-          icon: "$mdiCloudCheckVariant",
-          iconHover: "$mdiContentSaveMinus",
-          color: "green",
-          colorHover: "red",
-          readonly: false,
-          action: () => {}, // delete local handled by dialog action
-        };
-      } else {
-        return {
-          icon: "$mdiCloudDownload",
-          iconHover: "$mdiCloudDownload",
-          color: "green",
-          colorHover: "green",
-          readonly: false,
-          action: () => {}, // download handled by menu btngroup
-        };
-      }
-    } else {
-      if (props.game.inDeck || props.game.inSDCard) {
-        return {
-          icon: "$mdiCloudAlert",
-          iconHover: "$mdiCloudAlert",
-          color: "red",
-          colorHover: "red",
-          readonly: true,
-          // action: () => (props.game.inNetDisk = true), // @TODO: 上传到云端
-          action: () => {},
-        };
-      } else {
-        // not in cloud or local storage, means the link is broken or name is changed
-        return {
-          icon: "$mdiCloudOff",
-          iconHover: "$mdiCloudOff",
-          color: "blue-grey",
-          colorHover: "blue-grey",
-          readonly: true,
-          action: () => {},
-        };
-      }
-    }
-  });
-
-  const storageBtn = computed(() => {
-    if (props.game.inSDCard) {
-      return {
-        icon: "$mdiMicroSd",
-        iconHover: "$mdiFolderMove",
-        color: "green",
-        hoverColor: "green",
-        readonly: false,
-        action: () => {}, // handled by dialog action
-        // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
-      };
-    } else if (props.game.inDeck) {
-      return {
-        icon: "$mdiGamepadSquare",
-        iconHover: "$mdiFolderMove",
-        color: "green",
-        hoverColor: "green",
-        readonly: false,
-        action: () => {},
-        // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
-      };
-    } else {
-      return {
-        icon: "$mdiContentSaveOff",
-        iconHover: "$mdiContentSaveOff",
         color: "blue-grey",
-        hoverColor: "blue-grey",
+        colorHover: "blue-grey",
         readonly: true,
         action: () => {},
       };
     }
-  });
-
-  // const moveBtn = computed(() => {
-  //   if (props.game.inDeck || props.game.inSDCard) {
-  //     return {
-  //       icon: "$mdiFolderMove",
-  //       color: "green",
-  //       readonly: false,
-  //       action: () => {},
-  //     };
-  //   } else {
-  //     return {
-  //       icon: "$mdiFolderMove",
-  //       color: "blue-grey",
-  //       readonly: true,
-  //       action: () => {},
-  //     };
-  //   }
-  // });
-
-  const selectBtn = computed(() => {
-    return {
-      icon: props.game.selected
-        ? "$mdiCheckboxMarked"
-        : "$mdiCheckboxBlankOutline",
-      color: props.game.selected ? "grey-darken-4" : "grey",
-      action: () => (props.game.selected = !props.game.selected),
-    };
-  });
-
-  // const starBtn = computed(() => {
-  //   return {
-  //     icon: props.game.starred ? "$mdiStar" : "$mdiStarOutline",
-  //     color: "amber",
-  //     action: () => (props.game.starred = !props.game.starred),
-  //   };
-  // });
-
-  const syncBtn = computed(() => {
-    if (props.game.inNetDisk && (props.game.inDeck || props.game.inSDCard)) {
-      return {
-        icon: "$mdiSync",
-        color: "green",
-        readonly: false,
-        action: () => {}, // sync handled by dialog action
-      };
-    } else {
-      return {
-        icon: "$mdiSyncOff",
-        color: "blue-grey",
-        readonly: true,
-        action: () => {},
-      };
-    }
-  });
-
-  function pushToDownloadList(target: string) {
-    if (
-      gameStore.downloadList.some(
-        (item) => item.game.gameName === props.game.gameName
-      )
-    ) {
-      return; // already in the list
-    }
-    gameStore.downloadList.push({
-      game: props.game,
-      source: props.game.linked
-        ? props.game.linkedBasePath
-        : props.game.basePath,
-      target: target,
-      progress: 0,
-    });
   }
+});
+
+const storageBtn = computed(() => {
+  if (props.game.inSDCard) {
+    return {
+      icon: "$mdiMicroSd",
+      iconHover: "$mdiFolderMove",
+      color: "green",
+      hoverColor: "green",
+      readonly: false,
+      action: () => {}, // handled by dialog action
+      // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
+    };
+  } else if (props.game.inDeck) {
+    return {
+      icon: "$mdiGamepadSquare",
+      iconHover: "$mdiFolderMove",
+      color: "green",
+      hoverColor: "green",
+      readonly: false,
+      action: () => {},
+      // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
+    };
+  } else {
+    return {
+      icon: "$mdiContentSaveOff",
+      iconHover: "$mdiContentSaveOff",
+      color: "blue-grey",
+      hoverColor: "blue-grey",
+      readonly: true,
+      action: () => {},
+    };
+  }
+});
+
+// const moveBtn = computed(() => {
+//   if (props.game.inDeck || props.game.inSDCard) {
+//     return {
+//       icon: "$mdiFolderMove",
+//       color: "green",
+//       readonly: false,
+//       action: () => {},
+//     };
+//   } else {
+//     return {
+//       icon: "$mdiFolderMove",
+//       color: "blue-grey",
+//       readonly: true,
+//       action: () => {},
+//     };
+//   }
+// });
+
+const selectBtn = computed(() => {
+  return {
+    icon: props.game.selected
+      ? "$mdiCheckboxMarked"
+      : "$mdiCheckboxBlankOutline",
+    color: props.game.selected ? "grey-darken-4" : "grey",
+    action: () => (props.game.selected = !props.game.selected),
+  };
+});
+
+// const starBtn = computed(() => {
+//   return {
+//     icon: props.game.starred ? "$mdiStar" : "$mdiStarOutline",
+//     color: "amber",
+//     action: () => (props.game.starred = !props.game.starred),
+//   };
+// });
+
+const syncBtn = computed(() => {
+  if (props.game.inNetDisk && (props.game.inDeck || props.game.inSDCard)) {
+    return {
+      icon: "$mdiSync",
+      color: "green",
+      readonly: false,
+      action: () => {}, // sync handled by dialog action
+    };
+  } else {
+    return {
+      icon: "$mdiSyncOff",
+      color: "blue-grey",
+      readonly: true,
+      action: () => {},
+    };
+  }
+});
+
+function pushToDownloadList(target: string) {
+  if (
+    gameStore.downloadList.some(
+      (item) => item.game.gameName === props.game.gameName
+    )
+  ) {
+    return; // already in the list
+  }
+  gameStore.downloadList.push({
+    game: props.game,
+    source: props.game.linked ? props.game.linkedBasePath : props.game.basePath,
+    target: target,
+    progress: 0,
+  });
+}
 </script>
 
 <template>
@@ -551,39 +549,39 @@
 </template>
 
 <style scoped>
-  /* 右侧按钮样式 */
-  .game-controls {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-self: flex-end;
-    justify-content: space-evenly;
-    /* gap: 5px; */
-    margin-left: 10px;
-    width: 100px;
-    min-width: 100px;
-    margin-bottom: 10px;
-  }
+/* 右侧按钮样式 */
+.game-controls {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-self: flex-end;
+  justify-content: space-evenly;
+  /* gap: 5px; */
+  margin-left: 10px;
+  width: 100px;
+  min-width: 100px;
+  margin-bottom: 10px;
+}
 
-  .func-btns {
-    width: 20px;
-    min-width: 20px;
-    height: 20px;
-    /* border: none; */
-    /* border-radius: 5px; */
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
-    margin: 0;
-  }
+.func-btns {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  /* border: none; */
+  /* border-radius: 5px; */
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+}
 
-  .func-btns img {
-    height: 100%;
-  }
+.func-btns img {
+  height: 100%;
+}
 
-  .invisible {
-    visibility: hidden;
-  }
+.invisible {
+  visibility: hidden;
+}
 </style>

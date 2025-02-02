@@ -15,12 +15,18 @@ function filterGamesByQuery(
   games: GameEntry[],
   searchQuery: string
 ): GameEntry[] {
+  if (!searchQuery) return games;
+  if (!searchQuery.trim()) return games;
+  searchQuery = searchQuery
+    .replace(/\s+/g, " ")
+    .replace(/\s*\|\s*/g, "|")
+    .replace(/!\s*/g, "!")
+    .replace(/<\s*/g, "<")
+    .replace(/\s*>/g, ">");
   while ([" ", "|"].includes(searchQuery[0]))
     searchQuery = searchQuery.slice(1);
   while ([" ", "|", "!"].includes(searchQuery[searchQuery.length - 1]))
     searchQuery = searchQuery.slice(0, -1);
-
-  if (!searchQuery.trim()) return games;
 
   const tokens = tokenize(searchQuery);
   const parser = new Parser(tokens);
@@ -63,23 +69,23 @@ class Parser {
   constructor(private tokens: Token[]) {}
 
   parse(): ASTNode {
-    return this.parseOrExpression();
+    return this.parseAndExpression();
   }
 
   private parseOrExpression(): ASTNode {
-    let left = this.parseAndExpression();
+    let left = this.parseNotExpression();
     while (this.match("operator", "|")) {
       this.consume();
-      left = { type: "or", left, right: this.parseAndExpression() };
+      left = { type: "or", left, right: this.parseNotExpression() };
     }
     return left;
   }
 
   private parseAndExpression(): ASTNode {
-    let left = this.parseNotExpression();
+    let left = this.parseOrExpression();
     while (this.match("operator", " ")) {
       this.consume();
-      left = { type: "and", left, right: this.parseNotExpression() };
+      left = { type: "and", left, right: this.parseOrExpression() };
     }
     return left;
   }
@@ -95,7 +101,7 @@ class Parser {
   private parsePrimary(): ASTNode {
     if (this.match("operator", "<")) {
       this.consume();
-      const expr = this.parseOrExpression();
+      const expr = this.parseAndExpression();
       if (!this.match("operator", ">")) throw new Error();
       this.consume();
       return expr;
