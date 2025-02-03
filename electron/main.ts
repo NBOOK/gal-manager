@@ -175,4 +175,7 @@ function registerIpcMain() {
   ipcMain.handle('readlink', (_event, path: string) => {
     return fs.promises.readlink(path);
   });
+  ipcMain.handle('getFileInfos', (_event, filePath: string) => {
+    return utils.getFileInfos(filePath);
+  });
 }

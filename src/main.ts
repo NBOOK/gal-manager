@@ -16,3 +16,6 @@ app.mount("#app");
 
 gameEntrySetConfig();
 imageAssetsSetConfig();
+
+import { syncDirectories } from "./modules/Synchronizer";
+window.syncDirectories = syncDirectories;

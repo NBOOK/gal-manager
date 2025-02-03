@@ -36,5 +36,12 @@ declare global {
     executable: string;
     locale: string;
   }
+
+  type SyncStrategy = "l2r" | "r2l" | "newest";
+
+  interface FileInfo {
+    modified: Date;
+    size: number;
+  }
 }
 export {};

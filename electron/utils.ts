@@ -539,6 +539,42 @@ async function copyFileWithProgress(
   });
 }
 
+async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
+  const map = new Map<string, FileInfo>();
+
+  async function traverse(
+    currentDir: string,
+    relativePath: string
+  ): Promise<void> {
+    let entries: string[];
+    try {
+      entries = await fs.promises.readdir(currentDir);
+    } catch (error) {
+      console.error(`Error reading directory ${currentDir}:`, error);
+      return;
+    }
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry);
+      const newRelativePath = path.join(relativePath, entry);
+      let stats;
+      try {
+        stats = await fs.promises.stat(fullPath);
+      } catch (error) {
+        console.error(`Error stating ${fullPath}:`, error);
+        continue;
+      }
+      if (stats.isDirectory()) {
+        await traverse(fullPath, newRelativePath);
+      } else if (stats.isFile()) {
+        map.set(newRelativePath, { modified: stats.mtime, size: stats.size });
+      }
+    }
+  }
+
+  await traverse(root, "");
+  return map;
+}
+
 export default {
   scanDir,
   getDiskUsage,
@@ -561,4 +597,5 @@ export default {
   copyFileWithProgress,
   renameItem,
   removeItem,
+  getFileInfos,
 };
