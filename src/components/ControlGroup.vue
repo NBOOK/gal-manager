@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import GameEntry from "@/modules/GameEntry";
 import { useGameStore } from "@/store/global-store";
 
@@ -223,13 +223,22 @@ const selectBtn = computed(() => {
 //   };
 // });
 
+const syncChecking = ref(false);
 const syncBtn = computed(() => {
   if (props.game.inNetDisk && (props.game.inDeck || props.game.inSDCard)) {
     return {
       icon: "$mdiSync",
       color: "green",
-      readonly: false,
-      action: () => {}, // sync handled by dialog action
+      readonly: gameStore.downloadList.length > 0,
+      action: async () => {
+        syncChecking.value = true;
+        const dirSyncer = await props.game.getSyncManager();
+        if (dirSyncer && dirSyncer.fileSyncers.length > 0) {
+          console.log("Syncing", props.game.gameName);
+          gameStore.syncManager.syncList.push(dirSyncer);
+        }
+        syncChecking.value = false;
+      },
     };
   } else {
     return {
@@ -502,6 +511,7 @@ function pushToDownloadList(target: string) {
         :icon="syncBtn.icon"
         :color="syncBtn.color"
         size="x-large"
+        :class="{ rotating: syncChecking }"
       ></v-icon>
     </v-btn>
 
@@ -583,5 +593,18 @@ function pushToDownloadList(target: string) {
 
 .invisible {
   visibility: hidden;
+}
+
+.rotating {
+  animation: rotate 1.5s linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
 }
 </style>

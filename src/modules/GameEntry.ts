@@ -1,6 +1,7 @@
 import ImageAssets from "@/modules/ImageAssets";
 import { useGameStore } from "@/store/global-store";
 import utils from "./utils";
+import { DirSyncer } from "./Synchronizer";
 let gameStore: ReturnType<typeof useGameStore>;
 
 export function gameEntrySetConfig() {
@@ -374,6 +375,20 @@ class GameEntry {
         delete gameStore.games[this.gameName];
       }
     }
+  }
+
+  async getSyncManager(strategy: SyncStrategy = "newest") {
+    if (!(this.inNetDisk && (this.inDeck || this.inSDCard))) {
+      console.log("Game not found in both local and remote disks");
+      return;
+    }
+    const remotePath = `${gameStore.config.value.gamesExternalPath}/${this.folderName}`;
+    const localPath = this.gamePath;
+    const sync = new DirSyncer(this.folderName, remotePath, localPath);
+    await sync.scan();
+    await sync.setStrategy(strategy);
+    console.log(sync.fileSyncers.map((item) => item.relativePath));
+    return sync;
   }
 }
 

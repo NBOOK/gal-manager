@@ -521,6 +521,7 @@ async function copyFileWithProgress(
   event: Electron.IpcMainInvokeEvent
 ) {
   await fs.promises.mkdir(path.dirname(dest), { recursive: true });
+  const stats = await fs.promises.stat(src);
   return new Promise<void>((resolve, reject) => {
     const readStream = fs.createReadStream(src);
     const writeStream = fs.createWriteStream(dest);
@@ -531,9 +532,18 @@ async function copyFileWithProgress(
       });
     });
 
-    readStream.on("end", resolve);
+    // readStream.on("end", resolve);
     readStream.on("error", reject);
     writeStream.on("error", reject);
+
+    writeStream.on("finish", async () => {
+      try {
+        await fs.promises.utimes(dest, stats.atime, stats.mtime); // 保留原时间
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
 
     readStream.pipe(writeStream);
   });

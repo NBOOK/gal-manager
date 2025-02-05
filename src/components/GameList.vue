@@ -63,9 +63,6 @@ const games = computed(() => gameStore.filterSortedGames);
 </template>
 
 <style scoped>
-.scroller {
-  height: 100%;
-}
 .v-virtual-scroll {
   padding-top: 18px;
   padding-right: calc(1em - 10px);

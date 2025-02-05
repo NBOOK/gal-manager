@@ -1,148 +1,148 @@
 <script setup lang="ts">
-  import { computed, reactive, ref, watch } from "vue";
-  import { useGameStore } from "@/store/global-store";
-  import GameEntry from "@/modules/GameEntry";
-  import utils from "@/modules/utils";
+import { computed, reactive, ref, watch } from "vue";
+import { useGameStore } from "@/store/global-store";
+import GameEntry from "@/modules/GameEntry";
+import utils from "@/modules/utils";
 
-  const gameStore = useGameStore();
-  const emit = defineEmits(["proceed", "abort"]);
-  const props = defineProps<{ game: GameEntry }>();
-  const game = computed(() => props.game);
-  const gameNameENCandidates = ref<VNTitle[]>([]);
-  const isMenuOpen = ref(false);
-  const slugSync = ref(true);
-  const executables = ref<string[]>([]);
-  const enTitleColor = ref("");
-  const slugTitleColor = ref("");
+const gameStore = useGameStore();
+const emit = defineEmits(["proceed", "abort"]);
+const props = defineProps<{ game: GameEntry }>();
+const game = computed(() => props.game);
+const gameNameENCandidates = ref<VNTitle[]>([]);
+const isMenuOpen = ref(false);
+const slugSync = ref(true);
+const executables = ref<string[]>([]);
+const enTitleColor = ref("");
+const slugTitleColor = ref("");
 
-  const enTitleLoading = ref(true);
-  const executablesLoading = ref(true);
-  const dbAdding = ref(false);
-  const dbRemoving = ref(false);
+const enTitleLoading = ref(true);
+const executablesLoading = ref(true);
+const dbAdding = ref(false);
+const dbRemoving = ref(false);
 
-  function slugify(name: string, slug: string) {
-    if (slugSync.value) {
-      return utils.slugify(name);
-    }
-    return slug;
+function slugify(name: string, slug: string) {
+  if (slugSync.value) {
+    return utils.slugify(name);
   }
+  return slug;
+}
 
-  const titleKindColor = {
-    title: "#f1f8e9",
-    romanized: "#ffebee",
-    releaseTitle: "#e1f5fe",
-    alias: "#fff3e0",
-  };
+const titleKindColor = {
+  title: "#f1f8e9",
+  romanized: "#ffebee",
+  releaseTitle: "#e1f5fe",
+  alias: "#fff3e0",
+};
 
-  const gameConnfig = reactive<GameConnfig>({
-    gameName: "",
-    gameBrand: "",
-    gameNameEN: "",
-    gameNameSlug: "",
-    winePrefix: "",
-    wineRunner: "",
-    executable: "",
-    locale: "",
-  });
+const gameConnfig = reactive<GameConnfig>({
+  gameName: "",
+  gameBrand: "",
+  gameNameEN: "",
+  gameNameSlug: "",
+  winePrefix: "",
+  wineRunner: "",
+  executable: "",
+  locale: "",
+});
 
-  async function getGameNameENCandidates(gameName: string) {
-    enTitleLoading.value = true;
-    gameNameENCandidates.value = await utils.getGameNameEN(gameName);
-    enTitleLoading.value = false;
+async function getGameNameENCandidates(gameName: string) {
+  enTitleLoading.value = true;
+  gameNameENCandidates.value = await utils.getGameNameEN(gameName);
+  enTitleLoading.value = false;
+}
+
+watch(
+  () => gameConnfig.gameNameEN,
+  () => {
+    gameConnfig.gameNameSlug = slugify(
+      gameConnfig.gameNameEN,
+      gameConnfig.gameNameSlug
+    );
   }
+);
 
-  watch(
-    () => gameConnfig.gameNameEN,
-    () => {
-      gameConnfig.gameNameSlug = slugify(
-        gameConnfig.gameNameEN,
-        gameConnfig.gameNameSlug
-      );
+watch(
+  () => props.game,
+  async () => {
+    gameConnfig.gameName = props.game.gameName;
+    gameConnfig.gameBrand = props.game.gameBrand;
+
+    await getGameNameENCandidates(props.game.gameName);
+
+    if (props.game.inDatabase) {
+      gameConnfig.gameNameEN = props.game.gameNameEN;
+      enTitleColor.value = "#EDE7F6";
+      gameConnfig.gameNameSlug = props.game.gameNameSlug;
+      slugTitleColor.value = "#EDE7F6";
+    } else {
+      gameConnfig.gameNameEN = gameNameENCandidates.value[0].title;
+      enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
+      gameConnfig.gameNameSlug = slugify(gameConnfig.gameNameEN, "");
+      slugTitleColor.value = enTitleColor.value;
     }
-  );
 
-  watch(
-    () => props.game,
-    async () => {
-      gameConnfig.gameName = props.game.gameName;
-      gameConnfig.gameBrand = props.game.gameBrand;
-
-      await getGameNameENCandidates(props.game.gameName);
-
-      if (props.game.inDatabase) {
-        gameConnfig.gameNameEN = props.game.gameNameEN;
-        enTitleColor.value = "#EDE7F6";
-        gameConnfig.gameNameSlug = props.game.gameNameSlug;
-        slugTitleColor.value = "#EDE7F6";
-      } else {
-        gameConnfig.gameNameEN = gameNameENCandidates.value[0].title;
-        enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
-        gameConnfig.gameNameSlug = slugify(gameConnfig.gameNameEN, "");
-        slugTitleColor.value = enTitleColor.value;
-      }
-
-      const gamePath = `${props.game.basePath}/${props.game.gameBrand}${props.game.splitter}${props.game.gameName}`;
-      executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
-        .filter(
-          (file: DirEntry) =>
-            file.isFile && file.name.toLowerCase().endsWith(".exe")
-        )
-        .map((file: DirEntry) => file.name);
-      executables.value = await utils.guessLauncher(executables.value);
-      gameConnfig.executable = executables.value[0];
-      executablesLoading.value = false;
-
-      if (
-        gameStore.lutrisDB.winePrefixes.includes(
-          gameStore.config.lutrisDefaultWinePrefix
-        )
+    const gamePath = `${props.game.basePath}/${props.game.gameBrand}${props.game.splitter}${props.game.gameName}`;
+    executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
+      .filter(
+        (file: DirEntry) =>
+          file.isFile && file.name.toLowerCase().endsWith(".exe")
       )
-        gameConnfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
-      else gameConnfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
+      .map((file: DirEntry) => file.name);
+    executables.value = await utils.guessLauncher(executables.value);
+    gameConnfig.executable = executables.value[0];
+    executablesLoading.value = false;
 
-      if (
-        gameStore.lutrisDB.wineRunners.includes(
-          gameStore.config.lutrisDefaultWineRunner
-        )
-      )
-        gameConnfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
-      else gameConnfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
-
-      if (gameStore.config.locale) gameConnfig.locale = gameStore.config.locale;
-      else gameConnfig.locale = "ja_JP.utf8";
-    },
-    { immediate: true }
-  );
-
-  async function addGameToDB() {
-    dbAdding.value = true;
-    if (props.game.inDatabase > 0) {
-      console.log("Game already in database! Removing it...");
-      await props.game.removeDB();
-    }
     if (
-      gameConnfig.gameName !== props.game.gameName ||
-      gameConnfig.gameBrand !== props.game.gameBrand
-    ) {
-      console.log("Game name changed! Updating it...");
-      await props.game.rename(gameConnfig);
-    }
-    await props.game.addDB(gameConnfig);
-    dbAdding.value = false;
-    emit("proceed");
-  }
+      gameStore.lutrisDB.winePrefixes.includes(
+        gameStore.config.lutrisDefaultWinePrefix
+      )
+    )
+      gameConnfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
+    else gameConnfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
 
-  async function removeGameFromDB() {
-    dbRemoving.value = true;
+    if (
+      gameStore.lutrisDB.wineRunners.includes(
+        gameStore.config.lutrisDefaultWineRunner
+      )
+    )
+      gameConnfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
+    else gameConnfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
+
+    if (gameStore.config.locale) gameConnfig.locale = gameStore.config.locale;
+    else gameConnfig.locale = "ja_JP.utf8";
+  },
+  { immediate: true }
+);
+
+async function addGameToDB() {
+  dbAdding.value = true;
+  if (props.game.inDatabase > 0) {
+    console.log("Game already in database! Removing it...");
     await props.game.removeDB();
-    dbRemoving.value = false;
-    emit("proceed");
   }
+  if (
+    gameConnfig.gameName !== props.game.gameName ||
+    gameConnfig.gameBrand !== props.game.gameBrand
+  ) {
+    console.log("Game name changed! Updating it...");
+    await props.game.rename(gameConnfig);
+  }
+  await props.game.addDB(gameConnfig);
+  dbAdding.value = false;
+  emit("proceed");
+}
+
+async function removeGameFromDB() {
+  dbRemoving.value = true;
+  await props.game.removeDB();
+  dbRemoving.value = false;
+  emit("proceed");
+}
 </script>
 
 <template>
   <v-carousel-item>
-    <v-card rounded="10" height="100%" class="pa-8 d-flex flex-column">
+    <v-card rounded="lg" height="100%" class="pa-8 d-flex flex-column">
       <!-- ------------------------- Orig Title ------------------------------- -->
       <v-row class="flex-grow-0">
         <v-text-field
@@ -489,59 +489,59 @@
 </template>
 
 <style scoped>
-  .vn-title-kind-title {
-    background-color: #f1f8e9 !important;
-  }
-  .vn-title-kind-romanized {
-    background-color: #ffebee !important;
-  }
-  .vn-title-kind-releaseTitle {
-    background-color: #e1f5fe !important;
-  }
-  .vn-title-kind-alias {
-    background-color: #fff3e0 !important;
-  }
+.vn-title-kind-title {
+  background-color: #f1f8e9 !important;
+}
+.vn-title-kind-romanized {
+  background-color: #ffebee !important;
+}
+.vn-title-kind-releaseTitle {
+  background-color: #e1f5fe !important;
+}
+.vn-title-kind-alias {
+  background-color: #fff3e0 !important;
+}
 
-  .rotate-icon {
-    transform: rotate(180deg);
-  }
+.rotate-icon {
+  transform: rotate(180deg);
+}
 
-  .v-icon {
-    transition: transform 0.3s ease;
-  }
+.v-icon {
+  transition: transform 0.3s ease;
+}
 
-  ::-webkit-scrollbar {
-    display: none;
-  }
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
+::-webkit-scrollbar {
+  display: none;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
 
-  ::-webkit-scrollbar-track {
-    background: #f0f0f0;
-  }
-  ::-webkit-scrollbar-track:hover {
-    background: #f0f0f0;
-  }
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+::-webkit-scrollbar-track:hover {
+  background: #f0f0f0;
+}
 
-  ::-webkit-scrollbar-thumb {
-    background-color: #cccccc;
-    border-radius: 10px;
-  }
+::-webkit-scrollbar-thumb {
+  background-color: #cccccc;
+  border-radius: 10px;
+}
 
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: #888888;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background-color: #888888;
+}
 
-  .lutris-config-spacer {
-    width: 100%;
-    max-width: 24px;
-    min-width: 0px;
-    flex-shrink: 1.32;
-  }
+.lutris-config-spacer {
+  width: 100%;
+  max-width: 24px;
+  min-width: 0px;
+  flex-shrink: 1.32;
+}
 
-  .v-list-item-title {
-    font-size: 14px;
-  }
+.v-list-item-title {
+  font-size: 14px;
+}
 </style>

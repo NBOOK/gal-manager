@@ -17,6 +17,7 @@ import {
   mdiAlphabeticalVariant,
   mdiCalendarMonthOutline,
   mdiChartPieOutline,
+  mdiChartPie,
   mdiSelectMultiple,
   mdiCheckboxMarked,
   mdiCheckboxBlankOutline,
@@ -64,6 +65,12 @@ import {
   mdiMagnify,
   mdiPackageVariantClosed,
   mdiPackageVariant,
+  mdiDownload,
+  mdiFilePlus,
+  mdiFileEdit,
+  mdiFileRemove,
+  mdiPencil,
+  mdiPlusThick,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
@@ -84,6 +91,7 @@ const aliasesCustom = {
   mdiAlphabeticalVariant,
   mdiCalendarMonthOutline,
   mdiChartPieOutline,
+  mdiChartPie,
   mdiSelectMultiple,
   mdiCheckboxMarked,
   mdiCheckboxBlankOutline,
@@ -131,6 +139,12 @@ const aliasesCustom = {
   mdiMagnify,
   mdiPackageVariantClosed,
   mdiPackageVariant,
+  mdiDownload,
+  mdiFilePlus,
+  mdiFileEdit,
+  mdiFileRemove,
+  mdiPencil,
+  mdiPlusThick,
 };
 
 const vuetify = createVuetify({

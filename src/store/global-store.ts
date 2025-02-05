@@ -4,6 +4,7 @@ import GameEntry from "@/modules/GameEntry";
 import SteamDB from "@/modules/SteamDB";
 import LutrisDB from "@/modules/LutrisDB";
 import utils from "@/modules/utils";
+import { DirSyncer } from "@/modules/Synchronizer";
 
 export const useGameStore = defineStore("globalStore", () => {
   // const games = ref<Record<string, ReturnType<typeof useGameStore>>>({});
@@ -39,8 +40,9 @@ export const useGameStore = defineStore("globalStore", () => {
       sort.ascending
     )
   );
-  const selectedGames = computed(() =>
-    filterSortedGames.value.filter((game) => game.selected)
+  const selectedGames = computed(
+    () => filterSortedGames.value.filter((game) => game.selected)
+    // Object.values(games).filter((game) => game.selected)
   );
   const selectedDiskUsage = computed(() => {
     return selectedGames.value.reduce((sum, game) => sum + game.diskUsage, 0);
@@ -65,6 +67,11 @@ export const useGameStore = defineStore("globalStore", () => {
     }[]
   );
 
+  const syncManager = reactive({
+    syncList: [] as DirSyncer[],
+    gamesToSync: [] as GameEntry[],
+  });
+
   const netDiskOnline = ref(false);
 
   return {
@@ -82,9 +89,10 @@ export const useGameStore = defineStore("globalStore", () => {
     config,
     steamDB,
     lutrisDB,
+    netDiskOnline,
     dbEditList,
     downloadList,
-    netDiskOnline,
+    syncManager,
   };
 });
 

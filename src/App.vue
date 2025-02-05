@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { useGameStore } from "@/store/global-store";
 import LoadingOverlay from "@/components/Loading.vue";
 import DBAdderCarousel from "@/views/DBAdderCarousel.vue";
+import GameSync from "@/components/GameSync.vue";
 import GameList from "@/components/GameList.vue";
 import AppBar from "@/components/AppBar.vue";
 import StatusBar from "@/components/StatusBar.vue";
@@ -39,6 +40,7 @@ onMounted(async () => {
     <LoadingOverlay v-if="gameStore.config.value" />
     <!-- <FirstTime v-if="firstTime" /> -->
     <DBAdderCarousel v-if="gameStore.config.value" />
+    <GameSync v-if="gameStore.config.value" />
     <div v-if="firstTime" style="margin-top: 30vh">First Time!</div>
     <GameList v-if="gameStore.config.value" />
     <StatusBar v-if="gameStore.config.value" />

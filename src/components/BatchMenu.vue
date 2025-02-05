@@ -1,51 +1,66 @@
 <script setup lang="ts">
-  import { useGameStore } from "@/store/global-store";
+import { useGameStore } from "@/store/global-store";
+import { DirSyncer } from "@/modules/Synchronizer";
 
-  const gameStore = useGameStore();
+const gameStore = useGameStore();
 
-  function checkAllFilteredGames() {
-    gameStore.filterSortedGames.forEach((game) => (game.selected = true));
+function checkAllFilteredGames() {
+  gameStore.filterSortedGames.forEach((game) => (game.selected = true));
+}
+
+function uncheckAllFilteredGames() {
+  gameStore.filterSortedGames.forEach((game) => (game.selected = false));
+}
+
+async function linkAllSelectedGames(link: boolean) {
+  if (link) {
+    gameStore.selectedGames.forEach((game) => game.link());
+  } else {
+    gameStore.selectedGames.forEach((game) => game.unlink());
   }
+}
 
-  function uncheckAllFilteredGames() {
-    gameStore.filterSortedGames.forEach((game) => (game.selected = false));
-  }
+function pushAllToDownloadList(target: string) {
+  gameStore.downloadList.push(
+    ...gameStore.selectedGames
+      .map((game) => ({
+        game: game,
+        source: game.linked ? game.linkedBasePath : game.basePath,
+        target: target,
+        progress: 0,
+      }))
+      .filter((item) => {
+        // 检查 game.gameName 是否已经在 downloadList 中存在
+        const isDuplicate = gameStore.downloadList.some(
+          (existingItem) => existingItem.game.gameName === item.game.gameName
+        );
+        // 如果不存在重复项，则保留该项
+        return !isDuplicate;
+      })
+  );
+}
 
-  async function linkAllSelectedGames(link: boolean) {
-    if (link) {
-      gameStore.selectedGames.forEach((game) => game.link());
-    } else {
-      gameStore.selectedGames.forEach((game) => game.unlink());
-    }
-  }
+async function pushAlltoSyncList() {
+  // gameStore.syncManager.syncing = true;
+  // const syncManagers = await Promise.all(
+  //   gameStore.selectedGames.map(async (game) => await game.getSyncManager())
+  // );
+  // const validSyncManagers = syncManagers.filter(
+  //   (manager) => manager && manager?.FileSyncers.length > 0
+  // ) as DirSyncer[];
+  // if (validSyncManagers.length > 0) {
+  //   gameStore.syncManager.syncList.push(...validSyncManagers);
+  // }
+  gameStore.syncManager.gamesToSync.push(...gameStore.selectedGames);
+}
 
-  function pushAllToDownloadList(target: string) {
-    gameStore.downloadList.push(
-      ...gameStore.selectedGames
-        .map((game) => ({
-          game: game,
-          source: game.linked ? game.linkedBasePath : game.basePath,
-          target: target,
-          progress: 0,
-        }))
-        .filter((item) => {
-          // 检查 game.gameName 是否已经在 downloadList 中存在
-          const isDuplicate = gameStore.downloadList.some(
-            (existingItem) => existingItem.game.gameName === item.game.gameName
-          );
-          // 如果不存在重复项，则保留该项
-          return !isDuplicate;
-        })
-    );
-  }
+function pushAlltoDBEditList() {
+  gameStore.dbEditList.push(...gameStore.selectedGames);
+}
 
-  function pushAlltoDBEditList() {
-    gameStore.dbEditList.push(...gameStore.selectedGames);
-  }
-
-  async function deleteAllSelectedGames() {
-    gameStore.selectedGames.forEach(async (game) => await game.deleteLocal());
-  }
+async function deleteAllSelectedGames() {
+  gameStore.selectedGames.forEach(async (game) => await game.deleteLocal());
+}
 </script>
 
 <template>
@@ -269,19 +284,21 @@
               !(
                 gameStore.selectedGames.length > 0 &&
                 gameStore.selectedGames.every((game) => game.inNetDisk) &&
-                (gameStore.selectedGames.every((game) => game.inSDCard) ||
-                  gameStore.selectedGames.every((game) => game.inDeck))
+                gameStore.selectedGames.every(
+                  (game) => game.inSDCard || game.inDeck
+                )
               )
             "
-            @click=""
+            @click="pushAlltoSyncList"
           >
             <v-icon
               :color="
                 !(
                   gameStore.selectedGames.length > 0 &&
                   gameStore.selectedGames.every((game) => game.inNetDisk) &&
-                  (gameStore.selectedGames.every((game) => game.inSDCard) ||
-                    gameStore.selectedGames.every((game) => game.inDeck))
+                  gameStore.selectedGames.every(
+                    (game) => game.inSDCard || game.inDeck
+                  )
                 )
                   ? 'grey'
                   : 'grey-darken-4'
@@ -360,39 +377,39 @@
 </template>
 
 <style>
-  .grid3x2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    /* 2 列 */
-    height: 144px !important;
-  }
+.grid3x2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* 2 列 */
+  height: 144px !important;
+}
 
-  .game-list-container {
-    /* position: relative; */
-    overflow-y: scroll !important;
-    /* padding-right: calc(1em - 10px); */
-  }
+.game-list-container {
+  /* position: relative; */
+  overflow-y: scroll !important;
+  /* padding-right: calc(1em - 10px); */
+}
 
-  .game-list-container::-webkit-scrollbar {
-    /* width: 10px;
+.game-list-container::-webkit-scrollbar {
+  /* width: 10px;
   height: 10px; */
-    display: none;
-  }
+  display: none;
+}
 
-  .game-list-container::-webkit-scrollbar-track {
-    background: #f0f0f0;
-  }
+.game-list-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
 
-  .game-list-container::-webkit-scrollbar-track:hover {
-    background: #f0f0f0;
-  }
+.game-list-container::-webkit-scrollbar-track:hover {
+  background: #f0f0f0;
+}
 
-  .game-list-container::-webkit-scrollbar-thumb {
-    background-color: #cccccc;
-    border-radius: 10px;
-  }
+.game-list-container::-webkit-scrollbar-thumb {
+  background-color: #cccccc;
+  border-radius: 10px;
+}
 
-  .game-list-container::-webkit-scrollbar-thumb:hover {
-    background-color: #888888;
-  }
+.game-list-container::-webkit-scrollbar-thumb:hover {
+  background-color: #888888;
+}
 </style>

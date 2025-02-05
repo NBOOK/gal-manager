@@ -562,6 +562,30 @@ function filterSortGames(
   return games;
 }
 
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} Bytes`;
+  const units = ["KB", "MB", "GB", "TB"];
+  let size = bytes / 1024; // 转换为 KB
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
+  }
+  return `${size.toFixed(2)} ${units[unitIndex]}`;
+}
+
+function formatTime(time: number): string {
+  const units = ["seconds", "minutes", "hours", "days"];
+  const bases = [60, 60, 24];
+  let unitIndex = 0;
+  while (time >= bases[unitIndex] && unitIndex < units.length - 1) {
+    time /= bases[unitIndex];
+    unitIndex++;
+  }
+  time = Math.round(time);
+  return `${time} ${units[unitIndex]}`;
+}
+
 export default {
   romanize,
   slugify,
@@ -571,4 +595,6 @@ export default {
   filterGamesByQuery,
   filterSortGames,
   vndbQueryName,
+  formatSize,
+  formatTime,
 };
