@@ -97,3 +97,11 @@ button:focus-visible {
   padding-top: 0px !important;
   /* height: 100px !important; */
 }
+
+.behavior-toggle-btn .v-btn__overlay {
+  background-color: transparent;
+}
+
+.sync-indicator .v-btn__overlay {
+  background-color: transparent;
+}

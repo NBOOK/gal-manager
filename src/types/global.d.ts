@@ -37,7 +37,7 @@ declare global {
     locale: string;
   }
 
-  type SyncStrategy = "l2r" | "r2l" | "newest";
+  type SyncStrategy = "l2r" | "r2l" | "newest" | "skip";
 
   interface FileInfo {
     modified: Date;

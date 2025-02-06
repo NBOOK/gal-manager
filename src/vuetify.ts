@@ -71,6 +71,10 @@ import {
   mdiFileRemove,
   mdiPencil,
   mdiPlusThick,
+  mdiMinusThick,
+  mdiUpdate,
+  mdiArrowRightBold,
+  mdiArrowLeftBold,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
@@ -145,6 +149,10 @@ const aliasesCustom = {
   mdiFileRemove,
   mdiPencil,
   mdiPlusThick,
+  mdiMinusThick,
+  mdiUpdate,
+  mdiArrowRightBold,
+  mdiArrowLeftBold,
 };
 
 const vuetify = createVuetify({

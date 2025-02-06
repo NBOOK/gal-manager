@@ -384,7 +384,28 @@ class GameEntry {
     }
     const remotePath = `${gameStore.config.value.gamesExternalPath}/${this.folderName}`;
     const localPath = this.gamePath;
-    const sync = new DirSyncer(this.folderName, remotePath, localPath);
+
+    const exclude = [gameStore.config.value.assetsFolderName];
+    const include = [
+      this.imageAssets.capsuleName,
+      this.imageAssets.headerName,
+      this.imageAssets.heroName,
+      this.imageAssets.logoName,
+      this.imageAssets.iconName,
+      this.imageAssets.capsuleSDName,
+      this.imageAssets.headerSDName,
+      this.imageAssets.heroSDName,
+    ]
+      .filter((name) => name !== "")
+      .map((name) => `${gameStore.config.value.assetsFolderName}/${name}`);
+
+    const sync = new DirSyncer(
+      this.folderName,
+      remotePath,
+      localPath,
+      include,
+      exclude
+    );
     await sync.scan();
     await sync.setStrategy(strategy);
     console.log(sync.fileSyncers.map((item) => item.relativePath));

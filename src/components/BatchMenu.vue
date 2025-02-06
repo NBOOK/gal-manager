@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useGameStore } from "@/store/global-store";
-import { DirSyncer } from "@/modules/Synchronizer";
 
 const gameStore = useGameStore();
 
@@ -282,6 +281,7 @@ async function deleteAllSelectedGames() {
           <v-btn
             :readonly="
               !(
+                gameStore.downloadList.length === 0 &&
                 gameStore.selectedGames.length > 0 &&
                 gameStore.selectedGames.every((game) => game.inNetDisk) &&
                 gameStore.selectedGames.every(

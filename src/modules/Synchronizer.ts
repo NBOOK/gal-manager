@@ -5,6 +5,7 @@ class FileSyncer {
   strategy: SyncStrategy;
   private dirL: string;
   private dirR: string;
+  selected: boolean = false;
 
   constructor(
     relativePath: string,
@@ -48,25 +49,29 @@ class FileSyncer {
     return this.fileInfoL ? "l2r" : "r2l";
   }
 
-  get behavior(): string {
-    const strategy = this.actualStrategy;
+  behaviorOf(strategy: SyncStrategy): string {
+    if (strategy === "skip") return "skip";
     if (strategy === "l2r") {
       if (this.fileInfoL && this.fileInfoR) return "updateR";
       else if (this.fileInfoL && !this.fileInfoR) return "addR";
       else if (!this.fileInfoL && this.fileInfoR) return "deleteR";
       else {
-        throw new Error("Invalid state");
-        return "";
+        console.error("Invalid state");
+        return "skip";
       }
     } else {
       if (this.fileInfoL && this.fileInfoR) return "updateL";
       else if (this.fileInfoL && !this.fileInfoR) return "deleteL";
       else if (!this.fileInfoL && this.fileInfoR) return "addL";
       else {
-        throw new Error("Invalid state");
-        return "";
+        console.error("Invalid state");
+        return "skip";
       }
     }
+  }
+
+  get behavior(): string {
+    return this.behaviorOf(this.actualStrategy);
   }
 
   /**
@@ -79,11 +84,12 @@ class FileSyncer {
    * 根据实际情况可以在 ipc 主进程中处理具体的文件系统操作。
    */
   async sync(): Promise<void> {
+    const strategy = this.actualStrategy;
+    if (strategy === "skip") return;
+
     // 默认情况：left --> right（即 dirL -> dirR）
     let source = `${this.dirL}/${this.relativePath}`;
     let target = `${this.dirR}/${this.relativePath}`;
-
-    const strategy = this.actualStrategy;
 
     if (strategy === "r2l") {
       // 右到左：dirR -> dirL
@@ -108,12 +114,22 @@ class DirSyncer {
   dirL: string;
   dirR: string;
   dirName: string;
+  include: string[];
+  exclude: string[];
   fileSyncers: FileSyncer[];
 
-  constructor(dirName: string, dirL: string, dirR: string) {
+  constructor(
+    dirName: string,
+    dirL: string,
+    dirR: string,
+    include: string[] = [],
+    exclude: string[] = []
+  ) {
     this.dirName = dirName;
     this.dirL = dirL;
     this.dirR = dirR;
+    this.include = include;
+    this.exclude = exclude;
     this.fileSyncers = [];
   }
 
@@ -141,6 +157,15 @@ class DirSyncer {
     for (const relativePath of allFiles) {
       const fileInfoL = mapL.get(relativePath) || null;
       const fileInfoR = mapR.get(relativePath) || null;
+
+      // 如果文件在 exclude 中但不在 include 中，则跳过
+      const startWithExclude = this.exclude.some((ex) =>
+        relativePath.startsWith(ex)
+      );
+      const isInclude = this.include.includes(relativePath);
+      if (startWithExclude && !isInclude) {
+        continue;
+      }
 
       // 如果两边都存在且文件大小和修改时间一致，则认为文件内容相同，跳过该文件
       if (fileInfoL && fileInfoR) {

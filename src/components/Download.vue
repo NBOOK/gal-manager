@@ -46,17 +46,20 @@ window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
       (incrementSinceLastUpdate.value / currentGame.value.diskUsage) * 100;
     currentItem.value.progress += deltaProgress;
 
-    deltaProgressOfUpdates.value.push(deltaProgress);
+    const deltaProgressPerMs =
+      deltaProgress / (currentTime - lastUpdateTime.value);
+
+    deltaProgressOfUpdates.value.push(deltaProgressPerMs);
     if (deltaProgressOfUpdates.value.length > 5) {
       deltaProgressOfUpdates.value.shift();
     }
-    const avgDeltaProgress =
+    const avgDeltaProgressPerMs =
       deltaProgressOfUpdates.value.reduce((acc, val) => acc + val, 0) /
       deltaProgressOfUpdates.value.length;
 
     remainingTime.value = Math.round(
-      (((currentTime - lastUpdateTime.value) / avgDeltaProgress) *
-        (100 - currentItem.value.progress)) /
+      (100 - currentItem.value.progress) /
+        Math.max(avgDeltaProgressPerMs, 0.0001) /
         1000
     );
     if (remainingTime.value < 0) remainingTime.value = 0;
@@ -140,7 +143,9 @@ watch(
             <v-list-item-subtitle
               v-if="currentGame.gameName === item.game.gameName"
             >
-              {{ utils.formatSize((item.progress * item.game.diskUsage) / 100) }}
+              {{
+                utils.formatSize((item.progress * item.game.diskUsage) / 100)
+              }}
               /
               {{ utils.formatSize(item.game.diskUsage) }}
               ・ in
