@@ -42,6 +42,7 @@ declare global {
   interface FileInfo {
     modified: Date;
     size: number;
+    isDirectory: boolean;
   }
 }
 export {};

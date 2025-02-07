@@ -145,6 +145,9 @@ function registerIpcMain() {
   ipcMain.handle('openPath', (_event, path: string) => {
     return shell.openPath(path)
   });
+  ipcMain.handle('showItemInFolder', (_event, path: string) => {
+    return shell.showItemInFolder(path)
+  });
   ipcMain.handle('getFileNameWithType', (_event, filePath: string, format?: string) => {
     return utils.getFileNameWithType(filePath, format)
   });
@@ -154,10 +157,10 @@ function registerIpcMain() {
   ipcMain.handle('removeItem', (_event, path: string) => {
     return utils.removeItem(path)
   });
-  ipcMain.handle('start-copy', async (event, source:string, destination:string, include:string[]=[], exclude:string[]=[]) => {
+  ipcMain.handle('start-copy', async (event, source:string, destination:string, dirOnly=false, include:string[]=[], exclude:string[]=[]) => {
     try {
       if ((await fs.promises.stat(source)).isDirectory()) {
-        await utils.copyDirectory(source, destination, include, exclude, event);
+        await utils.copyDirectory(source, destination, dirOnly, include, exclude, event);
       } 
       else {
         const startWithExclude = exclude.some((excludePath) => {

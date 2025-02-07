@@ -27,7 +27,7 @@ class FileSyncer {
     return this.dirL.split("/").pop() || "";
   }
   get parentFolderPath(): string {
-    return this.relativePath.split("/").slice(0, -1).join("/");
+    return this.relativePath.split("/").at(-2) || "";
   }
   get fileName(): string {
     return this.relativePath.split("/").pop() || "";
@@ -74,6 +74,12 @@ class FileSyncer {
     return this.behaviorOf(this.actualStrategy);
   }
 
+  get isDirectory(): boolean {
+    if (this.fileInfoL && this.fileInfoL.isDirectory) return true;
+    if (this.fileInfoR && this.fileInfoR.isDirectory) return true;
+    return false;
+  }
+
   /**
    * 执行同步：
    * - l2r：以 dirL 为权威。如果 dirL 存在则复制到 dirR，否则删除 dirR 中对应文件（如果存在）。
@@ -84,6 +90,15 @@ class FileSyncer {
    * 根据实际情况可以在 ipc 主进程中处理具体的文件系统操作。
    */
   async sync(): Promise<void> {
+    if (
+      this.fileInfoL &&
+      this.fileInfoR &&
+      this.fileInfoL.isDirectory &&
+      this.fileInfoR.isDirectory
+    ) {
+      throw new Error("Both are directories, should be filtered out");
+    }
+
     const strategy = this.actualStrategy;
     if (strategy === "skip") return;
 
@@ -98,9 +113,30 @@ class FileSyncer {
 
     // 通过 ipcRenderer 调用主进程进行文件复制/删除操作
     if (await window.ipcRenderer.invoke("fileExists", source)) {
-      await window.ipcRenderer.invoke("start-copy", source, target);
+      await window.ipcRenderer.invoke(
+        "start-copy",
+        source,
+        target,
+        this.isDirectory
+      );
     } else {
       await window.ipcRenderer.invoke("removeItem", target);
+    }
+  }
+
+  async showInFolder(): Promise<void> {
+    const pathL = `${this.dirL}/${this.relativePath}`;
+    const pathR = `${this.dirR}/${this.relativePath}`;
+    const pathExistL = await window.ipcRenderer.invoke("fileExists", pathL);
+    const pathExistR = await window.ipcRenderer.invoke("fileExists", pathR);
+    if (pathExistL) {
+      await window.ipcRenderer.invoke("showItemInFolder", pathL);
+    }
+    if (pathExistR) {
+      await window.ipcRenderer.invoke("showItemInFolder", pathR);
+    }
+    if (!pathExistL && !pathExistR) {
+      console.error("File not found on both sides");
     }
   }
 }
@@ -167,6 +203,16 @@ class DirSyncer {
         continue;
       }
 
+      // 如果两边都是文件夹，直接跳过
+      if (
+        fileInfoL &&
+        fileInfoL.isDirectory &&
+        fileInfoR &&
+        fileInfoR.isDirectory
+      ) {
+        continue;
+      }
+
       // 如果两边都存在且文件大小和修改时间一致，则认为文件内容相同，跳过该文件
       if (fileInfoL && fileInfoR) {
         if (
@@ -192,7 +238,47 @@ class DirSyncer {
    * 遍历所有不一致的文件项，并执行各自的 sync() 操作实现同步。
    */
   async syncAll(): Promise<void> {
-    for (const item of this.fileSyncers) {
+    const sortedFileSyncers = this.fileSyncers.sort((a, b) => {
+      const behaviorOrder = [
+        "skip",
+        "deleteR",
+        "deleteL",
+        "addR",
+        "updateR",
+        "addL",
+        "updateL",
+      ];
+      const depth = (path: string) => path.split("/").length;
+
+      // Helper function to determine if a FileSyncer should be at the front or back
+      const isFrontDir = (fs: FileSyncer) =>
+        fs.isDirectory && (fs.behavior === "addL" || fs.behavior === "addR");
+      const isBackDir = (fs: FileSyncer) =>
+        fs.isDirectory &&
+        (fs.behavior === "deleteL" || fs.behavior === "deleteR");
+
+      if (isFrontDir(a) && !isFrontDir(b)) return -1;
+      if (!isFrontDir(a) && isFrontDir(b)) return 1;
+      if (isBackDir(a) && !isBackDir(b)) return 1;
+      if (!isBackDir(a) && isBackDir(b)) return -1;
+
+      if (isFrontDir(a) && isFrontDir(b)) {
+        return depth(a.relativePath) - depth(b.relativePath);
+      }
+      if (isBackDir(a) && isBackDir(b)) {
+        return depth(b.relativePath) - depth(a.relativePath);
+      }
+
+      if (!a.isDirectory && !b.isDirectory) {
+        const behaviorComparison =
+          behaviorOrder.indexOf(a.behavior) - behaviorOrder.indexOf(b.behavior);
+        if (behaviorComparison !== 0) return behaviorComparison;
+      }
+
+      return a.relativePath.localeCompare(b.relativePath);
+    });
+
+    for (const item of sortedFileSyncers) {
       await item.sync();
     }
   }

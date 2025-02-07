@@ -269,7 +269,7 @@ async function vndbQueryName(
           ["or", ["lang", "=", "en"], ["lang", "=", "ja"], ["lang", "=", "zh"]],
         ],
         fields:
-          "titles.official, titles.main, titles.lang, titles.latin, titles.title, aliases",
+          "titles.official, titles.main, titles.lang, titles.latin, titles.title, aliases, developers.name, developers.original",
         sort: "searchrank",
         results: 15,
       }),
@@ -280,7 +280,7 @@ async function vndbQueryName(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         filters: ["search", "=", gameName],
-        fields: "title,alttitle",
+        fields: "title, alttitle, producers.name, producers.original",
         sort: "searchrank",
         results: 15,
       }),
@@ -574,16 +574,106 @@ function formatSize(bytes: number): string {
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 }
 
-function formatTime(time: number): string {
-  const units = ["seconds", "minutes", "hours", "days"];
-  const bases = [60, 60, 24];
-  let unitIndex = 0;
-  while (time >= bases[unitIndex] && unitIndex < units.length - 1) {
-    time /= bases[unitIndex];
-    unitIndex++;
+function formatTime(
+  time: number,
+  unitStyle: "long" | "short" | "abbr" = "short"
+): string {
+  // 定义各个单位在不同显示风格下的文本
+  const unitsMapping = {
+    long: {
+      days: { singular: "day", plural: "days" },
+      hours: { singular: "hour", plural: "hours" },
+      minutes: { singular: "minute", plural: "minutes" },
+      seconds: { singular: "second", plural: "seconds" },
+    },
+    short: {
+      days: { singular: "day", plural: "day" },
+      hours: { singular: "hr", plural: "hr" },
+      minutes: { singular: "min", plural: "min" },
+      seconds: { singular: "sec", plural: "sec" },
+    },
+    abbr: {
+      days: { singular: "d", plural: "d" },
+      hours: { singular: "h", plural: "h" },
+      minutes: { singular: "m", plural: "m" },
+      seconds: { singular: "s", plural: "s" },
+    },
+  };
+
+  // 辅助函数，根据数值和单位返回对应文本
+  const getUnit = (
+    value: number,
+    unit: "days" | "hours" | "minutes" | "seconds"
+  ): string => {
+    const unitData = unitsMapping[unitStyle][unit];
+    // 对于 long 格式，根据值是否为 1 决定使用单数或复数形式
+    if (unitStyle === "long") {
+      return value === 1 ? unitData.singular : unitData.plural;
+    }
+    // 对于 short 与 abbr，直接返回缩写（一般不区分单复数）
+    return unitData.singular;
+  };
+
+  // 定义换算关系：一天 86400 秒、1 小时 3600 秒、1 分钟 60 秒
+  const daySeconds = 86400;
+  const hourSeconds = 3600;
+  const minuteSeconds = 60;
+
+  // 如果时长大于 3 天，直接返回 "3+" 加上日单位
+  if (time > 3 * daySeconds) {
+    return `3+ ${getUnit(5, "days")}`;
   }
-  time = Math.round(time);
-  return `${time} ${units[unitIndex]}`;
+
+  // 分解时间为 天、小时、分钟、秒
+  const days = Math.floor(time / daySeconds);
+  time %= daySeconds;
+  const hours = Math.floor(time / hourSeconds);
+  time %= hourSeconds;
+  const minutes = Math.floor(time / minuteSeconds);
+  const seconds = Math.floor(time % minuteSeconds);
+
+  // 按单位重要性依次存入数组
+  type UnitKey = "days" | "hours" | "minutes" | "seconds";
+  const units: Array<{ value: number; key: UnitKey }> = [
+    { value: days, key: "days" },
+    { value: hours, key: "hours" },
+    { value: minutes, key: "minutes" },
+    { value: seconds, key: "seconds" },
+  ];
+
+  // 找出第一个非 0 的单位（如果全部为 0，则取最后一项）
+  let primaryIndex = units.findIndex((u) => u.value > 0);
+  if (primaryIndex === -1) {
+    primaryIndex = units.length - 1;
+  }
+
+  // 在 primary 后查找下一个非 0 的单位
+  let secondaryIndex = -1;
+  for (let i = primaryIndex + 1; i < units.length; i++) {
+    if (units[i].value > 0) {
+      secondaryIndex = i;
+      break;
+    }
+  }
+
+  // 如果找到了第二个非 0 的单位，则返回两个单位，否则只返回第一个单位
+  if (secondaryIndex !== -1) {
+    return (
+      `${units[primaryIndex].value} ${getUnit(
+        units[primaryIndex].value,
+        units[primaryIndex].key
+      )} ` +
+      `${units[secondaryIndex].value} ${getUnit(
+        units[secondaryIndex].value,
+        units[secondaryIndex].key
+      )}`
+    );
+  } else {
+    return `${units[primaryIndex].value} ${getUnit(
+      units[primaryIndex].value,
+      units[primaryIndex].key
+    )}`;
+  }
 }
 
 export default {

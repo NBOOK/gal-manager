@@ -135,15 +135,21 @@ async function deleteAllSelectedGames() {
           <!-- Add to DB -->
           <v-btn
             :readonly="
-              gameStore.selectedGames.length === 0 ||
-              gameStore.selectedGames.some((game) => !game.linked)
+              !(
+                gameStore.fileOperatable &&
+                gameStore.selectedGames.length > 0 &&
+                gameStore.selectedGames.every((game) => game.linked)
+              )
             "
             @click="pushAlltoDBEditList"
           >
             <v-icon
               :color="
-                gameStore.selectedGames.length === 0 ||
-                gameStore.selectedGames.some((game) => !game.linked)
+                !(
+                  gameStore.fileOperatable &&
+                  gameStore.selectedGames.length > 0 &&
+                  gameStore.selectedGames.every((game) => game.linked)
+                )
                   ? 'grey'
                   : 'grey-darken-4'
               "
@@ -155,17 +161,25 @@ async function deleteAllSelectedGames() {
           <!-- Download -->
           <v-btn
             :readonly="
-              gameStore.selectedGames.length === 0 ||
-              gameStore.selectedGames.some(
-                (game) => game.inDeck || game.inSDCard
+              !(
+                gameStore.netDiskOnline &&
+                gameStore.fileOperatable &&
+                gameStore.selectedGames.length > 0 &&
+                gameStore.selectedGames.every(
+                  (game) => !game.inDeck && !game.inSDCard
+                )
               )
             "
           >
             <v-icon
               :color="
-                gameStore.selectedGames.length === 0 ||
-                gameStore.selectedGames.some(
-                  (game) => game.inDeck || game.inSDCard
+                !(
+                  gameStore.netDiskOnline &&
+                  gameStore.fileOperatable &&
+                  gameStore.selectedGames.length > 0 &&
+                  gameStore.selectedGames.every(
+                    (game) => !game.inDeck && !game.inSDCard
+                  )
                 )
                   ? 'grey'
                   : 'grey-darken-4'
@@ -212,18 +226,21 @@ async function deleteAllSelectedGames() {
             </v-menu>
           </v-btn>
 
-          <!-- Move -->
+          <!-- Local Move -->
           <v-btn
             :readonly="
-              gameStore.selectedGames.length === 0 ||
-              !gameStore.selectedGames.every(
-                (game) => game.inDeck || game.inSDCard
+              !(
+                gameStore.fileOperatable &&
+                gameStore.selectedGames.length > 0 &&
+                (gameStore.selectedGames.every((game) => game.inDeck) ||
+                  gameStore.selectedGames.every((game) => game.inSDCard))
               )
             "
           >
             <v-icon
               :color="
                 !(
+                  gameStore.fileOperatable &&
                   gameStore.selectedGames.length > 0 &&
                   (gameStore.selectedGames.every((game) => game.inDeck) ||
                     gameStore.selectedGames.every((game) => game.inSDCard))
@@ -281,7 +298,8 @@ async function deleteAllSelectedGames() {
           <v-btn
             :readonly="
               !(
-                gameStore.downloadList.length === 0 &&
+                gameStore.netDiskOnline &&
+                gameStore.fileOperatable &&
                 gameStore.selectedGames.length > 0 &&
                 gameStore.selectedGames.every((game) => game.inNetDisk) &&
                 gameStore.selectedGames.every(
@@ -294,6 +312,8 @@ async function deleteAllSelectedGames() {
             <v-icon
               :color="
                 !(
+                  gameStore.netDiskOnline &&
+                  gameStore.fileOperatable &&
                   gameStore.selectedGames.length > 0 &&
                   gameStore.selectedGames.every((game) => game.inNetDisk) &&
                   gameStore.selectedGames.every(
@@ -304,24 +324,30 @@ async function deleteAllSelectedGames() {
                   : 'grey-darken-4'
               "
               size="x-large"
-              >$mdiSync</v-icon
+              >$mdiAutorenew</v-icon
             >
           </v-btn>
 
           <!-- Delete -->
           <v-btn
             :readonly="
-              gameStore.selectedGames.length === 0 ||
-              !gameStore.selectedGames.every(
-                (game) => game.inDeck || game.inSDCard
+              !(
+                gameStore.fileOperatable &&
+                gameStore.selectedGames.length > 0 &&
+                gameStore.selectedGames.every(
+                  (game) => game.inSDCard || game.inDeck
+                )
               )
             "
           >
             <v-icon
               :color="
-                gameStore.selectedGames.length === 0 ||
-                !gameStore.selectedGames.every(
-                  (game) => game.inDeck || game.inSDCard
+                !(
+                  gameStore.fileOperatable &&
+                  gameStore.selectedGames.length > 0 &&
+                  gameStore.selectedGames.every(
+                    (game) => game.inSDCard || game.inDeck
+                  )
                 )
                   ? 'grey'
                   : 'grey-darken-4'

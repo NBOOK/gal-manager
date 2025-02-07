@@ -259,7 +259,7 @@ async function removeGameFromDB() {
           <template #append-inner>
             <v-icon
               style="cursor: pointer"
-              :icon="slugSync ? '$mdiSync' : '$mdiSyncOff'"
+              :icon="slugSync ? '$mdiAutorenew' : '$mdiSyncOff'"
               @click="slugSync = !slugSync"
             ></v-icon>
           </template> </v-text-field

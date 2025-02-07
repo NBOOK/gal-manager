@@ -377,7 +377,7 @@ class GameEntry {
     }
   }
 
-  async getSyncManager(strategy: SyncStrategy = "newest") {
+  async getSyncManager(strategy: SyncStrategy = "l2r") {
     if (!(this.inNetDisk && (this.inDeck || this.inSDCard))) {
       console.log("Game not found in both local and remote disks");
       return;

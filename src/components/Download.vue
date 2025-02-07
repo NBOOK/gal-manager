@@ -110,11 +110,15 @@ watch(
 
 <template>
   <v-progress-circular
-    :width="gameStore.downloadList.length ? 3 : 0"
+    :width="gameStore.downloadList.length ? 3 : 3"
     :model-value="(totalDownloadedSize / totalSize) * 100"
   >
     <v-btn icon :readonly="gameStore.downloadList.length === 0">
-      <v-icon v-if="gameStore.downloadList.length" icon="$mdiDownload" />
+      <v-icon
+        v-if="gameStore.downloadList.length"
+        size="small"
+        icon="$mdiDownload"
+      />
       <!-- <v-btn icon>
       <v-icon icon="$mdiDownload" /> -->
       <v-menu
@@ -149,7 +153,7 @@ watch(
               /
               {{ utils.formatSize(item.game.diskUsage) }}
               ・ in
-              {{ utils.formatTime(remainingTime) }}
+              {{ utils.formatTime(remainingTime, "short") }}
             </v-list-item-subtitle>
           </v-list-item>
         </v-list>

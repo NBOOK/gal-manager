@@ -487,11 +487,14 @@ async function getTotalSize(dir: string): Promise<number> {
 async function copyDirectory(
   src: string,
   dest: string,
+  dirOnly: boolean,
   include: string[],
   exclude: string[],
   event: Electron.IpcMainInvokeEvent
 ) {
   await fs.promises.mkdir(dest, { recursive: true });
+  if (dirOnly) return;
+
   const files = await fs.promises.readdir(src);
 
   for (const file of files) {
@@ -500,7 +503,7 @@ async function copyDirectory(
     const stats = await fs.promises.stat(srcPath);
 
     if (stats.isDirectory()) {
-      await copyDirectory(srcPath, destPath, include, exclude, event);
+      await copyDirectory(srcPath, destPath, dirOnly, include, exclude, event);
     } else {
       // leaf file
       const startWithExclude = exclude.some((excludePath) => {
@@ -573,10 +576,13 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
         console.error(`Error stating ${fullPath}:`, error);
         continue;
       }
+      map.set(newRelativePath, {
+        modified: stats.mtime,
+        size: stats.size,
+        isDirectory: stats.isDirectory(),
+      });
       if (stats.isDirectory()) {
         await traverse(fullPath, newRelativePath);
-      } else if (stats.isFile()) {
-        map.set(newRelativePath, { modified: stats.mtime, size: stats.size });
       }
     }
   }

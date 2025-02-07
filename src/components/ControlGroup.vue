@@ -30,7 +30,14 @@ const linkBtn = computed(() => {
 });
 
 const databaseBtn = computed(() => {
-  if (props.game.linked) {
+  if (!gameStore.fileOperatable) {
+    return {
+      icon: "$mdiDatabaseOff",
+      color: "blue-grey",
+      readonly: true,
+      action: () => {},
+    };
+  } else if (props.game.linked) {
     // console.log(
     //   props.game.gameName,
     //   "Lutris: ",
@@ -100,12 +107,12 @@ const imageBtn = computed(() => {
 });
 
 const cloudBtn = computed(() => {
-  if (!gameStore.netDiskOnline) {
+  if (!gameStore.netDiskOnline || !gameStore.fileOperatable) {
     return {
       icon: "$mdiCloudOff",
       iconHover: "$mdiCloudOff",
-      color: "grey-darken-4",
-      colorHover: "grey-darken-4",
+      color: "blue-grey",
+      colorHover: "blue-grey",
       readonly: true,
       action: () => {},
     };
@@ -155,7 +162,7 @@ const cloudBtn = computed(() => {
 });
 
 const storageBtn = computed(() => {
-  if (props.game.inSDCard) {
+  if (gameStore.fileOperatable && props.game.inSDCard) {
     return {
       icon: "$mdiMicroSd",
       iconHover: "$mdiFolderMove",
@@ -165,7 +172,7 @@ const storageBtn = computed(() => {
       action: () => {}, // handled by dialog action
       // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
     };
-  } else if (props.game.inDeck) {
+  } else if (gameStore.fileOperatable && props.game.inDeck) {
     return {
       icon: "$mdiGamepadSquare",
       iconHover: "$mdiFolderMove",
@@ -225,11 +232,16 @@ const selectBtn = computed(() => {
 
 const syncChecking = ref(false);
 const syncBtn = computed(() => {
-  if (props.game.inNetDisk && (props.game.inDeck || props.game.inSDCard)) {
+  if (
+    gameStore.netDiskOnline &&
+    gameStore.fileOperatable &&
+    props.game.inNetDisk &&
+    (props.game.inDeck || props.game.inSDCard)
+  ) {
     return {
-      icon: "$mdiSync",
+      icon: "$mdiAutorenew",
       color: "green",
-      readonly: gameStore.downloadList.length > 0,
+      readonly: false,
       action: async () => {
         syncChecking.value = true;
         const dirSyncer = await props.game.getSyncManager();
@@ -604,7 +616,7 @@ function pushToDownloadList(target: string) {
     transform: rotate(0deg);
   }
   100% {
-    transform: rotate(-360deg);
+    transform: rotate(360deg);
   }
 }
 </style>

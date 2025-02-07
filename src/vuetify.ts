@@ -41,7 +41,7 @@ import {
   mdiCloudCheckVariant,
   mdiGamepadSquare,
   mdiMicroSd,
-  mdiSync,
+  mdiAutorenew,
   mdiSyncOff,
   mdiDelete,
   mdiDeleteEmpty,
@@ -75,6 +75,11 @@ import {
   mdiUpdate,
   mdiArrowRightBold,
   mdiArrowLeftBold,
+  mdiPageLast,
+  mdiFolder,
+  mdiFile,
+  mdiFileAlert,
+  mdiFolderAlert,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
@@ -119,7 +124,7 @@ const aliasesCustom = {
   mdiCloudCheckVariant,
   mdiGamepadSquare,
   mdiMicroSd,
-  mdiSync,
+  mdiAutorenew,
   mdiSyncOff,
   mdiDelete,
   mdiDeleteEmpty,
@@ -127,8 +132,12 @@ const aliasesCustom = {
   mdiImageCheck,
   mdiImageMinus,
   mdiImageRemove,
+  mdiFolder,
+  mdiFolderAlert,
   mdiFolderOpen,
   mdiFolderMove,
+  mdiFile,
+  mdiFileAlert,
   mdiContentSaveMinus,
   mdiContentSaveOff,
   mdiIdeogramCjkVariant,
@@ -153,6 +162,7 @@ const aliasesCustom = {
   mdiUpdate,
   mdiArrowRightBold,
   mdiArrowLeftBold,
+  mdiPageLast,
 };
 
 const vuetify = createVuetify({

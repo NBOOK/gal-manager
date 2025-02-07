@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, toRef, computed, watch } from "vue";
 import { useGameStore } from "@/store/global-store";
 import pLimit from "p-limit";
 import utils from "@/modules/utils";
@@ -8,17 +8,22 @@ import { DirSyncer, FileSyncer } from "@/modules/Synchronizer";
 const limit = pLimit(50);
 const gameStore = useGameStore();
 
-const overlay = ref(false);
+// const overlay = computed({
+//   get: () => gameStore.syncManager.managerOpen,
+//   set: (value) => {
+//     gameStore.syncManager.managerOpen = value;
+//   },
+// });
+const overlay = toRef(gameStore.syncManager, "managerOpen");
+
 const currentScanningGame = ref<string>("");
 const scannedGames = ref<number>(0);
 const scannedGamesBuffer = ref<number>(0);
-// const currentSyncingGame = ref<string>("");
-// const syncedGames = ref<number>(0);
 
 const syncing = ref(false);
 const abort = ref(false);
 
-const copiedSize = ref(0);
+const syncedSize = ref(0);
 const totalSize = computed(() => {
   return gameStore.syncManager.syncList.reduce((accDir, dirSyncer) => {
     return (
@@ -48,6 +53,10 @@ const allFileSyncers = computed(() => {
     return fileSyncers.concat(dirSyncer.fileSyncers as FileSyncer[]);
   }, [] as FileSyncer[]);
 });
+
+// const currentSyncingGame = ref<string>("");
+// const syncedGames = ref<number>(0);
+const syncedFiles = ref<number>(0);
 
 const displayedBehaviors = ref([
   "addL",
@@ -161,16 +170,33 @@ const behaviorIconColor = (behavior: string) => {
       return "grey-darken-3";
   }
 };
-
-const checkTime = ref(0);
+const behaviorIconDirection = (behavior: string | undefined) => {
+  switch (behavior) {
+    case "addR":
+    case "updateR":
+      return "$mdiArrowRightBold";
+    case "addL":
+    case "updateL":
+      return "$mdiArrowLeftBold";
+    case "deleteL":
+    case "deleteR":
+      return "$mdiDelete";
+    case "skip":
+    default:
+      return "$mdiMinusThick";
+  }
+};
 
 watch(
   () => gameStore.syncManager.gamesToSync.length > 0,
   async (newVal) => {
-    overlay.value = newVal;
-    if (!newVal) return;
+    if (newVal) {
+      overlay.value = true;
+    } else {
+      cleanup();
+      overlay.value = false;
+    }
 
-    checkTime.value = Date.now();
     const syncManagers = await Promise.all(
       gameStore.selectedGames.map((game) =>
         limit(async () => {
@@ -182,7 +208,6 @@ watch(
         })
       )
     );
-    checkTime.value = Date.now() - checkTime.value;
 
     const validSyncManagers = syncManagers.filter(
       (manager) => manager && manager?.fileSyncers.length > 0
@@ -199,14 +224,37 @@ watch(
 watch(
   () => gameStore.syncManager.syncList.length > 0,
   async (newVal) => {
-    overlay.value = newVal;
+    if (newVal) {
+      overlay.value = true;
+    } else {
+      cleanup();
+      overlay.value = false;
+    }
   }
 );
 
+// Syncing
+
+const elapsedTime = ref(0);
 const lastUpdateTime = ref(0);
-const remainingTime = ref(0); // seconds
 const incrementSinceLastUpdate = ref(0);
-const incrementsPerMs = ref<number[]>([]);
+const incrementsPerSec = ref<number[]>([]);
+const avgIncrementPerSec = computed(() => {
+  if (incrementsPerSec.value.length === 0) return 0;
+  return (
+    incrementsPerSec.value.reduce((acc, val) => acc + val, 0) /
+    incrementsPerSec.value.length
+  );
+});
+const remainingTime = computed(() => {
+  return Math.max(
+    Math.round(
+      (totalSize.value - syncedSize.value) /
+        Math.max(avgIncrementPerSec.value, 0.0001)
+    ),
+    0
+  );
+});
 window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
   if (!syncing.value) return;
 
@@ -217,48 +265,101 @@ window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
 
   // update
   if (currentTime - lastUpdateTime.value > 1000) {
-    copiedSize.value += incrementSinceLastUpdate.value;
+    syncedSize.value += incrementSinceLastUpdate.value;
+    currentSyncingFileSyncedSize.value += incrementSinceLastUpdate.value;
+    gameStore.syncManager.progress = (syncedSize.value / totalSize.value) * 100;
 
-    const incrementPerMs =
-      incrementSinceLastUpdate.value / (currentTime - lastUpdateTime.value);
+    const incrementPerSec =
+      (incrementSinceLastUpdate.value / (currentTime - lastUpdateTime.value)) *
+      1000;
 
-    incrementsPerMs.value.push(incrementPerMs);
-    if (incrementsPerMs.value.length > 5) {
-      incrementsPerMs.value.shift();
+    incrementsPerSec.value.push(incrementPerSec);
+    if (incrementsPerSec.value.length > 5) {
+      incrementsPerSec.value.shift();
     }
-    const avgIncrementPerMs =
-      incrementsPerMs.value.reduce((acc, val) => acc + val, 0) /
-      incrementsPerMs.value.length;
 
-    remainingTime.value = Math.round(
-      (totalSize.value - copiedSize.value) /
-        Math.max(avgIncrementPerMs, 0.0001) /
-        1000
-    );
-    if (remainingTime.value < 0) remainingTime.value = 0;
     lastUpdateTime.value = currentTime;
     incrementSinceLastUpdate.value = 0;
   }
 });
 
+const currentFileSyncer = ref<FileSyncer | null>(null);
+const currentSyncingFilePath = computed(() => {
+  if (!currentFileSyncer.value) return "";
+  return `${currentFileSyncer.value.baseFolderName}/${currentFileSyncer.value.relativePath}`;
+});
+const currentSyncingFileSize = computed(() => {
+  if (!currentFileSyncer.value) return 0;
+  if (currentFileSyncer.value.behavior.startsWith("delete")) return 0;
+  if (currentFileSyncer.value.behavior.endsWith("R"))
+    return currentFileSyncer.value.fileInfoL!.size;
+  if (currentFileSyncer.value.behavior.endsWith("L"))
+    return currentFileSyncer.value.fileInfoR!.size;
+  return 0;
+});
+const currentSyncingFileSyncedSize = ref(0);
+const currentSyncingFileProgress = computed(() => {
+  if (currentSyncingFileSize.value === 0) return 0;
+  return (
+    (currentSyncingFileSyncedSize.value / currentSyncingFileSize.value) *
+    100
+  ).toFixed(1);
+});
 async function syncAll() {
   syncing.value = true;
-  const order = [
-    "skip",
-    "deleteR",
-    "deleteL",
-    "addR",
-    "updateR",
-    "addL",
-    "updateL",
-  ];
+
+  // put folder creation at the front, and deletion at the back
   const sortedFileSyncers = allFileSyncers.value.sort((a, b) => {
-    return order.indexOf(a.behavior) - order.indexOf(b.behavior);
+    const behaviorOrder = [
+      "skip",
+      "deleteR",
+      "deleteL",
+      "addR",
+      "updateR",
+      "addL",
+      "updateL",
+    ];
+    const depth = (path: string) => path.split("/").length;
+
+    // Helper function to determine if a FileSyncer should be at the front or back
+    const isFrontDir = (fs: FileSyncer) =>
+      fs.isDirectory && (fs.behavior === "addL" || fs.behavior === "addR");
+    const isBackDir = (fs: FileSyncer) =>
+      fs.isDirectory &&
+      (fs.behavior === "deleteL" || fs.behavior === "deleteR");
+
+    if (isFrontDir(a) && !isFrontDir(b)) return -1;
+    if (!isFrontDir(a) && isFrontDir(b)) return 1;
+    if (isBackDir(a) && !isBackDir(b)) return 1;
+    if (!isBackDir(a) && isBackDir(b)) return -1;
+
+    if (isFrontDir(a) && isFrontDir(b)) {
+      return depth(a.relativePath) - depth(b.relativePath);
+    }
+    if (isBackDir(a) && isBackDir(b)) {
+      return depth(b.relativePath) - depth(a.relativePath);
+    }
+
+    if (!a.isDirectory && !b.isDirectory) {
+      const behaviorComparison =
+        behaviorOrder.indexOf(a.behavior) - behaviorOrder.indexOf(b.behavior);
+      if (behaviorComparison !== 0) return behaviorComparison;
+    }
+
+    return a.relativePath.localeCompare(b.relativePath);
   });
+
+  console.log(sortedFileSyncers);
+
+  const timer = setInterval(() => {
+    elapsedTime.value++;
+  }, 1000);
+
   for (const fileSyncer of sortedFileSyncers) {
-    // currentSyncingGame.value = fileSyncer.baseFolderName;
+    currentFileSyncer.value = fileSyncer;
+    currentSyncingFileSyncedSize.value = 0;
     await fileSyncer.sync();
-    // syncedGames.value++;
+    syncedFiles.value++;
     if (abort.value) break;
   }
   // for (const syncManager of gameStore.syncManager.syncList) {
@@ -267,6 +368,8 @@ async function syncAll() {
   //   syncedGames.value++;
   //   if (abort.value) break;
   // }
+
+  clearInterval(timer);
 
   cleanup();
 }
@@ -280,27 +383,35 @@ function close() {
 }
 
 function cleanup() {
-  lastUpdateTime.value = 0;
-  remainingTime.value = 0;
-  incrementSinceLastUpdate.value = 0;
-  incrementsPerMs.value = [];
+  abort.value = false;
   syncing.value = false;
-  gameStore.syncManager.gamesToSync = [];
+
+  elapsedTime.value = 0;
+  lastUpdateTime.value = 0;
+
+  incrementSinceLastUpdate.value = 0;
+  incrementsPerSec.value = [];
+
+  syncedFiles.value = 0;
+  syncedSize.value = 0;
+  currentSyncingFileSyncedSize.value = 0;
+  currentFileSyncer.value = null;
+
   currentScanningGame.value = "";
   scannedGames.value = 0;
   scannedGamesBuffer.value = 0;
   gameStore.syncManager.syncList = [];
-  // currentSyncingGame.value = "";
-  // syncedGames.value = 0;
-  copiedSize.value = 0;
-  abort.value = false;
-  // overlay.value = false; // handled by watcher
+  gameStore.syncManager.gamesToSync = [];
+
+  gameStore.syncManager.progress = 0;
+  overlay.value = false; // handled by watcher
 }
 
 const currentCursorPos = ref([0, 0] as [number, number]);
 const dragging = ref(false);
 const contextMenuOpen = ref(false);
 function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
+  if (syncing.value) return;
   if (event.button === 0) {
     item.selected = !item.selected;
     dragging.value = true;
@@ -384,14 +495,14 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
     >
       <v-sheet
         width="100%"
-        min-width="630px"
+        min-width="680px"
         height="95vh"
         rounded="lg"
         class="pa-8 d-flex flex-column"
       >
         <!-- Top summary btns -->
         <v-row
-          class="justify-center flex-nowrap flex-grow-0 mb-3 text-medium-emphasis"
+          class="justify-center flex-nowrap flex-grow-0 mb-1 text-medium-emphasis"
         >
           <v-btn-toggle rounded="lg" multiple v-model="displayedBehaviors">
             <v-btn
@@ -501,11 +612,6 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
               :index="index"
               :key="item.baseFolderName + item.relativePath"
               class="flex-nowrap align-center justify-space-between ma-0"
-              @mousedown="mouseDownHandler($event, item)"
-              @mouseup="dragging = false"
-              @mouseenter="
-                item.selected = dragging ? !item.selected : item.selected
-              "
             >
               <v-btn
                 icon
@@ -521,10 +627,14 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
                 }}</v-icon>
               </v-btn>
               <div
-                class="cursor-default text-no-wrap flex-grow-1"
-                style="max-width: calc(100% - 128px); margin-right: auto"
+                @mousedown="mouseDownHandler($event, item)"
+                @mouseup="dragging = false"
+                @mouseenter="
+                  item.selected = dragging ? !item.selected : item.selected
+                "
+                class="cursor-default overflow-hidden text-no-wrap flex-grow-1 d-flex mr-1"
               >
-                <div class="sync-item" style="width: 60%">
+                <div class="sync-item" style="width: 55%">
                   <span class="sync-item-text">{{ item.baseFolderName }}</span>
                 </div>
                 <div class="sync-item" style="width: 20%">
@@ -532,7 +642,7 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
                     item.parentFolderPath
                   }}</span>
                 </div>
-                <div class="sync-item" style="width: 20%">
+                <div class="sync-item" style="width: 25%">
                   <span class="sync-item-text">{{ item.fileName }}</span>
                 </div>
                 <v-tooltip
@@ -543,6 +653,22 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
                   >{{ `${item.baseFolderName}/${item.relativePath}` }}
                 </v-tooltip>
               </div>
+
+              <v-btn
+                icon
+                tile
+                variant="text"
+                size="xs"
+                color="grey-lighten-1"
+                class="mr-1"
+                @click="item.showInFolder()"
+              >
+                <v-icon
+                  :icon="item.isDirectory ? '$mdiFolder' : '$mdiFile'"
+                  size="xs"
+                />
+              </v-btn>
+              <v-divider vertical></v-divider>
 
               <!-- <v-spacer></v-spacer> -->
 
@@ -603,18 +729,63 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
         <v-divider></v-divider>
 
         <v-expand-transition>
-          <v-sheet v-show="syncing" class="mt-5 text-center">
+          <v-sheet v-show="syncing" class="mt-5">
+            <v-row class="text-caption text-medium-emphasis ma-0 flex-nowrap">
+              <v-progress-circular
+                :model-value="currentSyncingFileProgress"
+                :indeterminate="currentSyncingFileProgress === 0"
+                width="2.5"
+                size="16"
+                color="grey-darken-1"
+                class="inline-circular-progress mr-1 flex-shrink-0"
+              >
+                <v-icon size="10">{{
+                  behaviorIconDirection(currentFileSyncer?.behavior)
+                }}</v-icon>
+              </v-progress-circular>
+              <!-- <span>{{ currentSyncingFilePath }}</span> -->
+              <span class="text-truncate mr-2">
+                {{ currentSyncingFilePath }}
+              </span>
+              <v-spacer></v-spacer>
+              <span class="flex-shrink-0">
+                {{ utils.formatSize(currentSyncingFileSyncedSize) }}
+                /
+                {{ utils.formatSize(currentSyncingFileSize) }}
+              </span>
+              <!-- <span>&nbsp;({{ currentSyncingFileProgress }}%)</span> -->
+            </v-row>
             <v-progress-linear
-              :model-value="copiedSize"
+              :model-value="syncedSize"
               :max="totalSize"
               height="8"
               stream
               color="green"
             ></v-progress-linear>
-            {{ utils.formatSize(copiedSize) }} /
+            <!-- {{ utils.formatSize(syncedSize) }} /
             {{ utils.formatSize(totalSize) }}
             ・ in
-            {{ utils.formatTime(remainingTime) }}
+            {{ utils.formatTime(remainingTime) }} -->
+            <v-row
+              class="text-caption text-medium-emphasis ma-0 justify-space-between position-relative"
+            >
+              <span>
+                {{ syncedFiles }} files ({{ utils.formatSize(syncedSize) }}) ・
+                {{ utils.formatTime(elapsedTime, "short") }}
+              </span>
+              <span
+                class="text-center position-absolute"
+                style="left: 50%; transform: translateX(-50%)"
+              >
+                {{ utils.formatSize(avgIncrementPerSec) }}/s
+              </span>
+              <span>
+                {{ allFileSyncers.length - syncedFiles }} files ({{
+                  utils.formatSize(totalSize - syncedSize)
+                }}) ・
+                {{ utils.formatTime(remainingTime, "short") }}
+              </span>
+            </v-row>
           </v-sheet>
         </v-expand-transition>
         <v-row class="mt-5 flex-grow-0">
@@ -628,17 +799,29 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
           >
           <v-btn
             variant="outlined"
-            prepend-icon="$mdiSync"
+            prepend-icon="$mdiAutorenew"
             :loading="syncing"
-            color="green"
+            :color="abort ? 'red' : 'green'"
             @click="syncAll"
-            class="flex-grow-1 mx-3"
+            class="flex-grow-1 ml-3"
             >Sync Changes</v-btn
           >
+          <v-btn
+            variant="outlined"
+            icon
+            rounded
+            height="36"
+            width="36"
+            color="grey"
+            @click="overlay = false"
+            class="flex-grow-0 mx-3"
+          >
+            <v-icon icon="$mdiPageLast" style="transform: rotate(90deg)" />
+          </v-btn>
         </v-row>
       </v-sheet>
       <v-menu v-model="contextMenuOpen" :target="currentCursorPos">
-        <v-list>
+        <v-list slim>
           <v-btn-group>
             <v-btn
               variant="text"
@@ -656,9 +839,10 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
               icon="$mdiCheckboxMultipleBlankOutline"
               @click="
                 async () =>
-                  allFileSyncers.forEach(
-                    (fileSyncer) => (fileSyncer.selected = false)
-                  )
+                  allFileSyncers.forEach((fileSyncer) => {
+                    fileSyncer.selected = false;
+                    fileSyncer.selected = false;
+                  })
               "
             ></v-btn>
           </v-btn-group>
@@ -667,9 +851,10 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
             prepend-icon="$mdiArrowRightBold"
             value="l2r"
             @click="
-              selectedFileSyncers.forEach(
-                (fileSyncer) => (fileSyncer.strategy = 'l2r')
-              )
+              selectedFileSyncers.forEach((fileSyncer) => {
+                fileSyncer.strategy = 'l2r';
+                fileSyncer.selected = false;
+              })
             "
           >
             Left to Right
@@ -678,9 +863,10 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
             prepend-icon="$mdiArrowLeftBold"
             value="r2l"
             @click="
-              selectedFileSyncers.forEach(
-                (fileSyncer) => (fileSyncer.strategy = 'r2l')
-              )
+              selectedFileSyncers.forEach((fileSyncer) => {
+                fileSyncer.strategy = 'r2l';
+                fileSyncer.selected = false;
+              })
             "
           >
             Right to Left
@@ -689,9 +875,10 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
             prepend-icon="$mdiMinusThick"
             value="skip"
             @click="
-              selectedFileSyncers.forEach(
-                (fileSyncer) => (fileSyncer.strategy = 'skip')
-              )
+              selectedFileSyncers.forEach((fileSyncer) => {
+                fileSyncer.strategy = 'skip';
+                fileSyncer.selected = false;
+              })
             "
           >
             Exclude
@@ -700,12 +887,23 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
             prepend-icon="$mdiUpdate"
             value="newest"
             @click="
-              selectedFileSyncers.forEach(
-                (fileSyncer) => (fileSyncer.strategy = 'newest')
-              )
+              selectedFileSyncers.forEach((fileSyncer) => {
+                fileSyncer.strategy = 'newest';
+                fileSyncer.selected = false;
+              })
             "
           >
             Newest
+          </v-list-item>
+
+          <!-- Open folders -->
+          <v-divider v-if="selectedFileSyncers.length === 1" />
+          <v-list-item
+            prepend-icon="$mdiFolderOpen"
+            v-if="selectedFileSyncers.length === 1"
+            @click="selectedFileSyncers[0].showInFolder()"
+          >
+            Show in Explorer
           </v-list-item>
         </v-list>
       </v-menu>
@@ -733,6 +931,10 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
 
 .sync-item-text {
   unicode-bidi: plaintext;
+}
+
+.inline-circular-progress {
+  height: auto !important;
 }
 
 .v-virtual-scroll {

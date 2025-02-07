@@ -70,6 +70,18 @@ export const useGameStore = defineStore("globalStore", () => {
   const syncManager = reactive({
     syncList: [] as DirSyncer[],
     gamesToSync: [] as GameEntry[],
+    managerOpen: false,
+    progress: 0,
+  });
+
+  const fileOperatable = computed(() => {
+    return (
+      syncManager.gamesToSync.length == 0 &&
+      syncManager.syncList.length == 0 &&
+      dbEditList.value.length == 0 &&
+      downloadList.value.length == 0 &&
+      loading.value == false
+    );
   });
 
   const netDiskOnline = ref(false);
@@ -93,6 +105,7 @@ export const useGameStore = defineStore("globalStore", () => {
     dbEditList,
     downloadList,
     syncManager,
+    fileOperatable,
   };
 });
 

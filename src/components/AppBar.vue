@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import { useGameStore } from "@/store/global-store";
-  import Download from "@/components/Download.vue";
-  import GameFilter from "@/components/GameFilter.vue";
-  import BatchMenu from "@/components/BatchMenu.vue";
+import { useGameStore } from "@/store/global-store";
+import Download from "@/components/Download.vue";
+import GameFilter from "@/components/GameFilter.vue";
+import BatchMenu from "@/components/BatchMenu.vue";
 
-  const gameStore = useGameStore();
-  const sortConfig = gameStore.sort;
+const gameStore = useGameStore();
+const sortConfig = gameStore.sort;
 </script>
 
 <template>
@@ -19,6 +19,7 @@
       <template v-slot:prepend>
         <v-btn
           icon
+          :readonly="!gameStore.fileOperatable"
           :loading="gameStore.loading"
           @click="gameStore.loading = true"
         >
@@ -111,7 +112,26 @@
 
       <template v-slot:append>
         <v-spacer></v-spacer>
-        <Download v-if="gameStore.config.value" />
+        <!-- Placeholder -->
+        <div
+          v-if="gameStore.fileOperatable"
+          class="invisible"
+          style="width: 32px"
+        ></div>
+
+        <!-- Download btn & panel -->
+        <Download v-if="gameStore.downloadList.length > 0" />
+
+        <!-- Sync btn -->
+        <v-progress-circular
+          v-if="gameStore.syncManager.syncList.length > 0"
+          width="3"
+          :model-value="gameStore.syncManager.progress"
+        >
+          <v-btn icon @click="gameStore.syncManager.managerOpen = true">
+            <v-icon size="small" icon="$mdiAutorenew" />
+          </v-btn>
+        </v-progress-circular>
 
         <!-- Dot menu -->
         <BatchMenu />
@@ -121,48 +141,61 @@
 </template>
 
 <style>
-  .grid2x2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    /* 2 列 */
-    height: 96px !important;
-  }
+.grid2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* 2 列 */
+  height: 96px !important;
+}
 
-  .v-field__field:has(> #searchbox-no-border) ~ .v-field__outline {
-    /* border: red solid; */
-    visibility: hidden;
-  }
+.v-field__field:has(> #searchbox-no-border) ~ .v-field__outline {
+  /* border: red solid; */
+  visibility: hidden;
+}
 
-  .invisible {
-    visibility: hidden;
-  }
+.invisible {
+  visibility: hidden;
+}
 
-  .game-list-container {
-    /* position: relative; */
-    overflow-y: scroll !important;
-    /* padding-right: calc(1em - 10px); */
-  }
+.rotating {
+  animation: rotate 3s linear infinite;
+}
 
-  .game-list-container::-webkit-scrollbar {
-    /* width: 10px;
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.game-list-container {
+  /* position: relative; */
+  overflow-y: scroll !important;
+  /* padding-right: calc(1em - 10px); */
+}
+
+.game-list-container::-webkit-scrollbar {
+  /* width: 10px;
   height: 10px; */
-    display: none;
-  }
+  display: none;
+}
 
-  .game-list-container::-webkit-scrollbar-track {
-    background: #f0f0f0;
-  }
+.game-list-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
 
-  .game-list-container::-webkit-scrollbar-track:hover {
-    background: #f0f0f0;
-  }
+.game-list-container::-webkit-scrollbar-track:hover {
+  background: #f0f0f0;
+}
 
-  .game-list-container::-webkit-scrollbar-thumb {
-    background-color: #cccccc;
-    border-radius: 10px;
-  }
+.game-list-container::-webkit-scrollbar-thumb {
+  background-color: #cccccc;
+  border-radius: 10px;
+}
 
-  .game-list-container::-webkit-scrollbar-thumb:hover {
-    background-color: #888888;
-  }
+.game-list-container::-webkit-scrollbar-thumb:hover {
+  background-color: #888888;
+}
 </style>
