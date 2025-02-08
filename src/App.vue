@@ -43,7 +43,7 @@ onMounted(async () => {
     <GameSync v-if="gameStore.config.value" />
     <div v-if="firstTime" style="margin-top: 30vh">First Time!</div>
     <GameList v-if="gameStore.config.value" />
-    <StatusBar v-if="gameStore.config.value" />
+    <!-- <StatusBar v-if="gameStore.config.value" /> -->
   </v-app>
 </template>
 

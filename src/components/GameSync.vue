@@ -349,7 +349,7 @@ async function syncAll() {
     return a.relativePath.localeCompare(b.relativePath);
   });
 
-  console.log(sortedFileSyncers);
+  // console.log(sortedFileSyncers);
 
   const timer = setInterval(() => {
     elapsedTime.value++;
