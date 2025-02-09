@@ -30,6 +30,9 @@ async function pathMustExist(path: string) {
 function fieldRequired(value: string) {
   return !!value || "This field is required";
 }
+function endsWithSlash(path: string) {
+  return !path.endsWith("/") || "Path must not ends with a slash";
+}
 
 const wineRunners = ref(["default"]);
 const winePrefixes = ref(["default"]);
@@ -118,7 +121,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.gamesMainPath"
               label="Main Games Mount Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -127,7 +130,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.gamesDataPath"
               label="Data Games Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -136,7 +139,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.gamesSDPath"
               label="SDCard Games Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -145,7 +148,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.gamesExternalPath"
               label="External Games Mount Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -154,7 +157,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.gamesNetPath"
               label="Net Disk Games Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -163,7 +166,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.gamesAssetsPath"
               label="Games Image Assets Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -264,7 +267,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.steamGridPath"
               label="Steam Grid Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -282,7 +285,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.lutrisGameConfigPath"
               label="Lutris Game Configurations Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -309,7 +312,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.lutrisIconPath"
               label="Lutris Icons Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -318,7 +321,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.lutrisBannerPath"
               label="Lutris Banners Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -327,7 +330,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.lutrisCoverPath"
               label="Lutris Covers Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -349,7 +352,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.wineRunnerPath"
               label="Wine Runner Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -358,7 +361,7 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.winePrefixPath"
               label="Wine Prefix Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
               variant="outlined"
               density="compact"

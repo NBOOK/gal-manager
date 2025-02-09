@@ -399,13 +399,7 @@ class GameEntry {
       .filter((name) => name !== "")
       .map((name) => `${gameStore.config.value.assetsFolderName}/${name}`);
 
-    const sync = new DirSyncer(
-      this.folderName,
-      remotePath,
-      localPath,
-      include,
-      exclude
-    );
+    const sync = new DirSyncer(remotePath, localPath, include, exclude);
     await sync.scan();
     await sync.setStrategy(strategy);
     console.log(sync.fileSyncers.map((item) => item.relativePath));

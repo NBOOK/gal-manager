@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, RelaunchOptions, shell } from "electron";
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import os from "node:os";
 import fs from "node:fs";
 import { VdfMap } from "steam-binary-vdf";
 import utils from "./utils";
@@ -164,11 +165,21 @@ function registerIpcMain() {
   ipcMain.handle('openExternal', (_event, url: string) => {
     return shell.openExternal(url)
   });
-  ipcMain.handle('openPath', (_event, path: string) => {
-    return shell.openPath(path)
+  ipcMain.handle('openPath', (_event, openpath: string) => {
+    if (openpath.startsWith("<MAIN_DIST>")) {
+      openpath = path.join(MAIN_DIST, openpath.slice(11));
+    } else if (openpath.startsWith("<HOME>")) {
+      openpath = path.join(os.homedir(), openpath.slice(6));
+    }
+    return shell.openPath(openpath)
   });
-  ipcMain.handle('showItemInFolder', (_event, path: string) => {
-    return shell.showItemInFolder(path)
+  ipcMain.handle('showItemInFolder', (_event, openpath: string) => {
+    if (openpath.startsWith("<MAIN_DIST>")) {
+      openpath = path.join(MAIN_DIST, openpath.slice(11));
+    } else if (openpath.startsWith("<HOME>")) {
+      openpath = path.join(os.homedir(), openpath.slice(6));
+    }
+    return shell.showItemInFolder(openpath)
   });
   ipcMain.handle('getFileNameWithType', (_event, filePath: string, format?: string) => {
     return utils.getFileNameWithType(filePath, format)

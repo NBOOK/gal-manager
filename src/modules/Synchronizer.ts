@@ -5,6 +5,7 @@ class FileSyncer {
   strategy: SyncStrategy;
   private dirL: string;
   private dirR: string;
+  prependName: string = "";
   selected: boolean = false;
 
   constructor(
@@ -13,7 +14,8 @@ class FileSyncer {
     dirR: string,
     fileInfoL: FileInfo | null,
     fileInfoR: FileInfo | null,
-    strategy: SyncStrategy = "newest"
+    strategy: SyncStrategy = "newest",
+    prependName: string = ""
   ) {
     this.relativePath = relativePath;
     this.dirL = dirL;
@@ -21,6 +23,7 @@ class FileSyncer {
     this.fileInfoL = fileInfoL;
     this.fileInfoR = fileInfoR;
     this.strategy = strategy;
+    this.prependName = prependName;
   }
 
   get baseFolderName(): string {
@@ -149,23 +152,24 @@ class FileSyncer {
 class DirSyncer {
   dirL: string;
   dirR: string;
-  dirName: string;
   include: string[];
   exclude: string[];
   fileSyncers: FileSyncer[];
 
+  prependName: string = "";
+
   constructor(
-    dirName: string,
     dirL: string,
     dirR: string,
     include: string[] = [],
-    exclude: string[] = []
+    exclude: string[] = [],
+    prependName: string = ""
   ) {
-    this.dirName = dirName;
     this.dirL = dirL;
     this.dirR = dirR;
     this.include = include;
     this.exclude = exclude;
+    this.prependName = prependName;
     this.fileSyncers = [];
   }
 
@@ -228,7 +232,9 @@ class DirSyncer {
         this.dirL,
         this.dirR,
         fileInfoL,
-        fileInfoR
+        fileInfoR,
+        "newest",
+        this.prependName
       );
       this.fileSyncers.push(item);
     }

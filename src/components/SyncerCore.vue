@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, toRef, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useGameStore } from "@/store/global-store";
 import utils from "@/modules/utils";
-import { DirSyncer, FileSyncer } from "@/modules/Synchronizer";
+import { FileSyncer } from "@/modules/Synchronizer";
 
 const gameStore = useGameStore();
 
@@ -13,6 +13,7 @@ const currentScanningGame = ref<string>("");
 const scannedGames = ref<number>(0);
 const scannedGamesBuffer = ref<number>(0);
 
+const syncing = ref(false);
 const abort = ref(false);
 
 onMounted(() => {
@@ -49,13 +50,13 @@ const totalSize = computed(() => {
 });
 
 const allDirSyncers = computed(() => {
-  return props.manager.syncList as DirSyncer[];
+  return props.manager.syncList;
 });
 const allFileSyncers = computed(() => {
   // merge all fileSyncers from all dirSyncers
   return props.manager.syncList.reduce((fileSyncers, dirSyncer) => {
-    return fileSyncers.concat(dirSyncer.fileSyncers as FileSyncer[]);
-  }, [] as FileSyncer[]) as FileSyncer[];
+    return fileSyncers.concat(dirSyncer.fileSyncers);
+  }, []) as FileSyncer[];
 });
 
 // const currentSyncingGame = ref<string>("");
@@ -101,12 +102,12 @@ watch(
 const displayedFileSyncers = computed(() => {
   return allFileSyncers.value.filter((fileSyncer: FileSyncer) =>
     displayedBehaviors.value.includes(fileSyncer.behavior)
-  ) as FileSyncer[];
+  );
 });
 const selectedFileSyncers = computed(() => {
   return allFileSyncers.value.filter(
     (fileSyncer: FileSyncer) => fileSyncer.selected
-  ) as FileSyncer[];
+  );
 });
 
 const fileCount = computed(() => {
@@ -216,7 +217,7 @@ const remainingTime = computed(() => {
   );
 });
 window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
-  if (!props.manager.syncing) return;
+  if (!syncing.value) return;
 
   incrementSinceLastUpdate.value += increment;
 
@@ -266,7 +267,7 @@ const currentSyncingFileProgress = computed(() => {
   ).toFixed(1);
 });
 async function syncAll() {
-  props.manager.syncing = true;
+  syncing.value = true;
 
   // put folder creation at the front, and deletion at the back
   const sortedFileSyncers = allFileSyncers.value.sort(
@@ -317,28 +318,28 @@ async function syncAll() {
     elapsedTime.value++;
   }, 1000);
 
-  // for (const fileSyncer of sortedFileSyncers) {
-  //   currentFileSyncer.value = fileSyncer;
-  //   currentSyncingFileSyncedSize.value = 0;
-  //   await fileSyncer.sync();
-  //   syncedFiles.value++;
-  //   if (abort.value) break;
-  // }
-  // for (const syncManager of syncList) {
-  //   currentSyncingGame.value = syncManager.dirName;
-  //   await syncManager.syncAll();
+  for (const fileSyncer of sortedFileSyncers) {
+    currentFileSyncer.value = fileSyncer;
+    currentSyncingFileSyncedSize.value = 0;
+    await fileSyncer.sync();
+    syncedFiles.value++;
+    if (abort.value) break;
+  }
+  // for (const dirSyncer of props.manager.syncList) {
+  //   currentSyncingGame.value = dirSyncer.dirName;
+  //   await dirSyncer.syncAll();
   //   syncedGames.value++;
   //   if (abort.value) break;
   // }
 
-  // clearInterval(timer);
+  clearInterval(timer);
 
-  // cleanup();
+  cleanup();
 }
 
 function close() {
   console.log("Close in Core Called");
-  if (props.manager.syncing) {
+  if (syncing.value) {
     abort.value = true;
   } else {
     cleanup();
@@ -348,7 +349,7 @@ function close() {
 function cleanup() {
   console.log("Cleanup in Core Called");
   abort.value = false;
-  props.manager.syncing = false;
+  syncing.value = false;
 
   elapsedTime.value = 0;
   lastUpdateTime.value = 0;
@@ -374,7 +375,7 @@ const currentCursorPos = ref([0, 0] as [number, number]);
 const dragging = ref(false);
 const contextMenuOpen = ref(false);
 function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
-  if (props.manager.syncing) return;
+  if (syncing.value) return;
   if (event.button === 0) {
     item.selected = !item.selected;
     dragging.value = true;
@@ -391,324 +392,319 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
 </script>
 
 <template>
-  <!-- Syncing container -->
-  <v-container
+  <v-sheet
     v-if="props.manager.syncList.length > 0"
-    width="100vw"
-    max-height="100%"
+    rounded="lg"
+    width="100%"
+    height="100%"
+    min-width="680px"
+    class="pa-8 d-flex flex-column"
   >
-    <v-sheet
-      width="100%"
-      min-width="680px"
-      height="95vh"
-      rounded="lg"
-      class="pa-8 d-flex flex-column"
+    <!-- Top summary btns -->
+    <v-row
+      class="justify-center flex-nowrap flex-grow-0 mb-1 text-medium-emphasis"
     >
-      <!-- Top summary btns -->
-      <v-row
-        class="justify-center flex-nowrap flex-grow-0 mb-1 text-medium-emphasis"
-      >
-        <v-btn-toggle rounded="lg" multiple v-model="displayedBehaviors">
-          <v-btn
-            stacked
-            density="compact"
-            color="red-lighten-5"
-            class="sync-indicator"
-            value="deleteL"
-          >
-            <template #prepend>
-              <v-icon color="indigo" icon="$mdiDelete" />
-            </template>
-            {{ fileCount.deleteL }}
-          </v-btn>
-          <v-btn
-            stacked
-            density="compact"
-            color="light-blue-lighten-5"
-            class="sync-indicator"
-            value="updateL"
-          >
-            <template #prepend>
-              <v-icon color="indigo" icon="$mdiPencil" />
-            </template>
-            {{ fileCount.updateL }}
-          </v-btn>
-          <v-btn
-            stacked
-            density="compact"
-            color="green-lighten-5"
-            class="sync-indicator"
-            value="addL"
-          >
-            <template #prepend>
-              <v-icon color="indigo" icon="$mdiPlusThick" />
-            </template>
-            {{ fileCount.addL }}
-          </v-btn>
+      <v-btn-toggle rounded="lg" multiple v-model="displayedBehaviors">
+        <v-btn
+          stacked
+          density="compact"
+          color="red-lighten-5"
+          class="sync-indicator"
+          value="deleteL"
+        >
+          <template #prepend>
+            <v-icon color="indigo" icon="$mdiDelete" />
+          </template>
+          {{ fileCount.deleteL }}
+        </v-btn>
+        <v-btn
+          stacked
+          density="compact"
+          color="light-blue-lighten-5"
+          class="sync-indicator"
+          value="updateL"
+        >
+          <template #prepend>
+            <v-icon color="indigo" icon="$mdiPencil" />
+          </template>
+          {{ fileCount.updateL }}
+        </v-btn>
+        <v-btn
+          stacked
+          density="compact"
+          color="green-lighten-5"
+          class="sync-indicator"
+          value="addL"
+        >
+          <template #prepend>
+            <v-icon color="indigo" icon="$mdiPlusThick" />
+          </template>
+          {{ fileCount.addL }}
+        </v-btn>
 
+        <v-btn
+          prepend-icon="$mdiChartPie"
+          density="compact"
+          stacked
+          variant="text"
+          width="115px"
+          readonly
+        >
+          {{ utils.formatSize(totalSize) }}
+          <!-- 177.42 MB -->
+        </v-btn>
+
+        <v-btn
+          stacked
+          density="compact"
+          color="green-lighten-5"
+          class="sync-indicator"
+          value="addR"
+        >
+          <template #prepend>
+            <v-icon color="amber-darken-2" icon="$mdiPlusThick" />
+          </template>
+          {{ fileCount.addR }}
+        </v-btn>
+        <v-btn
+          stacked
+          density="compact"
+          color="light-blue-lighten-5"
+          class="sync-indicator"
+          value="updateR"
+        >
+          <template #prepend>
+            <v-icon color="amber-darken-2" icon="$mdiPencil" />
+          </template>
+          {{ fileCount.updateR }}
+        </v-btn>
+        <v-btn
+          stacked
+          density="compact"
+          color="red-lighten-5"
+          class="sync-indicator"
+          value="deleteR"
+        >
+          <template #prepend>
+            <v-icon color="amber-darken-2" icon="$mdiDelete" />
+          </template>
+          {{ fileCount.deleteR }}
+        </v-btn>
+      </v-btn-toggle>
+    </v-row>
+    <p class="text-right text-caption text-medium-emphasis pr-3">
+      {{ selectedFileSyncers.length ? `${selectedFileSyncers.length} of` : `` }}
+      {{
+        `${allFileSyncers.length} file${
+          allFileSyncers.length > 1 ? "s" : ""
+        } from ${allDirSyncers.length} game${
+          allDirSyncers.length > 1 ? "s" : ""
+        }`
+      }}
+    </p>
+    <v-divider></v-divider>
+
+    <v-virtual-scroll :items="displayedFileSyncers" class="pt-0">
+      <template v-slot:default="{ item, index }">
+        <v-row
+          :index="index"
+          :key="item.baseFolderName + item.relativePath"
+          class="flex-nowrap align-center justify-space-between ma-0"
+        >
           <v-btn
-            prepend-icon="$mdiChartPie"
-            density="compact"
-            stacked
+            icon
             variant="text"
-            width="115px"
-            readonly
+            size="xs"
+            v-model="item.selected"
+            @click="item.selected = !item.selected"
           >
-            {{ utils.formatSize(totalSize) }}
-            <!-- 177.42 MB -->
+            <v-icon size="xs">{{
+              item.selected ? "$mdiCheckboxMarked" : "$mdiCheckboxBlankOutline"
+            }}</v-icon>
           </v-btn>
-
-          <v-btn
-            stacked
-            density="compact"
-            color="green-lighten-5"
-            class="sync-indicator"
-            value="addR"
+          <div
+            @mousedown="mouseDownHandler($event, item)"
+            @mouseup="dragging = false"
+            @mouseenter="
+              item.selected = dragging ? !item.selected : item.selected
+            "
+            class="cursor-default overflow-hidden text-no-wrap flex-grow-1 d-flex mr-1"
           >
-            <template #prepend>
-              <v-icon color="amber-darken-2" icon="$mdiPlusThick" />
-            </template>
-            {{ fileCount.addR }}
-          </v-btn>
-          <v-btn
-            stacked
-            density="compact"
-            color="light-blue-lighten-5"
-            class="sync-indicator"
-            value="updateR"
-          >
-            <template #prepend>
-              <v-icon color="amber-darken-2" icon="$mdiPencil" />
-            </template>
-            {{ fileCount.updateR }}
-          </v-btn>
-          <v-btn
-            stacked
-            density="compact"
-            color="red-lighten-5"
-            class="sync-indicator"
-            value="deleteR"
-          >
-            <template #prepend>
-              <v-icon color="amber-darken-2" icon="$mdiDelete" />
-            </template>
-            {{ fileCount.deleteR }}
-          </v-btn>
-        </v-btn-toggle>
-      </v-row>
-      <p class="text-right text-caption text-medium-emphasis pr-3">
-        {{
-          selectedFileSyncers.length ? `${selectedFileSyncers.length} of` : ``
-        }}
-        {{
-          `${allFileSyncers.length} file${
-            allFileSyncers.length > 1 ? "s" : ""
-          } from ${allDirSyncers.length} game${
-            allDirSyncers.length > 1 ? "s" : ""
-          }`
-        }}
-      </p>
-      <v-divider></v-divider>
-
-      <v-virtual-scroll :items="displayedFileSyncers" class="pt-0">
-        <template v-slot:default="{ item, index }">
-          <v-row
-            :index="index"
-            :key="item.baseFolderName + item.relativePath"
-            class="flex-nowrap align-center justify-space-between ma-0"
-          >
-            <v-btn
-              icon
-              variant="text"
-              size="xs"
-              v-model="item.selected"
-              @click="item.selected = !item.selected"
-            >
-              <v-icon size="xs">{{
-                item.selected
-                  ? "$mdiCheckboxMarked"
-                  : "$mdiCheckboxBlankOutline"
-              }}</v-icon>
-            </v-btn>
-            <div
-              @mousedown="mouseDownHandler($event, item)"
-              @mouseup="dragging = false"
-              @mouseenter="
-                item.selected = dragging ? !item.selected : item.selected
-              "
-              class="cursor-default overflow-hidden text-no-wrap flex-grow-1 d-flex mr-1"
-            >
-              <div class="sync-item" style="width: 55%">
-                <span class="sync-item-text">{{ item.baseFolderName }}</span>
-              </div>
-              <div class="sync-item" style="width: 20%">
-                <span class="sync-item-text">{{ item.parentFolderPath }}</span>
-              </div>
-              <div class="sync-item" style="width: 25%">
-                <span class="sync-item-text">{{ item.fileName }}</span>
-              </div>
-              <v-tooltip
-                activator="parent"
-                location="top"
-                open-delay="2000"
-                transition="fade-transition"
-                >{{ `${item.baseFolderName}/${item.relativePath}` }}
-              </v-tooltip>
+            <div class="sync-item" style="width: 55%">
+              <span class="sync-item-text">{{ item.baseFolderName }}</span>
             </div>
+            <div class="sync-item" style="width: 20%">
+              <span class="sync-item-text">{{ item.parentFolderPath }}</span>
+            </div>
+            <div class="sync-item" style="width: 25%">
+              <span class="sync-item-text">{{ item.fileName }}</span>
+            </div>
+            <v-tooltip
+              activator="parent"
+              location="top"
+              open-delay="2000"
+              transition="fade-transition"
+              >{{
+                `${item.prependName ? item.prependName + "/" : ""}${
+                  item.baseFolderName
+                }/${item.relativePath}`
+              }}
+            </v-tooltip>
+          </div>
 
+          <v-btn
+            icon
+            tile
+            variant="text"
+            size="xs"
+            color="grey-lighten-1"
+            class="mr-1"
+            @click="item.showInFolder()"
+          >
+            <v-icon
+              :icon="item.isDirectory ? '$mdiFolder' : '$mdiFile'"
+              size="xs"
+            />
+          </v-btn>
+          <v-divider vertical></v-divider>
+
+          <!-- <v-spacer></v-spacer> -->
+
+          <v-btn-toggle
+            mandatory
+            tile
+            density="compact"
+            :model-value="item.actualStrategy"
+            style="height: 24px; flex-shrink: 0"
+          >
             <v-btn
               icon
-              tile
-              variant="text"
-              size="xs"
-              color="grey-lighten-1"
-              class="mr-1"
-              @click="item.showInFolder()"
+              value="r2l"
+              @click="item.strategy = 'r2l'"
+              :color="behaviorBGColor(item.behaviorOf('r2l'))"
+              :readonly="syncing"
+              class="behavior-toggle-btn"
             >
               <v-icon
-                :icon="item.isDirectory ? '$mdiFolder' : '$mdiFile'"
                 size="xs"
+                :icon="behaviorIcon(item.behaviorOf('r2l'))"
+                :color="behaviorIconColor(item.behaviorOf('r2l'))"
               />
             </v-btn>
-            <v-divider vertical></v-divider>
-
-            <!-- <v-spacer></v-spacer> -->
-
-            <v-btn-toggle
-              mandatory
-              tile
-              density="compact"
-              :model-value="item.actualStrategy"
-              style="height: 24px; flex-shrink: 0"
+            <v-btn
+              icon
+              value="skip"
+              @click="item.strategy = 'skip'"
+              :color="behaviorBGColor('skip')"
+              :readonly="syncing"
+              class="behavior-toggle-btn"
             >
-              <v-btn
-                icon
-                value="r2l"
-                @click="item.strategy = 'r2l'"
-                :color="behaviorBGColor(item.behaviorOf('r2l'))"
-                :readonly="props.manager.syncing"
-                class="behavior-toggle-btn"
-              >
-                <v-icon
-                  size="xs"
-                  :icon="behaviorIcon(item.behaviorOf('r2l'))"
-                  :color="behaviorIconColor(item.behaviorOf('r2l'))"
-                />
-              </v-btn>
-              <v-btn
-                icon
-                value="skip"
-                @click="item.strategy = 'skip'"
-                :color="behaviorBGColor('skip')"
-                :readonly="props.manager.syncing"
-                class="behavior-toggle-btn"
-              >
-                <v-icon
-                  size="xs"
-                  :icon="behaviorIcon(item.behaviorOf('skip'))"
-                  :color="behaviorIconColor(item.behaviorOf('skip'))"
-                />
-              </v-btn>
-              <v-btn
-                icon
-                value="l2r"
-                @click="item.strategy = 'l2r'"
-                :color="behaviorBGColor(item.behaviorOf('l2r'))"
-                :readonly="props.manager.syncing"
-                class="behavior-toggle-btn"
-              >
-                <v-icon
-                  size="xs"
-                  :icon="behaviorIcon(item.behaviorOf('l2r'))"
-                  :color="behaviorIconColor(item.behaviorOf('l2r'))"
-                />
-              </v-btn>
-            </v-btn-toggle>
-          </v-row>
-          <v-divider></v-divider>
-        </template>
-      </v-virtual-scroll>
-      <v-divider></v-divider>
-
-      <v-expand-transition>
-        <v-sheet v-show="props.manager.syncing" class="mt-5">
-          <v-row class="text-caption text-medium-emphasis ma-0 flex-nowrap">
-            <v-progress-circular
-              :model-value="currentSyncingFileProgress"
-              :indeterminate="currentSyncingFileProgress === 0"
-              width="2.5"
-              size="16"
-              color="grey-darken-1"
-              class="inline-circular-progress mr-1 flex-shrink-0"
+              <v-icon
+                size="xs"
+                :icon="behaviorIcon(item.behaviorOf('skip'))"
+                :color="behaviorIconColor(item.behaviorOf('skip'))"
+              />
+            </v-btn>
+            <v-btn
+              icon
+              value="l2r"
+              @click="item.strategy = 'l2r'"
+              :color="behaviorBGColor(item.behaviorOf('l2r'))"
+              :readonly="syncing"
+              class="behavior-toggle-btn"
             >
-              <v-icon size="10">{{
-                behaviorIconDirection(currentFileSyncer?.behavior)
-              }}</v-icon>
-            </v-progress-circular>
-            <!-- <span>{{ currentSyncingFilePath }}</span> -->
-            <span class="text-truncate mr-2">
-              {{ currentSyncingFilePath }}
-            </span>
-            <v-spacer></v-spacer>
-            <span class="flex-shrink-0">
-              {{ utils.formatSize(currentSyncingFileSyncedSize) }}
-              /
-              {{ utils.formatSize(currentSyncingFileSize) }}
-            </span>
-            <!-- <span>&nbsp;({{ currentSyncingFileProgress }}%)</span> -->
-          </v-row>
-          <v-progress-linear
-            :model-value="syncedSize"
-            :max="totalSize"
-            height="8"
-            stream
-            color="green"
-          ></v-progress-linear>
-          <!-- {{ utils.formatSize(syncedSize) }} /
+              <v-icon
+                size="xs"
+                :icon="behaviorIcon(item.behaviorOf('l2r'))"
+                :color="behaviorIconColor(item.behaviorOf('l2r'))"
+              />
+            </v-btn>
+          </v-btn-toggle>
+        </v-row>
+        <v-divider></v-divider>
+      </template>
+    </v-virtual-scroll>
+    <v-divider></v-divider>
+
+    <v-expand-transition>
+      <v-sheet v-show="syncing" class="mt-5">
+        <v-row class="text-caption text-medium-emphasis ma-0 flex-nowrap">
+          <v-progress-circular
+            :model-value="currentSyncingFileProgress"
+            :indeterminate="currentSyncingFileProgress === 0"
+            width="2.5"
+            size="16"
+            color="grey-darken-1"
+            class="inline-circular-progress mr-1 flex-shrink-0"
+          >
+            <v-icon size="10">{{
+              behaviorIconDirection(currentFileSyncer?.behavior)
+            }}</v-icon>
+          </v-progress-circular>
+          <!-- <span>{{ currentSyncingFilePath }}</span> -->
+          <span class="text-truncate mr-2">
+            {{ currentSyncingFilePath }}
+          </span>
+          <v-spacer></v-spacer>
+          <span class="flex-shrink-0">
+            {{ utils.formatSize(currentSyncingFileSyncedSize) }}
+            /
+            {{ utils.formatSize(currentSyncingFileSize) }}
+          </span>
+          <!-- <span>&nbsp;({{ currentSyncingFileProgress }}%)</span> -->
+        </v-row>
+        <v-progress-linear
+          :model-value="syncedSize"
+          :max="totalSize"
+          height="8"
+          stream
+          color="green"
+        ></v-progress-linear>
+        <!-- {{ utils.formatSize(syncedSize) }} /
             {{ utils.formatSize(totalSize) }}
             ・ in
             {{ utils.formatTime(remainingTime) }} -->
-          <v-row
-            class="text-caption text-medium-emphasis ma-0 justify-space-between position-relative"
+        <v-row
+          class="text-caption text-medium-emphasis ma-0 justify-space-between position-relative"
+        >
+          <span>
+            {{ syncedFiles }} files ({{ utils.formatSize(syncedSize) }}) ・
+            {{ utils.formatTime(elapsedTime, "short") }}
+          </span>
+          <span
+            class="text-center position-absolute"
+            style="left: 50%; transform: translateX(-50%)"
           >
-            <span>
-              {{ syncedFiles }} files ({{ utils.formatSize(syncedSize) }}) ・
-              {{ utils.formatTime(elapsedTime, "short") }}
-            </span>
-            <span
-              class="text-center position-absolute"
-              style="left: 50%; transform: translateX(-50%)"
-            >
-              {{ utils.formatSize(avgIncrementPerSec) }}/s
-            </span>
-            <span>
-              {{ allFileSyncers.length - syncedFiles }} files ({{
-                utils.formatSize(totalSize - syncedSize)
-              }}) ・
-              {{ utils.formatTime(remainingTime, "short") }}
-            </span>
-          </v-row>
-        </v-sheet>
-      </v-expand-transition>
-      <v-row class="mt-5 flex-grow-0">
-        <v-btn
-          class="ml-3"
-          variant="outlined"
-          color="red"
-          prepend-icon="$mdiStop"
-          @click="close"
-          >Cancel</v-btn
-        >
-        <v-btn
-          variant="outlined"
-          prepend-icon="$mdiAutorenew"
-          :loading="props.manager.syncing"
-          :color="abort ? 'red' : 'green'"
-          @click="syncAll"
-          class="flex-grow-1 ml-3"
-          >Sync Changes</v-btn
-        >
-        <v-btn
+            {{ utils.formatSize(avgIncrementPerSec) }}/s
+          </span>
+          <span>
+            {{ allFileSyncers.length - syncedFiles }} files ({{
+              utils.formatSize(totalSize - syncedSize)
+            }}) ・
+            {{ utils.formatTime(remainingTime, "short") }}
+          </span>
+        </v-row>
+      </v-sheet>
+    </v-expand-transition>
+    <v-row class="mt-5 flex-grow-0">
+      <v-btn
+        class="ml-3"
+        variant="outlined"
+        :color="syncing ? 'red' : 'grey-darken-4'"
+        prepend-icon="$mdiStop"
+        @click="close"
+        >Cancel</v-btn
+      >
+      <v-btn
+        variant="outlined"
+        prepend-icon="$mdiAutorenew"
+        :loading="syncing"
+        :color="abort ? 'red' : 'green'"
+        @click="syncAll"
+        class="flex-grow-1 ml-3"
+        >Sync Changes</v-btn
+      >
+      <!-- <v-btn
           variant="outlined"
           icon
           rounded
@@ -719,97 +715,96 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
           class="flex-grow-0 mx-3"
         >
           <v-icon icon="$mdiPageLast" style="transform: rotate(90deg)" />
+        </v-btn> -->
+    </v-row>
+  </v-sheet>
+  <v-menu v-model="contextMenuOpen" :target="currentCursorPos">
+    <v-list slim>
+      <v-btn-group>
+        <v-btn
+          variant="text"
+          icon="$mdiCheckboxMultipleMarked"
+          @click="
+            async () =>
+              allFileSyncers.forEach(
+                (fileSyncer) => (fileSyncer.selected = true)
+              )
+          "
+        >
         </v-btn>
-      </v-row>
-    </v-sheet>
-    <v-menu v-model="contextMenuOpen" :target="currentCursorPos">
-      <v-list slim>
-        <v-btn-group>
-          <v-btn
-            variant="text"
-            icon="$mdiCheckboxMultipleMarked"
-            @click="
-              async () =>
-                allFileSyncers.forEach(
-                  (fileSyncer) => (fileSyncer.selected = true)
-                )
-            "
-          >
-          </v-btn>
-          <v-btn
-            variant="text"
-            icon="$mdiCheckboxMultipleBlankOutline"
-            @click="
-              async () =>
-                allFileSyncers.forEach((fileSyncer) => {
-                  fileSyncer.selected = false;
-                  fileSyncer.selected = false;
-                })
-            "
-          ></v-btn>
-        </v-btn-group>
-        <v-list-subheader>Set Strategy</v-list-subheader>
-        <v-list-item
-          prepend-icon="$mdiArrowRightBold"
-          value="l2r"
+        <v-btn
+          variant="text"
+          icon="$mdiCheckboxMultipleBlankOutline"
           @click="
-            selectedFileSyncers.forEach((fileSyncer) => {
-              fileSyncer.strategy = 'l2r';
-              fileSyncer.selected = false;
-            })
+            async () =>
+              allFileSyncers.forEach((fileSyncer) => {
+                fileSyncer.selected = false;
+                fileSyncer.selected = false;
+              })
           "
-        >
-          Left to Right
-        </v-list-item>
-        <v-list-item
-          prepend-icon="$mdiArrowLeftBold"
-          value="r2l"
-          @click="
-            selectedFileSyncers.forEach((fileSyncer) => {
-              fileSyncer.strategy = 'r2l';
-              fileSyncer.selected = false;
-            })
-          "
-        >
-          Right to Left
-        </v-list-item>
-        <v-list-item
-          prepend-icon="$mdiMinusThick"
-          value="skip"
-          @click="
-            selectedFileSyncers.forEach((fileSyncer) => {
-              fileSyncer.strategy = 'skip';
-              fileSyncer.selected = false;
-            })
-          "
-        >
-          Exclude
-        </v-list-item>
-        <v-list-item
-          prepend-icon="$mdiUpdate"
-          value="newest"
-          @click="
-            selectedFileSyncers.forEach((fileSyncer) => {
-              fileSyncer.strategy = 'newest';
-              fileSyncer.selected = false;
-            })
-          "
-        >
-          Newest
-        </v-list-item>
+        ></v-btn>
+      </v-btn-group>
+      <v-list-subheader>Set Strategy</v-list-subheader>
+      <v-list-item
+        prepend-icon="$mdiArrowRightBold"
+        value="l2r"
+        @click="
+          selectedFileSyncers.forEach((fileSyncer) => {
+            fileSyncer.strategy = 'l2r';
+            fileSyncer.selected = false;
+          })
+        "
+      >
+        Left to Right
+      </v-list-item>
+      <v-list-item
+        prepend-icon="$mdiArrowLeftBold"
+        value="r2l"
+        @click="
+          selectedFileSyncers.forEach((fileSyncer) => {
+            fileSyncer.strategy = 'r2l';
+            fileSyncer.selected = false;
+          })
+        "
+      >
+        Right to Left
+      </v-list-item>
+      <v-list-item
+        prepend-icon="$mdiMinusThick"
+        value="skip"
+        @click="
+          selectedFileSyncers.forEach((fileSyncer) => {
+            fileSyncer.strategy = 'skip';
+            fileSyncer.selected = false;
+          })
+        "
+      >
+        Exclude
+      </v-list-item>
+      <v-list-item
+        prepend-icon="$mdiUpdate"
+        value="newest"
+        @click="
+          selectedFileSyncers.forEach((fileSyncer) => {
+            fileSyncer.strategy = 'newest';
+            fileSyncer.selected = false;
+          })
+        "
+      >
+        Newest
+      </v-list-item>
 
-        <!-- Open folders -->
-        <v-divider v-if="selectedFileSyncers.length === 1" />
-        <v-list-item
-          prepend-icon="$mdiFolderOpen"
-          v-if="selectedFileSyncers.length === 1"
-          @click="selectedFileSyncers[0].showInFolder()"
-        >
-          Show in Explorer
-        </v-list-item>
-      </v-list>
-    </v-menu>
-  </v-container>
+      <!-- Open folders -->
+      <v-divider v-if="selectedFileSyncers.length === 1" />
+      <v-list-item
+        prepend-icon="$mdiFolderOpen"
+        v-if="selectedFileSyncers.length === 1"
+        @click="selectedFileSyncers[0].showInFolder()"
+      >
+        Show in Explorer
+      </v-list-item>
+    </v-list>
+  </v-menu>
 </template>
 
 <style scoped>

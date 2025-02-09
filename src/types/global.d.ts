@@ -49,7 +49,12 @@ declare global {
     syncList: DirSyncer[];
     managerOpen: boolean;
     progress: number;
-    syncing: boolean;
+  }
+
+  interface SaveSyncConfig {
+    remotePath: string;
+    localPath: string;
+    items: string[];
   }
 }
 export {};

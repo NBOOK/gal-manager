@@ -82,6 +82,13 @@ import {
   mdiDotsVertical,
   mdiCog,
   mdiFileSync,
+  mdiArrowLeftRightBold,
+  mdiMinusCircleOutline,
+  mdiPlusCircleOutline,
+  mdiCheckBold,
+  mdiConsole,
+  mdiPower,
+  mdiCodeJson,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
@@ -167,6 +174,13 @@ const aliasesCustom = {
   mdiDotsVertical,
   mdiCog,
   mdiFileSync,
+  mdiArrowLeftRightBold,
+  mdiMinusCircleOutline,
+  mdiPlusCircleOutline,
+  mdiCheckBold,
+  mdiConsole,
+  mdiPower,
+  mdiCodeJson,
 };
 
 const vuetify = createVuetify({

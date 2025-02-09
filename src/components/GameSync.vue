@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, toRef, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, toRef, watch, onMounted, onUnmounted } from "vue";
 import { useGameStore } from "@/store/global-store";
 import pLimit from "p-limit";
 import { DirSyncer } from "@/modules/Synchronizer";
@@ -76,6 +76,7 @@ function cleanup() {
   currentScanningGame.value = "";
   scannedGames.value = 0;
   scannedGamesBuffer.value = 0;
+  gameStore.gamesToSync = [];
 }
 </script>
 

@@ -180,6 +180,10 @@ async function fetchJsonConfig(jsonPath?: string): Promise<any> {
 async function saveJsonConfig(config: any, jsonPath?: string): Promise<void> {
   if (!jsonPath) {
     jsonPath = path.join(os.homedir(), ".config", "gal-manager", "config.json");
+  } else if (jsonPath.startsWith("<MAIN_DIST>")) {
+    jsonPath = path.join(MAIN_DIST, jsonPath.slice(11));
+  } else if (jsonPath.startsWith("<HOME>")) {
+    jsonPath = path.join(os.homedir(), jsonPath.slice(6));
   }
   try {
     const data = JSON.stringify(config, null, 2);
@@ -496,6 +500,14 @@ async function copyDirectory(
     const stats = await fs.promises.stat(srcPath);
 
     if (stats.isDirectory()) {
+      const startWithExclude = exclude.some((excludePath) => {
+        return srcPath.startsWith(excludePath);
+      });
+      const containedInInclude = include.some((includePath) => {
+        return includePath.startsWith(srcPath);
+      });
+      if (startWithExclude && !containedInInclude) continue;
+
       await copyDirectory(srcPath, destPath, dirOnly, include, exclude, event);
     } else {
       // leaf file

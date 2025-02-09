@@ -6,6 +6,16 @@ import BatchMenu from "@/components/BatchMenu.vue";
 
 const gameStore = useGameStore();
 const sortConfig = gameStore.sort;
+
+function openDevTools() {
+  window.ipcRenderer.invoke("openDevTools");
+}
+function openConfigPath() {
+  window.ipcRenderer.invoke("openPath", "<HOME>/.config/gal-manager");
+}
+function quit() {
+  window.ipcRenderer.invoke("quitApp");
+}
 </script>
 
 <template>
@@ -159,6 +169,24 @@ const sortConfig = gameStore.sort;
                   title="Savedata Sync"
                   @click="gameStore.dataSyncManager.managerOpen = true"
                   :readonly="!gameStore.fileOperatable"
+                />
+                <v-list-item
+                  prepend-icon="$mdiCodeJson"
+                  value="openConfig"
+                  title="Open Configs"
+                  @click="openConfigPath"
+                />
+                <v-list-item
+                  prepend-icon="$mdiConsole"
+                  value="devTools"
+                  title="Developer Tools"
+                  @click="openDevTools"
+                />
+                <v-list-item
+                  prepend-icon="$mdiPower"
+                  value="power"
+                  title="Quit"
+                  @click="quit"
                 />
               </v-list>
             </v-sheet>
