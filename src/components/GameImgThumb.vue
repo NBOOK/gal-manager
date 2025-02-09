@@ -142,7 +142,7 @@ function toggleOverlay() {
   aspect-ratio: 92 / 43;
 }
 
-.nav-thumbnail ::v-deep .v-slide-group__content {
+.nav-thumbnail :deep(.v-slide-group__content) {
   justify-content: center !important;
 }
 

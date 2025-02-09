@@ -51,6 +51,7 @@ import {
   mdiImageRemove,
   mdiFolderOpen,
   mdiFolderMove,
+  mdiContentSave,
   mdiContentSaveMinus,
   mdiContentSaveOff,
   mdiIdeogramCjkVariant,
@@ -78,8 +79,9 @@ import {
   mdiPageLast,
   mdiFolder,
   mdiFile,
-  mdiFileAlert,
-  mdiFolderAlert,
+  mdiDotsVertical,
+  mdiCog,
+  mdiFileSync,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
@@ -136,6 +138,7 @@ const aliasesCustom = {
   mdiFolderOpen,
   mdiFolderMove,
   mdiFile,
+  mdiContentSave,
   mdiContentSaveMinus,
   mdiContentSaveOff,
   mdiIdeogramCjkVariant,
@@ -161,6 +164,9 @@ const aliasesCustom = {
   mdiArrowRightBold,
   mdiArrowLeftBold,
   mdiPageLast,
+  mdiDotsVertical,
+  mdiCog,
+  mdiFileSync,
 };
 
 const vuetify = createVuetify({

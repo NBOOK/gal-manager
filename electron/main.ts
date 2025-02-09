@@ -1,10 +1,11 @@
-import { app, BrowserWindow, ipcMain, shell } from "electron";
+import { app, BrowserWindow, ipcMain, RelaunchOptions, shell } from "electron";
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
 import { VdfMap } from "steam-binary-vdf";
 import utils from "./utils";
+import { execFile } from "node:child_process";
 // import { fstat } from 'node:fs';
 
 // check if we are running in development mode
@@ -42,6 +43,7 @@ function createWindow() {
       preload: path.join(__dirname, "preload.mjs"),
       // nodeIntegration: true, // Enable Node.js integration
       webSecurity: !isDev, // Disable same-origin policy during development
+      devTools: isDev,
     },
     autoHideMenuBar: true,
   });
@@ -85,6 +87,26 @@ app.whenReady().then(() => {
 
 // prettier-ignore
 function registerIpcMain() {
+  ipcMain.handle('restartApp', () => {
+    const options: RelaunchOptions = {
+      args: process.argv.slice(1).concat(['--relaunch']),
+      execPath: process.execPath
+    };
+    // Fix for .AppImage
+    if (app.isPackaged && process.env.APPIMAGE) {
+      execFile(process.env.APPIMAGE, options.args);
+      app.quit();
+      return;
+    }
+    app.relaunch(options);
+    app.quit();
+  });
+  ipcMain.handle('quitApp', () => {
+    app.quit();
+  });
+  ipcMain.handle('openDevTools', () => {
+    win?.webContents.openDevTools();
+  });
   ipcMain.handle('scanDir', (_event, dirPath: string) => {
     return utils.scanDir(dirPath)
   });

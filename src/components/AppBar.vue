@@ -135,6 +135,34 @@ const sortConfig = gameStore.sort;
 
         <!-- Dot menu -->
         <BatchMenu />
+        <v-btn icon>
+          <v-icon>$mdiDotsVertical</v-icon>
+          <v-menu
+            activator="parent"
+            scroll-strategy="close"
+            transition="slide-y-transition"
+            location="bottom center"
+            origin="top center"
+          >
+            <v-sheet rounded="lg">
+              <v-list slim density="compact">
+                <v-list-item
+                  prepend-icon="$mdiCog"
+                  value="settings"
+                  title="Settings"
+                  @click="gameStore.settingsOpen = true"
+                />
+                <v-list-item
+                  prepend-icon="$mdiFileSync"
+                  value="fileSync"
+                  title="Savedata Sync"
+                  @click="gameStore.savedataSyncOpen = true"
+                  :readonly="!gameStore.fileOperatable"
+                />
+              </v-list>
+            </v-sheet>
+          </v-menu>
+        </v-btn>
       </template>
     </v-app-bar>
   </v-container>

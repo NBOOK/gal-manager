@@ -10,6 +10,7 @@ export const useGameStore = defineStore("globalStore", () => {
   // const games = ref<Record<string, ReturnType<typeof useGameStore>>>({});
   const games = reactive({} as Record<string, GameEntry>);
   const loading = ref<boolean>(false);
+  const settingsOpen = ref<boolean>(false);
   const searchQuery = ref<string>("");
   const sort = reactive({ by: "gameName" as keyof GameEntry, ascending: true });
   const filter = reactive({
@@ -85,10 +86,12 @@ export const useGameStore = defineStore("globalStore", () => {
   });
 
   const netDiskOnline = ref(false);
+  const savedataSyncOpen = ref(false);
 
   return {
     games,
     loading,
+    settingsOpen,
     totalGames,
     filterSortedGames,
     selectedGames,
@@ -106,6 +109,7 @@ export const useGameStore = defineStore("globalStore", () => {
     downloadList,
     syncManager,
     fileOperatable,
+    savedataSyncOpen,
   };
 });
 
