@@ -1,53 +1,61 @@
 <script setup lang="ts">
-import { ref, toRef, computed, watch } from "vue";
+import { ref, toRef, computed, watch, onMounted, onUnmounted } from "vue";
 import { useGameStore } from "@/store/global-store";
-import pLimit from "p-limit";
 import utils from "@/modules/utils";
 import { DirSyncer, FileSyncer } from "@/modules/Synchronizer";
 
 const gameStore = useGameStore();
 
-const props = defineProps<{ syncList: DirSyncer[]; overlay: boolean }>();
-
-const overlay = toRef(props, "overlay");
-const syncList = toRef(props.syncList);
+const props = defineProps<{ manager: SyncManager }>();
+// const props.manager = props.props.manager;
 
 const currentScanningGame = ref<string>("");
 const scannedGames = ref<number>(0);
 const scannedGamesBuffer = ref<number>(0);
 
-const syncing = ref(false);
 const abort = ref(false);
+
+onMounted(() => {
+  console.log("SyncCore mounted");
+  console.log("abort", abort.value);
+});
+onUnmounted(() => {
+  console.log("SyncCore unmounted");
+  console.log("abort", abort.value);
+});
 
 const syncedSize = ref(0);
 const totalSize = computed(() => {
-  return syncList.value.reduce((accDir, dirSyncer) => {
+  return props.manager.syncList.reduce((accDir, dirSyncer) => {
     return (
       accDir +
-      dirSyncer.fileSyncers.reduce((accFile, fileSyncer) => {
-        if (fileSyncer.behavior.startsWith("delete"))
-          // no file copy here
-          return accFile;
-        else if (fileSyncer.behavior.endsWith("R"))
-          // from left to right
-          return accFile + fileSyncer.fileInfoL!.size;
-        else if (fileSyncer.behavior.endsWith("L"))
-          // from right to left
-          return accFile + fileSyncer.fileInfoR!.size;
-        else return accFile; // should not reach here, but just in case
-      }, 0)
+      dirSyncer.fileSyncers.reduce(
+        (accFile: number, fileSyncer: FileSyncer) => {
+          if (fileSyncer.behavior.startsWith("delete"))
+            // no file copy here
+            return accFile;
+          else if (fileSyncer.behavior.endsWith("R"))
+            // from left to right
+            return accFile + fileSyncer.fileInfoL!.size;
+          else if (fileSyncer.behavior.endsWith("L"))
+            // from right to left
+            return accFile + fileSyncer.fileInfoR!.size;
+          else return accFile; // should not reach here, but just in case
+        },
+        0
+      )
     );
   }, 0);
 });
 
 const allDirSyncers = computed(() => {
-  return syncList.value as DirSyncer[];
+  return props.manager.syncList as DirSyncer[];
 });
 const allFileSyncers = computed(() => {
   // merge all fileSyncers from all dirSyncers
-  return syncList.value.reduce((fileSyncers, dirSyncer) => {
+  return props.manager.syncList.reduce((fileSyncers, dirSyncer) => {
     return fileSyncers.concat(dirSyncer.fileSyncers as FileSyncer[]);
-  }, [] as FileSyncer[]);
+  }, [] as FileSyncer[]) as FileSyncer[];
 });
 
 // const currentSyncingGame = ref<string>("");
@@ -91,12 +99,14 @@ watch(
   }
 );
 const displayedFileSyncers = computed(() => {
-  return allFileSyncers.value.filter((fileSyncer) =>
+  return allFileSyncers.value.filter((fileSyncer: FileSyncer) =>
     displayedBehaviors.value.includes(fileSyncer.behavior)
-  );
+  ) as FileSyncer[];
 });
 const selectedFileSyncers = computed(() => {
-  return allFileSyncers.value.filter((fileSyncer) => fileSyncer.selected);
+  return allFileSyncers.value.filter(
+    (fileSyncer: FileSyncer) => fileSyncer.selected
+  ) as FileSyncer[];
 });
 
 const fileCount = computed(() => {
@@ -110,7 +120,7 @@ const fileCount = computed(() => {
     deleteL: 0,
   };
 
-  allFileSyncers.value.forEach((fileSyncer) => {
+  allFileSyncers.value.forEach((fileSyncer: FileSyncer) => {
     if (counts.hasOwnProperty(fileSyncer.behavior)) {
       counts[fileSyncer.behavior as keyof typeof counts]++;
     }
@@ -183,18 +193,6 @@ const behaviorIconDirection = (behavior: string | undefined) => {
   }
 };
 
-watch(
-  () => syncList.value.length > 0,
-  async (newVal) => {
-    if (newVal) {
-      overlay.value = true;
-    } else {
-      cleanup();
-      overlay.value = false;
-    }
-  }
-);
-
 // Syncing
 
 const elapsedTime = ref(0);
@@ -218,7 +216,7 @@ const remainingTime = computed(() => {
   );
 });
 window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
-  if (!syncing.value) return;
+  if (!props.manager.syncing) return;
 
   incrementSinceLastUpdate.value += increment;
 
@@ -268,48 +266,50 @@ const currentSyncingFileProgress = computed(() => {
   ).toFixed(1);
 });
 async function syncAll() {
-  syncing.value = true;
+  props.manager.syncing = true;
 
   // put folder creation at the front, and deletion at the back
-  const sortedFileSyncers = allFileSyncers.value.sort((a, b) => {
-    const behaviorOrder = [
-      "skip",
-      "deleteR",
-      "deleteL",
-      "addR",
-      "updateR",
-      "addL",
-      "updateL",
-    ];
-    const depth = (path: string) => path.split("/").length;
+  const sortedFileSyncers = allFileSyncers.value.sort(
+    (a: FileSyncer, b: FileSyncer) => {
+      const behaviorOrder = [
+        "skip",
+        "deleteR",
+        "deleteL",
+        "addR",
+        "updateR",
+        "addL",
+        "updateL",
+      ];
+      const depth = (path: string) => path.split("/").length;
 
-    // Helper function to determine if a FileSyncer should be at the front or back
-    const isFrontDir = (fs: FileSyncer) =>
-      fs.isDirectory && (fs.behavior === "addL" || fs.behavior === "addR");
-    const isBackDir = (fs: FileSyncer) =>
-      fs.isDirectory &&
-      (fs.behavior === "deleteL" || fs.behavior === "deleteR");
+      // Helper function to determine if a FileSyncer should be at the front or back
+      const isFrontDir = (fs: FileSyncer) =>
+        fs.isDirectory && (fs.behavior === "addL" || fs.behavior === "addR");
+      const isBackDir = (fs: FileSyncer) =>
+        fs.isDirectory &&
+        (fs.behavior === "deleteL" || fs.behavior === "deleteR");
 
-    if (isFrontDir(a) && !isFrontDir(b)) return -1;
-    if (!isFrontDir(a) && isFrontDir(b)) return 1;
-    if (isBackDir(a) && !isBackDir(b)) return 1;
-    if (!isBackDir(a) && isBackDir(b)) return -1;
+      if (isFrontDir(a) && !isFrontDir(b)) return -1;
+      if (!isFrontDir(a) && isFrontDir(b)) return 1;
+      if (isBackDir(a) && !isBackDir(b)) return 1;
+      if (!isBackDir(a) && isBackDir(b)) return -1;
 
-    if (isFrontDir(a) && isFrontDir(b)) {
-      return depth(a.relativePath) - depth(b.relativePath);
+      if (isFrontDir(a) && isFrontDir(b)) {
+        return depth(a.relativePath) - depth(b.relativePath);
+      }
+      if (isBackDir(a) && isBackDir(b)) {
+        return depth(b.relativePath) - depth(a.relativePath);
+      }
+
+      if (!a.isDirectory && !b.isDirectory) {
+        const behaviorComparison =
+          behaviorOrder.indexOf(a.behavior) - behaviorOrder.indexOf(b.behavior);
+        if (behaviorComparison !== 0) return behaviorComparison;
+      }
+
+      return a.relativePath.localeCompare(b.relativePath);
     }
-    if (isBackDir(a) && isBackDir(b)) {
-      return depth(b.relativePath) - depth(a.relativePath);
-    }
-
-    if (!a.isDirectory && !b.isDirectory) {
-      const behaviorComparison =
-        behaviorOrder.indexOf(a.behavior) - behaviorOrder.indexOf(b.behavior);
-      if (behaviorComparison !== 0) return behaviorComparison;
-    }
-
-    return a.relativePath.localeCompare(b.relativePath);
-  });
+  );
 
   // console.log(sortedFileSyncers);
 
@@ -317,13 +317,13 @@ async function syncAll() {
     elapsedTime.value++;
   }, 1000);
 
-  for (const fileSyncer of sortedFileSyncers) {
-    currentFileSyncer.value = fileSyncer;
-    currentSyncingFileSyncedSize.value = 0;
-    await fileSyncer.sync();
-    syncedFiles.value++;
-    if (abort.value) break;
-  }
+  // for (const fileSyncer of sortedFileSyncers) {
+  //   currentFileSyncer.value = fileSyncer;
+  //   currentSyncingFileSyncedSize.value = 0;
+  //   await fileSyncer.sync();
+  //   syncedFiles.value++;
+  //   if (abort.value) break;
+  // }
   // for (const syncManager of syncList) {
   //   currentSyncingGame.value = syncManager.dirName;
   //   await syncManager.syncAll();
@@ -331,13 +331,14 @@ async function syncAll() {
   //   if (abort.value) break;
   // }
 
-  clearInterval(timer);
+  // clearInterval(timer);
 
-  cleanup();
+  // cleanup();
 }
 
 function close() {
-  if (syncing.value) {
+  console.log("Close in Core Called");
+  if (props.manager.syncing) {
     abort.value = true;
   } else {
     cleanup();
@@ -345,8 +346,9 @@ function close() {
 }
 
 function cleanup() {
+  console.log("Cleanup in Core Called");
   abort.value = false;
-  syncing.value = false;
+  props.manager.syncing = false;
 
   elapsedTime.value = 0;
   lastUpdateTime.value = 0;
@@ -362,18 +364,17 @@ function cleanup() {
   currentScanningGame.value = "";
   scannedGames.value = 0;
   scannedGamesBuffer.value = 0;
-  syncList.value = [];
-  gameStore.syncManager.gamesToSync = [];
+  props.manager.syncList = [];
 
-  gameStore.syncManager.progress = 0;
-  overlay.value = false; // handled by watcher
+  props.manager.progress = 0;
+  props.manager.managerOpen = false; // handled by watcher
 }
 
 const currentCursorPos = ref([0, 0] as [number, number]);
 const dragging = ref(false);
 const contextMenuOpen = ref(false);
 function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
-  if (syncing.value) return;
+  if (props.manager.syncing) return;
   if (event.button === 0) {
     item.selected = !item.selected;
     dragging.value = true;
@@ -391,7 +392,11 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
 
 <template>
   <!-- Syncing container -->
-  <v-container v-if="syncList.length > 0" width="100vw" max-height="100%">
+  <v-container
+    v-if="props.manager.syncList.length > 0"
+    width="100vw"
+    max-height="100%"
+  >
     <v-sheet
       width="100%"
       min-width="680px"
@@ -581,7 +586,7 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
                 value="r2l"
                 @click="item.strategy = 'r2l'"
                 :color="behaviorBGColor(item.behaviorOf('r2l'))"
-                :readonly="syncing"
+                :readonly="props.manager.syncing"
                 class="behavior-toggle-btn"
               >
                 <v-icon
@@ -595,7 +600,7 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
                 value="skip"
                 @click="item.strategy = 'skip'"
                 :color="behaviorBGColor('skip')"
-                :readonly="syncing"
+                :readonly="props.manager.syncing"
                 class="behavior-toggle-btn"
               >
                 <v-icon
@@ -609,7 +614,7 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
                 value="l2r"
                 @click="item.strategy = 'l2r'"
                 :color="behaviorBGColor(item.behaviorOf('l2r'))"
-                :readonly="syncing"
+                :readonly="props.manager.syncing"
                 class="behavior-toggle-btn"
               >
                 <v-icon
@@ -626,7 +631,7 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
       <v-divider></v-divider>
 
       <v-expand-transition>
-        <v-sheet v-show="syncing" class="mt-5">
+        <v-sheet v-show="props.manager.syncing" class="mt-5">
           <v-row class="text-caption text-medium-emphasis ma-0 flex-nowrap">
             <v-progress-circular
               :model-value="currentSyncingFileProgress"
@@ -697,7 +702,7 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
         <v-btn
           variant="outlined"
           prepend-icon="$mdiAutorenew"
-          :loading="syncing"
+          :loading="props.manager.syncing"
           :color="abort ? 'red' : 'green'"
           @click="syncAll"
           class="flex-grow-1 ml-3"
@@ -710,7 +715,7 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
           height="36"
           width="36"
           color="grey"
-          @click="overlay = false"
+          @click="props.manager.managerOpen = false"
           class="flex-grow-0 mx-3"
         >
           <v-icon icon="$mdiPageLast" style="transform: rotate(90deg)" />

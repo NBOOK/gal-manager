@@ -44,5 +44,12 @@ declare global {
     size: number;
     isDirectory: boolean;
   }
+
+  interface SyncManager {
+    syncList: DirSyncer[];
+    managerOpen: boolean;
+    progress: number;
+    syncing: boolean;
+  }
 }
 export {};

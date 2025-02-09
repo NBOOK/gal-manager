@@ -127,6 +127,7 @@ const sortConfig = gameStore.sort;
           v-if="gameStore.syncManager.syncList.length > 0"
           width="3"
           :model-value="gameStore.syncManager.progress"
+          :class="{ rotating: gameStore.syncManager.progress > 0 }"
         >
           <v-btn icon @click="gameStore.syncManager.managerOpen = true">
             <v-icon size="small" icon="$mdiAutorenew" />
@@ -156,7 +157,7 @@ const sortConfig = gameStore.sort;
                   prepend-icon="$mdiFileSync"
                   value="fileSync"
                   title="Savedata Sync"
-                  @click="gameStore.savedataSyncOpen = true"
+                  @click="gameStore.dataSyncManager.managerOpen = true"
                   :readonly="!gameStore.fileOperatable"
                 />
               </v-list>

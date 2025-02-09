@@ -50,7 +50,7 @@ async function pushAlltoSyncList() {
   // if (validSyncManagers.length > 0) {
   //   gameStore.syncManager.syncList.push(...validSyncManagers);
   // }
-  gameStore.syncManager.gamesToSync.push(...gameStore.selectedGames);
+  gameStore.gamesToSync.push(...gameStore.selectedGames);
 }
 
 function pushAlltoDBEditList() {

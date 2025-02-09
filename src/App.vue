@@ -46,7 +46,7 @@ async function init() {
     <GameSync />
     <GameList />
     <Settings v-if="gameStore.settingsOpen" />
-    <DataSync v-if="gameStore.savedataSyncOpen" />
+    <DataSync v-if="gameStore.dataSyncManager.managerOpen" />
     <StatusBar />
   </v-app>
 </template>

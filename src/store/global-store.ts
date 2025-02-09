@@ -68,16 +68,25 @@ export const useGameStore = defineStore("globalStore", () => {
     }[]
   );
 
+  const gamesToSync = ref([] as GameEntry[]);
+
   const syncManager = reactive({
     syncList: [] as DirSyncer[],
-    gamesToSync: [] as GameEntry[],
     managerOpen: false,
     progress: 0,
+    syncing: false,
+  });
+
+  const dataSyncManager: SyncManager = reactive({
+    syncList: [] as DirSyncer[],
+    managerOpen: false,
+    progress: 0,
+    syncing: false,
   });
 
   const fileOperatable = computed(() => {
     return (
-      syncManager.gamesToSync.length == 0 &&
+      gamesToSync.value.length == 0 &&
       syncManager.syncList.length == 0 &&
       dbEditList.value.length == 0 &&
       downloadList.value.length == 0 &&
@@ -86,7 +95,6 @@ export const useGameStore = defineStore("globalStore", () => {
   });
 
   const netDiskOnline = ref(false);
-  const savedataSyncOpen = ref(false);
 
   return {
     games,
@@ -107,9 +115,10 @@ export const useGameStore = defineStore("globalStore", () => {
     netDiskOnline,
     dbEditList,
     downloadList,
+    gamesToSync,
     syncManager,
+    dataSyncManager,
     fileOperatable,
-    savedataSyncOpen,
   };
 });
 
