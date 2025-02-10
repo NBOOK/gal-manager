@@ -29,7 +29,7 @@ watch(
     if (newVal) {
       overlay.value = true;
     } else {
-      cleanup();
+      await cleanup();
       overlay.value = false;
       return;
     }
@@ -53,7 +53,7 @@ watch(
     if (validSyncManagers.length > 0) {
       gameStore.syncManager.syncList.push(...validSyncManagers);
     } else {
-      cleanup();
+      await cleanup();
     }
   }
 );
@@ -64,19 +64,28 @@ watch(
     if (newVal) {
       overlay.value = true;
     } else {
-      cleanup();
+      await cleanup();
       overlay.value = false;
     }
   }
 );
 
-function cleanup() {
+async function cleanup() {
   console.log("Cleanup in GameSync Called");
 
   currentScanningGame.value = "";
   scannedGames.value = 0;
   scannedGamesBuffer.value = 0;
+  // call game.refreshDiskUsage() for all games in gamesToSync with limit
+  await Promise.all(
+    gameStore.gamesToSync.map((game) =>
+      limit(async () => {
+        await game.refreshDiskUsage();
+      })
+    )
+  );
   gameStore.gamesToSync = [];
+  gameStore.needDiskUsageRefresh = true;
 }
 </script>
 

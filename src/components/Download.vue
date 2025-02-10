@@ -77,6 +77,7 @@ async function downloadAll() {
       currentItem.value.game.gameName
     );
     await currentItem.value.game.downloadTo(currentItem.value.target);
+
     currentItem.value.progress = 100; // sometimes the progress is not 100%
     lastUpdateTime.value = 0;
     remainingTime.value = 0;
@@ -103,6 +104,7 @@ watch(
     if (oldVal === 0 && newVal > 0 && !downloading.value) {
       console.log("Call downloadAll()");
       downloadAll();
+      gameStore.needDiskUsageRefresh = true;
     }
   }
 );

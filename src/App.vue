@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // import HelloWorld from '@components/HelloWorld.vue'
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { useGameStore } from "@/store/global-store";
 import LoadingOverlay from "@/components/Loading.vue";
-import DBAdderCarousel from "@/views/DBAdderCarousel.vue";
+import DBAdderCarousel from "@/components/DBAdderCarousel.vue";
 import GameSync from "@/components/GameSync.vue";
 import GameList from "@/components/GameList.vue";
 import AppBar from "@/components/AppBar.vue";
@@ -12,6 +12,7 @@ import Settings from "@/components/Settings.vue";
 import DataSync from "@/components/DataSync.vue";
 
 const gameStore = useGameStore();
+const ready = ref(false);
 
 onMounted(async () => {
   gameStore.config.value = await window.ipcRenderer.invoke("fetchJsonConfig");
@@ -35,19 +36,21 @@ async function init() {
 
   await gameStore.steamDB.setup(gameStore.config.value);
   await gameStore.lutrisDB.setup(gameStore.config.value);
+
+  ready.value = true;
 }
 </script>
 
 <template>
   <v-app>
-    <AppBar />
-    <LoadingOverlay />
-    <DBAdderCarousel />
-    <GameSync />
-    <GameList />
+    <AppBar v-if="ready" />
+    <LoadingOverlay v-if="ready" />
+    <DBAdderCarousel v-if="ready" />
+    <GameSync v-if="ready" />
+    <GameList v-if="ready" />
     <Settings v-if="gameStore.settingsOpen" />
-    <DataSync v-if="gameStore.dataSyncManager.managerOpen" />
-    <StatusBar />
+    <DataSync v-if="ready && gameStore.dataSyncManager.managerOpen" />
+    <StatusBar v-if="ready" />
   </v-app>
 </template>
 

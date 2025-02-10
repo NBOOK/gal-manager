@@ -5,10 +5,10 @@ import GameItem from "@/components/GameItem.vue";
 
 const gameStore = useGameStore();
 
-const contentHeight = ref(window.innerHeight - 48 - 18);
+const contentHeight = ref(window.innerHeight - 40 - 18);
 
 const updateContentHeight = () => {
-  contentHeight.value = window.innerHeight - 48 - 18;
+  contentHeight.value = window.innerHeight - 40 - 18;
 };
 
 const scrollCoverRef = useTemplateRef("scrollCoverRef");

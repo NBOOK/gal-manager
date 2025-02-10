@@ -89,6 +89,7 @@ import {
   mdiConsole,
   mdiPower,
   mdiCodeJson,
+  mdiCloudOutline,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
@@ -127,6 +128,7 @@ const aliasesCustom = {
   mdiDatabaseEdit,
   mdiDatabaseRemove,
   mdiCloud,
+  mdiCloudOutline,
   mdiCloudDownload,
   mdiCloudOff,
   mdiCloudAlert,

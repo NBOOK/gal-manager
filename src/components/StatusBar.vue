@@ -1,21 +1,117 @@
+<script setup lang="ts">
+import { ref, onMounted, watch } from "vue";
+import { useGameStore } from "@/store/global-store";
+import utils from "@/modules/utils";
+import CloudIcon from "@/icons/CloudIcon.vue";
+import GamePadIcon from "@/icons/GamePadIcon.vue";
+import SDCardIcon from "@/icons/SDCardIcon.vue";
+// import USBIcon from "@/icons/USBIcon.vue";
+
+const gameStore = useGameStore();
+
+const deckDiskUsage = ref(0);
+const sdCardDiskUsage = ref(0);
+const netDiskUsage = ref(0);
+
+async function getDiskUsage() {
+  deckDiskUsage.value =
+    (await window.ipcRenderer.invoke(
+      "getDiskUsage",
+      gameStore.config.value.gamesDataPath
+    )) | 0;
+  sdCardDiskUsage.value =
+    (await window.ipcRenderer.invoke(
+      "getDiskUsage",
+      gameStore.config.value.gamesSDPath
+    )) | 0;
+  netDiskUsage.value =
+    (await window.ipcRenderer.invoke(
+      "getDiskUsage",
+      gameStore.config.value.gamesNetPath
+    )) | 0;
+  deckDiskUsage.value /= 100;
+  sdCardDiskUsage.value /= 100;
+  netDiskUsage.value /= 100;
+}
+
+onMounted(async () => {
+  await getDiskUsage();
+});
+
+watch(
+  () => gameStore.needDiskUsageRefresh,
+  async (newVal) => {
+    if (newVal) {
+      await getDiskUsage();
+      gameStore.needDiskUsageRefresh = false;
+    }
+  }
+);
+</script>
+
 <template>
   <v-container>
     <v-app-bar
       flat
       density="compact"
       location="bottom"
-      height="48"
-      style="border-top: #aaaaaa solid 1px"
+      height="40"
+      style="border-top: #aaaaaa solid 1px; font-size: 14px"
     >
       <template v-slot:prepend>
-        <v-app-bar-nav-icon></v-app-bar-nav-icon>
+        <CloudIcon :fillPercentage="netDiskUsage" class="storage-icon" />
+        <span class="ml-1 mr-3 text-truncate">
+          {{
+            Object.values(gameStore.games).filter((game) => game.inNetDisk)
+              .length
+          }}
+          games
+        </span>
+        <GamePadIcon :fillPercentage="deckDiskUsage" class="storage-icon" />
+        <span class="ml-1 mr-3 text-truncate">
+          {{
+            Object.values(gameStore.games).filter((game) => game.inDeck).length
+          }}
+          games
+        </span>
+        <SDCardIcon :fillPercentage="sdCardDiskUsage" class="storage-icon" />
+        <span class="ml-1 mr-3 text-truncate">
+          {{
+            Object.values(gameStore.games).filter((game) => game.inSDCard)
+              .length
+          }}
+          games
+        </span>
+        <!-- <USBIcon :fillPercentage="1" class="storage-icon" /> -->
       </template>
 
-      <v-app-bar-title>Application Bar</v-app-bar-title>
+      <!-- <v-app-bar-title>Application Bar</v-app-bar-title> -->
 
       <template v-slot:append>
-        <v-btn icon="$mdiMagnify"></v-btn>
+        <!-- <v-btn icon="$mdiMagnify"></v-btn> -->
+        <v-row
+          v-if="Object.values(gameStore.selectedGames).length > 0"
+          class="ma-0 text-truncate"
+        >
+          {{ gameStore.selectedGames.length }}
+          {{ gameStore.selectedGames.length > 1 ? "games" : "game" }} selected
+          ({{
+            utils.formatSize(
+              gameStore.selectedGames.reduce(
+                (acc, game) => acc + game.diskUsage,
+                0
+              )
+            )
+          }})
+        </v-row>
       </template>
     </v-app-bar>
   </v-container>
 </template>
+
+<style scoped>
+.storage-icon {
+  color: #212121;
+  height: 16px;
+}
+</style>

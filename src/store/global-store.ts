@@ -94,6 +94,8 @@ export const useGameStore = defineStore("globalStore", () => {
 
   const netDiskOnline = ref(false);
 
+  const needDiskUsageRefresh = ref(false);
+
   return {
     games,
     loading,
@@ -117,6 +119,7 @@ export const useGameStore = defineStore("globalStore", () => {
     syncManager,
     dataSyncManager,
     fileOperatable,
+    needDiskUsageRefresh,
   };
 });
 

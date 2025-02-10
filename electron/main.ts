@@ -111,6 +111,9 @@ function registerIpcMain() {
   ipcMain.handle('scanDir', (_event, dirPath: string) => {
     return utils.scanDir(dirPath)
   });
+  ipcMain.handle('getDirDiskUsage', (_event, dirPath: string) => {
+    return utils.getDirDiskUsage(dirPath)
+  });
   ipcMain.handle('getDiskUsage', (_event, dirPath: string) => {
     return utils.getDiskUsage(dirPath)
   });

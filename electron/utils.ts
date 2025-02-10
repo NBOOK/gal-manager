@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import os from "node:os";
-import { spawn } from "node:child_process";
+import { spawn, exec } from "node:child_process";
 import sharp from "sharp";
 import path from "node:path";
 import { readVdf, VdfMap, writeVdf, getShortcutHash } from "steam-binary-vdf";
@@ -80,7 +80,7 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
   }
 }
 
-async function getDiskUsage(dirPath: string): Promise<number> {
+async function getDirDiskUsage(dirPath: string): Promise<number> {
   const platform = os.platform();
 
   // console.log('platform:', platform);
@@ -143,6 +143,29 @@ async function getDiskUsage(dirPath: string): Promise<number> {
       });
     });
   }
+}
+
+function getDiskUsage(path: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    // 执行 df 命令
+    exec(`df ${path}`, (error, stdout, _stderr) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      // 假设 df 输出类似如下格式：
+      // Filesystem     1K-blocks    Used Available Use% Mounted on
+      // /dev/sda1       20511356 8626432   982556   47% /
+      // 使用正则匹配第一个出现的百分比数字
+      const match = stdout.match(/(\d+)%/);
+      if (match) {
+        resolve(parseInt(match[0])); // match[0] 包含 "47%" 格式的结果
+      } else {
+        reject(new Error('Failed to parse "df" output.'));
+      }
+    });
+  });
 }
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -598,6 +621,7 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
 
 export default {
   scanDir,
+  getDirDiskUsage,
   getDiskUsage,
   fileExists,
   resizeImage,

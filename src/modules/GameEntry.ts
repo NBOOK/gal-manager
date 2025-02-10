@@ -112,7 +112,7 @@ class GameEntry {
 
     const [diskUsage, imageAssets]: [number, ImageAssets] = await Promise.all([
       window.ipcRenderer.invoke(
-        "getDiskUsage",
+        "getDirDiskUsage",
         `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}`
       ),
       ImageAssets.create(
@@ -136,6 +136,13 @@ class GameEntry {
       this.gameNameSlug = utils.slugify(this.gameNameEN);
     }
     // this.inSteamDB = gameStore.steamDB.inDB(this);
+  }
+
+  async refreshDiskUsage() {
+    this.diskUsage = await window.ipcRenderer.invoke(
+      "getDirDiskUsage",
+      `${this.basePath}/${this.folderName}`
+    );
   }
 
   async link() {
@@ -330,6 +337,8 @@ class GameEntry {
       this.basePath = target;
       this.imageAssets.basePath = this.basePath;
     }
+
+    await this.refreshDiskUsage();
   }
 
   async deleteLocal() {
@@ -375,6 +384,8 @@ class GameEntry {
         delete gameStore.games[this.gameName];
       }
     }
+
+    await this.refreshDiskUsage();
   }
 
   async getSyncManager(strategy: SyncStrategy = "l2r") {
