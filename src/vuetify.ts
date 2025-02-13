@@ -91,14 +91,18 @@ import {
   mdiCodeJson,
   mdiCloudOutline,
   mdiController,
+  mdiWeb,
+  mdiApplicationOutline,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
+import customWineEmptyVariant from "./icons/customWineEmptyVariant.vue";
 import customWineHalf from "./icons/customWineHalf.vue";
 
 const aliasesCustom = {
   ...aliases,
   customWineEmpty,
+  customWineEmptyVariant,
   customWineHalf,
   mdiFilter,
   mdiFilterOutline,
@@ -185,6 +189,8 @@ const aliasesCustom = {
   mdiPower,
   mdiCodeJson,
   mdiController,
+  mdiWeb,
+  mdiApplicationOutline,
 };
 
 const vuetify = createVuetify({

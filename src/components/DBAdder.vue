@@ -320,10 +320,15 @@ async function removeGameFromDB() {
               height: 32px !important;
               min-height: 10px !important;
               font-size: 16px !important;
-              padding-left: 16px;
             "
-            >Game Executable</v-list-subheader
           >
+            <v-icon
+              icon="$mdiApplicationOutline"
+              class="mx-1"
+              style="padding-bottom: 3px"
+            />
+            <span>Game Executable</span>
+          </v-list-subheader>
           <v-divider></v-divider>
           <v-list
             density="compact"
@@ -352,10 +357,15 @@ async function removeGameFromDB() {
               height: 32px !important;
               min-height: 10px !important;
               font-size: 16px !important;
-              padding-left: 16px;
             "
-            >Wine Prefix</v-list-subheader
           >
+            <v-icon
+              icon="$mdiPackageVariantClosed"
+              class="mx-1"
+              style="padding-bottom: 3px"
+            />
+            <span>Wine Prefix</span>
+          </v-list-subheader>
           <v-divider></v-divider>
           <v-list
             density="compact"
@@ -386,10 +396,15 @@ async function removeGameFromDB() {
               height: 32px !important;
               min-height: 10px !important;
               font-size: 16px !important;
-              padding-left: 16px;
             "
-            >Wine Runner</v-list-subheader
           >
+            <v-icon
+              icon="$customWineEmptyVariant"
+              class="mx-1"
+              style="padding-bottom: 3px"
+            />
+            <span>Wine Runner</span>
+          </v-list-subheader>
           <v-divider></v-divider>
           <v-list
             density="compact"
@@ -414,16 +429,23 @@ async function removeGameFromDB() {
         <v-spacer class="lutris-config-spacer"></v-spacer>
 
         <!-- <v-col> -->
-        <v-card border elevation="0" rounded="10" width="100%" max-width="86px">
+        <v-card
+          border
+          elevation="0"
+          rounded="10"
+          width="100%"
+          max-width="103px"
+        >
           <v-list-subheader
             style="
               height: 32px !important;
               min-height: 10px !important;
               font-size: 16px !important;
-              padding-left: 16px;
             "
-            >Locale</v-list-subheader
           >
+            <v-icon icon="$mdiWeb" class="mx-1" style="padding-bottom: 3px" />
+            Locale
+          </v-list-subheader>
           <v-divider></v-divider>
           <v-list
             density="compact"
