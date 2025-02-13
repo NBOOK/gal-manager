@@ -145,7 +145,7 @@ class GameEntry {
     );
   }
 
-  async link() {
+  async link(refreshDiskUsage = true) {
     console.log(`Linking ${this.gamePath}...`);
     window.ipcRenderer.invoke(
       "createSymbolicLink",
@@ -156,9 +156,13 @@ class GameEntry {
     this.linkedBasePath = this.basePath;
     this.basePath = gameStore.config.value.gamesMainPath;
     this.imageAssets.basePath = this.basePath;
+
+    if (refreshDiskUsage) {
+      await this.refreshDiskUsage();
+    }
   }
 
-  async unlink() {
+  async unlink(refreshDiskUsage = true) {
     console.log(`Unlinking ${this.gamePath}...`);
     window.ipcRenderer.invoke("removeSymbolicLink", this.gamePath);
     this.linked = false;
@@ -175,24 +179,27 @@ class GameEntry {
     }
     this.imageAssets.basePath = this.basePath;
     this.linkedBasePath = "";
+
+    if (refreshDiskUsage) {
+      await this.refreshDiskUsage();
+    }
   }
 
-  async addDB(gameConfig: GameConnfig) {
-    //@TODO
-    // gameName always comes from folderName,
-    // If not match call other functions to rename the folder
-    // this.gameName = gameConfig.gameName;
-    // if (
-    //   this.gameNameEN !== gameConfig.gameNameEN ||
-    //   this.gameNameSlug !== gameConfig.gameNameSlug
-    // ) {
-    //   console.log(`New name of ${this.gameNameEN} is ${gameConfig.gameNameEN}`);
-    //   console.log(`Removing old ${this.gameNameEN} from DB...`);
-    //   await this.removeDB();
-    //   console.log(`${this.gameNameEN} removed from DB`);
-    //   this.gameNameEN = gameConfig.gameNameEN;
-    //   this.gameNameSlug = gameConfig.gameNameSlug;
-    // }
+  async refreshLink() {
+    if (!this.linked) return;
+    if (
+      (this.inDeck && this.basePath !== gameStore.config.value.gamesDataPath) ||
+      (this.inSDCard && this.basePath !== gameStore.config.value.gamesSDPath) ||
+      (this.inNetDisk &&
+        this.basePath !== gameStore.config.value.gamesExternalPath)
+    ) {
+      await this.unlink(false);
+      await this.link(false);
+      await this.refreshDiskUsage();
+    }
+  }
+
+  async addDB(gameConfig: GameConfig) {
     if (this.inDatabase > 0) {
       throw new Error("Game is already in database, remove it first");
       return;
@@ -207,7 +214,7 @@ class GameEntry {
     }
     if (!this.inSteamDB) {
       console.log(`Adding ${this.folderName} to SteamDB...`);
-      await gameStore.steamDB.addGame(this);
+      await gameStore.steamDB.addGame(this, gameConfig);
       // this.inSteamDB = true;
       console.log(`${this.folderName} added to SteamDB`);
     }
@@ -227,7 +234,7 @@ class GameEntry {
     }
   }
 
-  async rename(gameConfig: GameConnfig) {
+  async rename(gameConfig: GameConfig) {
     if (
       this.gameName === gameConfig.gameName &&
       this.gameBrand === gameConfig.gameBrand
@@ -248,7 +255,7 @@ class GameEntry {
     //   await this.removeDB();
     // }
     // if (wasLinked) {
-    await this.unlink();
+    await this.unlink(false);
     // }
     const gameBasePaths = [
       gameStore.config.value.gamesDataPath,
@@ -275,7 +282,7 @@ class GameEntry {
     this.imageAssets.gameBrand = this.gameBrand;
     this.imageAssets.gameName = this.gameName;
     // if (wasLinked) {
-    await this.link();
+    await this.link(false);
     // }
     // if (wasInDatabase) {
     //   await this.addDB(gameConfig);
@@ -331,14 +338,11 @@ class GameEntry {
     }
 
     if (this.linked) {
-      await this.unlink();
-      await this.link();
+      await this.refreshLink();
     } else {
       this.basePath = target;
       this.imageAssets.basePath = this.basePath;
     }
-
-    await this.refreshDiskUsage();
   }
 
   async deleteLocal() {

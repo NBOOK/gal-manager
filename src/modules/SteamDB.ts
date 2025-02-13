@@ -7,10 +7,14 @@ class SteamDB {
 
   //   private steamID: string = "";
   private steamShortcutPath: string = "";
+  private steamControllerConfigPath: string = "";
+  private steamControllerTemplatePath: string = "";
   private steamGridPath: string = "";
   private steamLaunchOptionsPrefix: string = "";
-  private vdf: VdfMap | null = null;
+  private shortcutVDF: VdfMap | null = null;
+  private controllerVDF: any | null = null;
   linkLowRes: boolean = true;
+  controllerLayouts: string[] = [];
 
   private steamGameIndices: Record<string, number> = {};
 
@@ -32,13 +36,15 @@ class SteamDB {
     this.steamGridPath = config.steamGridPath;
     this.linkLowRes = config.assetsLinkLowRes;
     this.steamLaunchOptionsPrefix = config.steamLaunchOptionsPrefix;
+    this.steamControllerConfigPath = config.steamControllerConfigPath;
+    this.steamControllerTemplatePath = config.steamControllerTemplatePath;
 
-    this.vdf = await window.ipcRenderer.invoke(
+    this.shortcutVDF = await window.ipcRenderer.invoke(
       "readVdfFile",
       this.steamShortcutPath
     );
-    if (this.vdf && this.vdf.shortcuts) {
-      const shortcuts = this.vdf.shortcuts as Record<string, any>;
+    if (this.shortcutVDF && this.shortcutVDF.shortcuts) {
+      const shortcuts = this.shortcutVDF.shortcuts as Record<string, any>;
       Object.keys(shortcuts).forEach((key) => {
         const game = shortcuts[key];
         const gameNameEN = game.AppName;
@@ -46,43 +52,43 @@ class SteamDB {
         this.steamGameIndices[gameNameEN] = steamGameIndex;
       });
     }
+    this.controllerVDF = await window.ipcRenderer.invoke(
+      "readVDF",
+      this.steamControllerConfigPath
+    );
+    // console.log(this.controllerVDF);
+
+    this.controllerLayouts = (
+      await window.ipcRenderer.invoke(
+        "scanDir",
+        "<HOME>/.config/GalManager/controller_layouts"
+      )
+    )
+      .filter(
+        (item: DirEntry) => !item.isDirectory && item.name.endsWith(".vdf")
+      )
+      .map((item: DirEntry) => item.name);
+
+    this.controllerLayouts.unshift("--");
   }
 
-  // private async processQueue() {
-  //   if (this.processing) {
-  //     return;
-  //   }
-  //   this.processing = true;
-  //   while (this.taskQueue.length > 0) {
-  //     const task = this.taskQueue.shift()!;
-  //     if (task.action === "add") {
-  //       await this._addGame(task.game);
-  //     } else if (task.action === "remove") {
-  //       await this._removeGame(task.game);
-  //     }
-  //   }
-  //   this.processing = false;
-  // }
-
   async removeGame(game: GameEntry) {
-    // this.taskQueue.push({ action: "remove", game });
-    // this.processQueue(); // @TOCHECK should we await this?
     await this.mutex.runExclusive(async () => await this._removeGame(game));
   }
 
   private async _removeGame(game: GameEntry) {
-    if (!this.vdf) {
+    if (!this.shortcutVDF) {
       return;
     }
     const gameIndex: string = this.getGameIndex(game).toString();
     const appID = this.getAppID(game.gameNameEN);
-    delete (this.vdf.shortcuts as Record<string, any>)[gameIndex];
+    delete (this.shortcutVDF.shortcuts as Record<string, any>)[gameIndex];
 
-    console.log("Writing VDF- file", this.steamShortcutPath, this.vdf);
+    console.log("Writing VDF- file", this.steamShortcutPath, this.shortcutVDF);
     await window.ipcRenderer.invoke(
       "writeVdfFile",
       this.steamShortcutPath,
-      JSON.stringify(this.vdf)
+      JSON.stringify(this.shortcutVDF)
     );
     console.log("VDF- file written");
 
@@ -93,14 +99,16 @@ class SteamDB {
     delete this.steamGameIndices[game.gameNameEN];
   }
 
-  async addGame(game: GameEntry) {
+  async addGame(game: GameEntry, gameConfig: GameConfig) {
     // this.taskQueue.push({ action: "add", game });
     // this.processQueue(); // @TOCHECK should we await this?
-    await this.mutex.runExclusive(async () => await this._addGame(game));
+    await this.mutex.runExclusive(
+      async () => await this._addGame(game, gameConfig)
+    );
   }
 
-  private async _addGame(game: GameEntry) {
-    if (!this.vdf) {
+  private async _addGame(game: GameEntry, gameConfig: GameConfig) {
+    if (!this.shortcutVDF || !this.controllerVDF) {
       return;
     }
     const gameIndex: string = this.getGameIndex(game).toString();
@@ -127,13 +135,13 @@ class SteamDB {
       tags: {}, // tags are are now stored in localconfig.vdf and this field is ignored
     };
 
-    (this.vdf.shortcuts as Record<string, any>)[gameIndex] = shortcut;
+    (this.shortcutVDF.shortcuts as Record<string, any>)[gameIndex] = shortcut;
 
-    console.log("Writing VDF+ file", this.steamShortcutPath, this.vdf);
+    console.log("Writing VDF+ file", this.steamShortcutPath, this.shortcutVDF);
     await window.ipcRenderer.invoke(
       "writeVdfFile",
       this.steamShortcutPath,
-      JSON.stringify(this.vdf)
+      JSON.stringify(this.shortcutVDF)
     );
     console.log("VDF+ file written");
 
@@ -142,6 +150,29 @@ class SteamDB {
     console.log("Image assets linked");
 
     this.steamGameIndices[game.gameNameEN] = parseInt(gameIndex, 10);
+
+    if (gameConfig.controllerLayout !== "--") {
+      if (
+        !(await window.ipcRenderer.invoke(
+          "fileExists",
+          `${this.steamControllerTemplatePath}/${gameConfig.controllerLayout}`
+        ))
+      ) {
+        await window.ipcRenderer.invoke(
+          "createSymbolicLink",
+          `<HOME>/.config/GalManager/controller_layouts/${gameConfig.controllerLayout}`,
+          `${this.steamControllerTemplatePath}/${gameConfig.controllerLayout}`
+        );
+      }
+      this.controllerVDF["controller_config"][game.gameNameEN.toLowerCase()] = {
+        template: gameConfig.controllerLayout,
+      };
+      await window.ipcRenderer.invoke(
+        "writeVDF",
+        this.steamControllerConfigPath,
+        JSON.stringify(this.controllerVDF)
+      );
+    }
   }
 
   private getAppID(gameNameEN: string): number {
@@ -174,12 +205,12 @@ class SteamDB {
   }
 
   async linkImageAssets(game: GameEntry, appID?: number) {
-    if (!this.vdf || !this.vdf.shortcuts) {
+    if (!this.shortcutVDF || !this.shortcutVDF.shortcuts) {
       return;
     }
     if (!appID) {
       const gameIndex: string = this.getGameIndex(game).toString(); // should get a valid index if inDB
-      appID = (this.vdf.shortcuts as Record<string, any>)[gameIndex]
+      appID = (this.shortcutVDF.shortcuts as Record<string, any>)[gameIndex]
         .appid as number;
     }
 
@@ -196,12 +227,12 @@ class SteamDB {
   }
 
   private async unlinkImageAssets(game: GameEntry, appID?: number) {
-    if (!this.vdf || !this.vdf.shortcuts) {
+    if (!this.shortcutVDF || !this.shortcutVDF.shortcuts) {
       return;
     }
     if (!appID) {
       const gameIndex: string = this.getGameIndex(game).toString(); // should get a valid index if inDB
-      appID = (this.vdf.shortcuts as Record<string, any>)[gameIndex]
+      appID = (this.shortcutVDF.shortcuts as Record<string, any>)[gameIndex]
         .appid as number;
     }
 
@@ -241,14 +272,14 @@ class SteamDB {
   private getGameIndex(game: GameEntry): number {
     // Return the index of the game in steamDB or largest steamDB index + 1
     // DON't use this function to check if the game is in steamDB
-    if (!this.vdf || !this.vdf.shortcuts) {
+    if (!this.shortcutVDF || !this.shortcutVDF.shortcuts) {
       return -1;
     }
     // const launchOptions = this.steamLaunchOptionsPrefix + gameNameSlug;
-    // const keys = Object.keys(this.vdf.shortcuts);
+    // const keys = Object.keys(this.shortcutVDF.shortcuts);
     // for (const key of keys) {
     //   if (
-    //     (this.vdf.shortcuts as Record<string, any>)[key].AppName === gameNameEN
+    //     (this.shortcutVDF.shortcuts as Record<string, any>)[key].AppName === gameNameEN
     //   ) {
     //     return key;
     //   }
@@ -262,7 +293,7 @@ class SteamDB {
   }
 
   inDB(game: GameEntry): boolean {
-    if (!this.vdf || !this.vdf.shortcuts) {
+    if (!this.shortcutVDF || !this.shortcutVDF.shortcuts) {
       return false;
     }
     return this.steamGameIndices[game.gameNameEN] !== undefined;

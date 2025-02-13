@@ -109,6 +109,11 @@ function registerIpcMain() {
     win?.webContents.openDevTools();
   });
   ipcMain.handle('scanDir', (_event, dirPath: string) => {
+    if (dirPath.startsWith("<MAIN_DIST>")) {
+      dirPath = path.join(MAIN_DIST, dirPath.slice(11));
+    } else if (dirPath.startsWith("<HOME>")) {
+      dirPath = path.join(os.homedir(), dirPath.slice(6));
+    }
     return utils.scanDir(dirPath)
   });
   ipcMain.handle('getDirDiskUsage', (_event, dirPath: string) => {
@@ -118,6 +123,11 @@ function registerIpcMain() {
     return utils.getDiskUsage(dirPath)
   });
   ipcMain.handle('fileExists', (_event, filePath: string) => {
+    if (filePath.startsWith("<MAIN_DIST>")) {
+      filePath = path.join(MAIN_DIST, filePath.slice(11));
+    } else if (filePath.startsWith("<HOME>")) {
+      filePath = path.join(os.homedir(), filePath.slice(6));
+    }
     return utils.fileExists(filePath)
   });
   ipcMain.handle('resizeImage', (_event, sourcePath: string, targetWidth: number, format: 'jpg' | 'webp', compression: number) => {
@@ -194,6 +204,16 @@ function registerIpcMain() {
     return utils.removeItem(path)
   });
   ipcMain.handle('start-copy', async (event, source:string, destination:string, dirOnly=false, include:string[]=[], exclude:string[]=[]) => {
+    if (source.startsWith("<MAIN_DIST>")) {
+      source = path.join(MAIN_DIST, source.slice(11));
+    } else if (source.startsWith("<HOME>")) {
+      source = path.join(os.homedir(), source.slice(6));
+    }
+    if (destination.startsWith("<MAIN_DIST>")) {
+      destination = path.join(MAIN_DIST, destination.slice(11));
+    } else if (destination.startsWith("<HOME>")) {
+      destination = path.join(os.homedir(), destination.slice(6));
+    }
     try {
       if ((await fs.promises.stat(source)).isDirectory()) {
         await utils.copyDirectory(source, destination, dirOnly, include, exclude, event);
@@ -216,5 +236,11 @@ function registerIpcMain() {
   });
   ipcMain.handle('getFileInfos', (_event, filePath: string) => {
     return utils.getFileInfos(filePath);
+  });
+  ipcMain.handle('readVDF', (_event, filePath: string) => {
+    return utils.readVDF(filePath);
+  });
+  ipcMain.handle('writeVDF', (_event, filePath: string, serializedJSON: string) => {
+    return utils.writeVDF(filePath, JSON.parse(serializedJSON));
   });
 }

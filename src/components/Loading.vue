@@ -101,6 +101,12 @@ async function scanGames() {
   await processEntries(sdCardEntries, "inSDCard");
   await processEntries(netDiskEntries, "inNetDisk");
 
+  Object.values(gameStore.games)
+    .filter((game) => game.linked)
+    .forEach((game) => {
+      game.refreshLink();
+    });
+
   // console.log("Game list:", gameStore.games);
   gameStore.loading = false;
 

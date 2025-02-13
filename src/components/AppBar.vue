@@ -11,7 +11,7 @@ function openDevTools() {
   window.ipcRenderer.invoke("openDevTools");
 }
 function openConfigPath() {
-  window.ipcRenderer.invoke("openPath", "<HOME>/.config/gal-manager");
+  window.ipcRenderer.invoke("openPath", "<HOME>/.config/GalManager");
 }
 function quit() {
   window.ipcRenderer.invoke("quitApp");

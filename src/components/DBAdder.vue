@@ -34,7 +34,7 @@ const titleKindColor = {
   alias: "#fff3e0",
 };
 
-const gameConnfig = reactive<GameConnfig>({
+const gameConfig = reactive<GameConfig>({
   gameName: "",
   gameBrand: "",
   gameNameEN: "",
@@ -43,6 +43,9 @@ const gameConnfig = reactive<GameConnfig>({
   wineRunner: "",
   executable: "",
   locale: "",
+  controllerLayout: "avg.vdf",
+  steamCollections: ["Gal"],
+  lutrisCategories: [],
 });
 
 async function getGameNameENCandidates(gameName: string) {
@@ -52,11 +55,11 @@ async function getGameNameENCandidates(gameName: string) {
 }
 
 watch(
-  () => gameConnfig.gameNameEN,
+  () => gameConfig.gameNameEN,
   () => {
-    gameConnfig.gameNameSlug = slugify(
-      gameConnfig.gameNameEN,
-      gameConnfig.gameNameSlug
+    gameConfig.gameNameSlug = slugify(
+      gameConfig.gameNameEN,
+      gameConfig.gameNameSlug
     );
   }
 );
@@ -64,20 +67,20 @@ watch(
 watch(
   () => props.game,
   async () => {
-    gameConnfig.gameName = props.game.gameName;
-    gameConnfig.gameBrand = props.game.gameBrand;
+    gameConfig.gameName = props.game.gameName;
+    gameConfig.gameBrand = props.game.gameBrand;
 
     await getGameNameENCandidates(props.game.gameName);
 
     if (props.game.inDatabase) {
-      gameConnfig.gameNameEN = props.game.gameNameEN;
+      gameConfig.gameNameEN = props.game.gameNameEN;
       enTitleColor.value = "#EDE7F6";
-      gameConnfig.gameNameSlug = props.game.gameNameSlug;
+      gameConfig.gameNameSlug = props.game.gameNameSlug;
       slugTitleColor.value = "#EDE7F6";
     } else {
-      gameConnfig.gameNameEN = gameNameENCandidates.value[0].title;
+      gameConfig.gameNameEN = gameNameENCandidates.value[0].title;
       enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
-      gameConnfig.gameNameSlug = slugify(gameConnfig.gameNameEN, "");
+      gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
       slugTitleColor.value = enTitleColor.value;
     }
 
@@ -89,7 +92,7 @@ watch(
       )
       .map((file: DirEntry) => file.name);
     executables.value = await utils.guessLauncher(executables.value);
-    gameConnfig.executable = executables.value[0];
+    gameConfig.executable = executables.value[0];
     executablesLoading.value = false;
 
     if (
@@ -97,19 +100,19 @@ watch(
         gameStore.config.lutrisDefaultWinePrefix
       )
     )
-      gameConnfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
-    else gameConnfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
+      gameConfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
+    else gameConfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
 
     if (
       gameStore.lutrisDB.wineRunners.includes(
         gameStore.config.lutrisDefaultWineRunner
       )
     )
-      gameConnfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
-    else gameConnfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
+      gameConfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
+    else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
 
-    if (gameStore.config.locale) gameConnfig.locale = gameStore.config.locale;
-    else gameConnfig.locale = "ja_JP.utf8";
+    if (gameStore.config.locale) gameConfig.locale = gameStore.config.locale;
+    else gameConfig.locale = "ja_JP.utf8";
   },
   { immediate: true }
 );
@@ -121,13 +124,13 @@ async function addGameToDB() {
     await props.game.removeDB();
   }
   if (
-    gameConnfig.gameName !== props.game.gameName ||
-    gameConnfig.gameBrand !== props.game.gameBrand
+    gameConfig.gameName !== props.game.gameName ||
+    gameConfig.gameBrand !== props.game.gameBrand
   ) {
     console.log("Game name changed! Updating it...");
-    await props.game.rename(gameConnfig);
+    await props.game.rename(gameConfig);
   }
-  await props.game.addDB(gameConnfig);
+  await props.game.addDB(gameConfig);
   dbAdding.value = false;
   emit("proceed");
 }
@@ -154,7 +157,7 @@ async function removeGameFromDB() {
           placeholder="Game's orginal title."
           prepend-icon="$mdiIdeogramCjkVariant"
           :spellcheck="false"
-          v-model="gameConnfig.gameName"
+          v-model="gameConfig.gameName"
           class="vn-title-textinput"
         >
           <template #append-inner>
@@ -178,8 +181,8 @@ async function removeGameFromDB() {
           prepend-icon="$mdiAlphabeticalVariant"
           :spellcheck="false"
           :loading="enTitleLoading"
-          v-model="gameConnfig.gameNameEN"
-          :bg-color="gameConnfig.gameNameEN ? enTitleColor : ''"
+          v-model="gameConfig.gameNameEN"
+          :bg-color="gameConfig.gameNameEN ? enTitleColor : ''"
           @input="
             () => {
               enTitleColor = '';
@@ -215,7 +218,7 @@ async function removeGameFromDB() {
                 :class="'vn-title-kind-' + item.kind"
                 @click="
                   () => {
-                    gameConnfig.gameNameEN = item.title;
+                    gameConfig.gameNameEN = item.title;
                     enTitleColor = titleKindColor[item.kind];
                     slugTitleColor = '';
                   }
@@ -246,8 +249,8 @@ async function removeGameFromDB() {
           placeholder="Game's title slug (identifier)."
           prepend-icon="$mdiFingerprint"
           :spellcheck="false"
-          v-model="gameConnfig.gameNameSlug"
-          :bg-color="gameConnfig.gameNameSlug ? slugTitleColor : ''"
+          v-model="gameConfig.gameNameSlug"
+          :bg-color="gameConfig.gameNameSlug ? slugTitleColor : ''"
           @input="
             () => {
               slugTitleColor = '';
@@ -268,20 +271,37 @@ async function removeGameFromDB() {
       <!-- ------------------------- Steam/Lutris Categories ------------------------------- -->
       <!-- @TODO add lutris category support -->
       <v-row class="flex-grow-0">
-        <v-combobox
+        <v-select
           label="Steam/Lutris Categories"
           density="compact"
           clearable
           chips
+          closable-chips
           hide-selected
           multiple
           :items="['Gal', 'Anime', 'RPG', 'Emulation', 'Rhythm']"
+          v-model="gameConfig.steamCollections"
           variant="outlined"
           prepend-icon="$mdiTagMultiple"
           clear-icon="$mdiBackspaceOutline"
           :menu-props="{ transition: 'slide-y-transition' }"
           class="vn-title-textinput"
-        ></v-combobox>
+        ></v-select>
+      </v-row>
+
+      <!-- ------------------------- Steam Controller Layout ------------------------------- -->
+      <!-- @TODO add lutris category support -->
+      <v-row class="flex-grow-0">
+        <v-select
+          label="Steam Controller Layout"
+          density="compact"
+          :items="gameStore.steamDB.controllerLayouts"
+          v-model="gameConfig.controllerLayout"
+          variant="outlined"
+          prepend-icon="$mdiController"
+          :menu-props="{ transition: 'slide-y-transition' }"
+          class="vn-title-textinput"
+        ></v-select>
       </v-row>
 
       <!-- ------------------------- Lutris Env Setup ------------------------------- -->
@@ -307,8 +327,8 @@ async function removeGameFromDB() {
           <v-divider></v-divider>
           <v-list
             density="compact"
-            @click:select="(value) => gameConnfig.executable = value.id as string"
-            :selected="[gameConnfig.executable]"
+            @click:select="(value) => gameConfig.executable = value.id as string"
+            :selected="[gameConfig.executable]"
             base-color="grey-darken-2"
             height="100%"
             max-height="150px"
@@ -339,8 +359,8 @@ async function removeGameFromDB() {
           <v-divider></v-divider>
           <v-list
             density="compact"
-            @click:select="(value) => gameConnfig.winePrefix = value.id as string"
-            :selected="[gameConnfig.winePrefix]"
+            @click:select="(value) => gameConfig.winePrefix = value.id as string"
+            :selected="[gameConfig.winePrefix]"
             base-color="grey-darken-2"
             height="100%"
             max-height="150px"
@@ -373,8 +393,8 @@ async function removeGameFromDB() {
           <v-divider></v-divider>
           <v-list
             density="compact"
-            @click:select="(value) => gameConnfig.wineRunner = value.id as string"
-            :selected="[gameConnfig.wineRunner]"
+            @click:select="(value) => gameConfig.wineRunner = value.id as string"
+            :selected="[gameConfig.wineRunner]"
             base-color="grey-darken-2"
             height="100%"
             max-height="150px"
@@ -407,8 +427,8 @@ async function removeGameFromDB() {
           <v-divider></v-divider>
           <v-list
             density="compact"
-            @click:select="(value) => gameConnfig.locale = value.id as string"
-            :selected="[gameConnfig.locale]"
+            @click:select="(value) => gameConfig.locale = value.id as string"
+            :selected="[gameConfig.locale]"
             base-color="grey-darken-2"
             height="100%"
             max-height="150px"

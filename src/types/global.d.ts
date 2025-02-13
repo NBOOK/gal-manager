@@ -26,7 +26,7 @@ declare global {
     weight: number;
   }
 
-  interface GameConnfig {
+  interface GameConfig {
     gameName: string;
     gameBrand: string;
     gameNameEN: string;
@@ -35,6 +35,9 @@ declare global {
     wineRunner: string;
     executable: string;
     locale: string;
+    controllerLayout: string;
+    steamCollections: string[];
+    lutrisCategories: string[];
   }
 
   type SyncStrategy = "l2r" | "r2l" | "newest" | "skip";

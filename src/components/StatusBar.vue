@@ -29,9 +29,6 @@ async function getDiskUsage() {
       "getDiskUsage",
       gameStore.config.value.gamesNetPath
     )) | 0;
-  deckDiskUsage.value /= 100;
-  sdCardDiskUsage.value /= 100;
-  netDiskUsage.value /= 100;
 }
 
 onMounted(async () => {
@@ -59,7 +56,7 @@ watch(
       style="border-top: #aaaaaa solid 1px; font-size: 14px"
     >
       <template v-slot:prepend>
-        <CloudIcon :fillPercentage="netDiskUsage" class="storage-icon" />
+        <CloudIcon :fillPercentage="netDiskUsage / 100" class="storage-icon" />
         <span class="ml-1 mr-3 text-truncate">
           {{
             Object.values(gameStore.games).filter((game) => game.inNetDisk)
@@ -67,14 +64,20 @@ watch(
           }}
           games
         </span>
-        <GamePadIcon :fillPercentage="deckDiskUsage" class="storage-icon" />
+        <GamePadIcon
+          :fillPercentage="deckDiskUsage / 100"
+          class="storage-icon"
+        />
         <span class="ml-1 mr-3 text-truncate">
           {{
             Object.values(gameStore.games).filter((game) => game.inDeck).length
           }}
           games
         </span>
-        <SDCardIcon :fillPercentage="sdCardDiskUsage" class="storage-icon" />
+        <SDCardIcon
+          :fillPercentage="sdCardDiskUsage / 100"
+          class="storage-icon"
+        />
         <span class="ml-1 mr-3 text-truncate">
           {{
             Object.values(gameStore.games).filter((game) => game.inSDCard)

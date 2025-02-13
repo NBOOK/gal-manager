@@ -4,6 +4,7 @@ import { spawn, exec } from "node:child_process";
 import sharp from "sharp";
 import path from "node:path";
 import { readVdf, VdfMap, writeVdf, getShortcutHash } from "steam-binary-vdf";
+import vdf from "vdf";
 import YAML from "yaml";
 import { Database as DatabaseType, Statement } from "better-sqlite3";
 import { MAIN_DIST } from "./main";
@@ -11,7 +12,63 @@ import Kuroshiro from "@sglkc/kuroshiro";
 import KuromojiAnalyzer from "@sglkc/kuroshiro-analyzer-kuromoji";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const Database = require("better-sqlite3");
+const SqliteDB = require("better-sqlite3");
+// const SteamCategories = require("steam-categories");
+
+// const levelDBPath =
+//   "/home/deck/.steam/steam/config/htmlcache/Local Storage/leveldb";
+// const cats = new SteamCat(levelDBPath, "341355059");
+// const collections = await cats.read();
+
+// 使用 async/await 方式
+// (async () => {
+//   try {
+//     // 创建 SteamCategories 实例
+//     const steamCategories = new SteamCategories(levelDBPath, "341355059");
+
+//     // 从数据库中读取 collections（read() 返回一个 Promise）
+//     const collections = await steamCategories.read();
+//     console.log("已加载 collections:", collections);
+
+//     // 获取所有 collection 的名称（移除了 "user-collections." 前缀）
+//     const names = steamCategories.list();
+//     console.log("Collection 名称列表:", names);
+
+//     const serializedCollections =
+//       steamCategories.serializeCollections(collections);
+//     console.log("序列化的 collections:", serializedCollections);
+
+//     const input = serializedCollections;
+//     let transformed = input.substr(0,2)==='01'?input.slice(2).match(/.{1,2}/g).join('00').concat('00'): input.slice(2);
+//     let iBuf = Buffer.from(transformed,'hex');
+//     let decoded = iconv.decode(iBuf,'utf16le');
+
+//     // 如果需要，可以通过 get() 方法获取某个具体的 collection 数据
+//     // const collectionData = steamCategories.get("someCollectionId");
+//     // console.log("某个 collection 的数据:", collectionData);
+
+//     // 添加一个新的 collection：
+//     // 参数 1 是 collection 的 id，参数 2 是包含其他数据的对象
+//     // const newCollection = steamCategories.add("newCollectionId", {
+//     //   exampleKey: "exampleValue",
+//     // });
+//     // console.log("添加的新 collection:", newCollection);
+
+//     // 如果需要删除某个 collection，可以调用 remove() 方法
+//     // const removed = steamCategories.remove("collectionIdToRemove");
+//     // console.log("删除操作是否成功:", removed);
+
+//     // 将修改后的 collections 保存回数据库
+//     // await steamCategories.save();
+//     // console.log("数据已保存");
+
+//     // 关闭数据库连接
+//     await steamCategories.close();
+//     console.log("数据库已关闭");
+//   } catch (err) {
+//     console.error("发生错误:", err);
+//   }
+// })();
 
 let sqliteDB: DatabaseType;
 const kuroshiro = new Kuroshiro();
@@ -51,10 +108,16 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
         try {
           // 如果是符号链接，解析目标路径并确定类型
           if (isSymbolicLink) {
-            result.symbolicTarget = await fs.promises.readlink(entryPath);
-            const stats = await fs.promises.stat(entryPath);
-            result.isDirectory = stats.isDirectory();
-            result.isFile = stats.isFile();
+            try {
+              result.symbolicTarget = await fs.promises.readlink(entryPath);
+              const stats = await fs.promises.stat(entryPath);
+              result.isDirectory = stats.isDirectory();
+              result.isFile = stats.isFile();
+            } catch (err) {
+              // 如果符号链接失效/指向的位置不存在，则删除这个符号链接并返回null
+              await fs.promises.unlink(entryPath);
+              result.basePath = "";
+            }
           }
 
           // 如果是目录（或符号链接指向目录），计算磁盘占用和时间戳
@@ -72,7 +135,7 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
       })
     );
 
-    return serializedEntries;
+    return serializedEntries.filter((entry) => entry.basePath !== "");
   } catch (err) {
     console.error("Error reading directory:", (err as Error).message);
     // throw err;
@@ -179,7 +242,7 @@ async function fileExists(filePath: string): Promise<boolean> {
 
 async function fetchJsonConfig(jsonPath?: string): Promise<any> {
   if (!jsonPath) {
-    jsonPath = path.join(os.homedir(), ".config", "gal-manager", "config.json");
+    jsonPath = path.join(os.homedir(), ".config", "GalManager", "config.json");
   } else if (jsonPath.startsWith("<MAIN_DIST>")) {
     jsonPath = path.join(MAIN_DIST, jsonPath.slice(11));
   } else if (jsonPath.startsWith("<HOME>")) {
@@ -202,7 +265,7 @@ async function fetchJsonConfig(jsonPath?: string): Promise<any> {
 
 async function saveJsonConfig(config: any, jsonPath?: string): Promise<void> {
   if (!jsonPath) {
-    jsonPath = path.join(os.homedir(), ".config", "gal-manager", "config.json");
+    jsonPath = path.join(os.homedir(), ".config", "GalManager", "config.json");
   } else if (jsonPath.startsWith("<MAIN_DIST>")) {
     jsonPath = path.join(MAIN_DIST, jsonPath.slice(11));
   } else if (jsonPath.startsWith("<HOME>")) {
@@ -323,7 +386,7 @@ async function getGameID(name: string): Promise<string> {
 }
 
 async function sqliteDBConnect(dbPath: string): Promise<void> {
-  sqliteDB = new Database(dbPath);
+  sqliteDB = new SqliteDB(dbPath);
 }
 
 async function sqliteDBInsert(
@@ -619,6 +682,26 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
   return map;
 }
 
+async function readVDF(filePath: string): Promise<any> {
+  try {
+    const fileContent = await fs.promises.readFile(filePath, "utf8");
+    const parsed = vdf.parse(fileContent);
+    return parsed;
+  } catch (error) {
+    throw new Error(`读取或解析 VDF 文件失败: ${error}`);
+  }
+}
+
+async function writeVDF(filePath: string, json: any): Promise<void> {
+  try {
+    const vdfString = vdf.dump(json);
+    console.log(vdfString);
+    await fs.promises.writeFile(filePath, vdfString, "utf8");
+  } catch (error) {
+    throw new Error(`写入 VDF 文件失败: ${error}`);
+  }
+}
+
 export default {
   scanDir,
   getDirDiskUsage,
@@ -643,4 +726,6 @@ export default {
   renameItem,
   removeItem,
   getFileInfos,
+  readVDF,
+  writeVDF,
 };

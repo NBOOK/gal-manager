@@ -12,7 +12,7 @@ const syncConfig = ref({} as { [baseName: string]: SaveSyncConfig });
 onMounted(async () => {
   syncConfig.value = await window.ipcRenderer.invoke(
     "fetchJsonConfig",
-    "<HOME>/.config/gal-manager/sync-config.json"
+    "<HOME>/.config/GalManager/sync-config.json"
   );
   if (Object.keys(syncConfig.value).length === 0) {
     syncConfig.value = await window.ipcRenderer.invoke(
@@ -43,7 +43,7 @@ async function saveAndScanBinds() {
   window.ipcRenderer.invoke(
     "saveJsonConfig",
     JSON.stringify(syncConfig.value),
-    "<HOME>/.config/gal-manager/sync-config.json"
+    "<HOME>/.config/GalManager/sync-config.json"
   );
   await scanBindDirs();
   loading.value = false;
@@ -86,7 +86,7 @@ async function saveAndScanDiffs() {
   window.ipcRenderer.invoke(
     "saveJsonConfig",
     JSON.stringify(syncConfig.value),
-    "<HOME>/.config/gal-manager/sync-config.json"
+    "<HOME>/.config/GalManager/sync-config.json"
   );
   await scanDiffs();
 

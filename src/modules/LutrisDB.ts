@@ -90,7 +90,7 @@ class LutrisDB {
     });
   }
 
-  async addGame(game: GameEntry, gameConfig: GameConnfig) {
+  async addGame(game: GameEntry, gameConfig: GameConfig) {
     // this.taskQueue.push({ action: "remove", game });
     // this.processQueue(); // @TOCHECK should we await this?
     await this.mutex.runExclusive(
@@ -102,7 +102,7 @@ class LutrisDB {
     await this.mutex.runExclusive(async () => await this._removeGame(game));
   }
 
-  private async _addGame(game: GameEntry, gameConfig: GameConnfig) {
+  private async _addGame(game: GameEntry, gameConfig: GameConfig) {
     console.log("Adding: ", game, gameConfig);
     const timestamp: number = Math.floor(Date.now() / 1000);
     const exePath = `${game.basePath}/${game.folderName}/${gameConfig.executable}`;
@@ -163,7 +163,7 @@ class LutrisDB {
     console.log("Images linked");
   }
 
-  private async linkImageAssets(game: GameEntry, gameConfig: GameConnfig) {
+  private async linkImageAssets(game: GameEntry, gameConfig: GameConfig) {
     await window.ipcRenderer.invoke(
       "createSymbolicLink",
       game.imageAssets.iconPath,

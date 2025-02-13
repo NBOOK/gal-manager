@@ -148,8 +148,14 @@ async function cleanup() {
         </div>
       </div>
     </v-container>
-
-    <SyncerCore :manager="gameStore.syncManager" />
+    <v-container
+      v-if="gameStore.syncManager.syncList.length > 0"
+      width="100vw"
+      max-height="100%"
+      height="100vh"
+    >
+      <SyncerCore :manager="gameStore.syncManager" />
+    </v-container>
   </v-overlay>
 </template>
 

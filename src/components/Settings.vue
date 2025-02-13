@@ -96,6 +96,43 @@ async function saveAndRestart() {
     "saveJsonConfig",
     JSON.stringify(config.value)
   );
+  if (
+    !(await window.ipcRenderer.invoke(
+      "fileExists",
+      `<HOME>/.config/GalManager/sync-config.json`
+    ))
+  ) {
+    await window.ipcRenderer.invoke(
+      "start-copy",
+      `<MAIN_DIST>/GalManager/sync-config_template.json`,
+      `<HOME>/.config/GalManager/sync-config.json`
+    );
+  }
+  if (
+    !(await window.ipcRenderer.invoke(
+      "fileExists",
+      `<HOME>/.config/GalManager/avg.vdf`
+    ))
+  ) {
+    await window.ipcRenderer.invoke(
+      "start-copy",
+      `<MAIN_DIST>/GalManager/controller_layouts/avg_template.vdf`,
+      `<HOME>/.config/GalManager/controller_layouts/avg.vdf`
+    );
+  }
+  if (
+    !(await window.ipcRenderer.invoke(
+      "fileExists",
+      `${config.value.steamControllerTemplatePath}/avg.vdf`
+    ))
+  ) {
+    await window.ipcRenderer.invoke(
+      "createSymbolicLink",
+      `<HOME>/.config/GalManager/avg.vdf`,
+      `${config.value.steamControllerTemplatePath}/avg.vdf`
+    );
+  }
+
   await window.ipcRenderer.invoke("restartApp");
 }
 </script>
@@ -268,6 +305,33 @@ async function saveAndRestart() {
               v-model="config.steamGridPath"
               label="Steam Grid Path"
               :rules="[fieldRequired, pathMustExist, endsWithSlash]"
+              :spellcheck="false"
+              variant="outlined"
+              density="compact"
+              class="mb-1"
+            />
+            <v-text-field
+              v-model="config.steamDBPath"
+              label="Steam LevelDB Path"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
+              :spellcheck="false"
+              variant="outlined"
+              density="compact"
+              class="mb-1"
+            />
+            <v-text-field
+              v-model="config.steamControllerTemplatePath"
+              label="Steam Controller Template Path"
+              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
+              :spellcheck="false"
+              variant="outlined"
+              density="compact"
+              class="mb-1"
+            />
+            <v-text-field
+              v-model="config.steamControllerConfigPath"
+              label="Steam Controller Configurations Path"
+              :rules="[fieldRequired, pathMustExist]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
