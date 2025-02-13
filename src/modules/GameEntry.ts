@@ -98,7 +98,9 @@ class GameEntry {
 
   async setup(entry: DirEntry) {
     this.basePath = entry.basePath;
-    // this.folderName = entry.name;
+    // if (entry.symbolicTarget) {
+    // handled in Loading.vue
+    // }
     if (entry.name.includes(" ‐ ")) this.splitter = " ‐ ";
     this.gameBrand = entry.name.split(this.splitter)[0];
     // this.gameBrandEN = this.gameBrand;
@@ -187,15 +189,22 @@ class GameEntry {
 
   async refreshLink() {
     if (!this.linked) return;
-    if (
-      (this.inDeck && this.basePath !== gameStore.config.value.gamesDataPath) ||
-      (this.inSDCard && this.basePath !== gameStore.config.value.gamesSDPath) ||
-      (this.inNetDisk &&
-        this.basePath !== gameStore.config.value.gamesExternalPath)
-    ) {
-      await this.unlink(false);
-      await this.link(false);
-      await this.refreshDiskUsage();
+
+    const mapping = [
+      { flag: "inDeck", path: gameStore.config.value.gamesDataPath },
+      { flag: "inSDCard", path: gameStore.config.value.gamesSDPath },
+      { flag: "inNetDisk", path: gameStore.config.value.gamesExternalPath },
+    ];
+
+    for (const { flag, path } of mapping) {
+      if (this[flag as keyof GameEntry]) {
+        if (this.linkedBasePath !== path) {
+          await this.unlink(false);
+          await this.link(false);
+          await this.refreshDiskUsage();
+        }
+        break;
+      }
     }
   }
 

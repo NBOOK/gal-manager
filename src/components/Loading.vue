@@ -47,6 +47,7 @@ async function scanGames() {
               `Linked folder ${linkedBasePath} is not in any of the game paths: ${paths}`
             );
           }
+          // console.log("Linked game", entry.name, "at", linkedBasePath);
           gameStore.games[entry.name].linkedBasePath = linkedBasePath;
         }
       });
