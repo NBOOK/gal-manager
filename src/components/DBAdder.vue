@@ -9,6 +9,7 @@ const emit = defineEmits(["proceed", "abort"]);
 const props = defineProps<{ game: GameEntry }>();
 const game = computed(() => props.game);
 const gameNameENCandidates = ref<VNTitle[]>([]);
+const allSteamCategories = ref<string[]>([]);
 const isMenuOpen = ref(false);
 const slugSync = ref(true);
 const executables = ref<string[]>([]);
@@ -44,7 +45,7 @@ const gameConfig = reactive<GameConfig>({
   executable: "",
   locale: "",
   controllerLayout: "avg.vdf",
-  steamCollections: ["Gal"],
+  steamCategories: [],
   lutrisCategories: [],
 });
 
@@ -113,20 +114,33 @@ watch(
 
     if (gameStore.config.locale) gameConfig.locale = gameStore.config.locale;
     else gameConfig.locale = "ja_JP.utf8";
+
+    // Steam
+    allSteamCategories.value = gameStore.steamDB.steamCategoriesNames.sort();
+    gameConfig.steamCategories = gameStore.steamDB.categoriesForGame(
+      props.game
+    );
+    if (
+      gameConfig.steamCategories.length === 0 &&
+      allSteamCategories.value.includes("Gal")
+    )
+      gameConfig.steamCategories.push("Gal");
   },
   { immediate: true }
 );
 
 async function addGameToDB() {
   dbAdding.value = true;
+  const nameChanged =
+    gameConfig.gameName !== props.game.gameName ||
+    gameConfig.gameBrand !== props.game.gameBrand;
+
   if (props.game.inDatabase > 0) {
     console.log("Game already in database! Removing it...");
-    await props.game.removeDB();
+    // set reAdd to true if the game name is not changed
+    await props.game.removeDB(!nameChanged);
   }
-  if (
-    gameConfig.gameName !== props.game.gameName ||
-    gameConfig.gameBrand !== props.game.gameBrand
-  ) {
+  if (nameChanged) {
     console.log("Game name changed! Updating it...");
     await props.game.rename(gameConfig);
   }
@@ -272,15 +286,15 @@ async function removeGameFromDB() {
       <!-- @TODO add lutris category support -->
       <v-row class="flex-grow-0">
         <v-select
-          label="Steam/Lutris Categories"
+          label="Steam Categories"
           density="compact"
           clearable
           chips
           closable-chips
           hide-selected
           multiple
-          :items="['Gal', 'Anime', 'RPG', 'Emulation', 'Rhythm']"
-          v-model="gameConfig.steamCollections"
+          :items="allSteamCategories"
+          v-model="gameConfig.steamCategories"
           variant="outlined"
           prepend-icon="$mdiTagMultiple"
           clear-icon="$mdiBackspaceOutline"

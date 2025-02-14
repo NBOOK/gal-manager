@@ -229,7 +229,7 @@ class GameEntry {
     }
   }
 
-  async removeDB() {
+  async removeDB(reAdd = false) {
     if (this.inLutrisDB) {
       console.log(`Removing ${this.folderName} from LutrisDB...`);
       await gameStore.lutrisDB.removeGame(this);
@@ -238,7 +238,7 @@ class GameEntry {
 
     if (this.inSteamDB) {
       console.log(`Removing ${this.folderName} from SteamDB...`);
-      await gameStore.steamDB.removeGame(this);
+      await gameStore.steamDB.removeGame(this, reAdd);
       // this.inSteamDB = false;
     }
   }

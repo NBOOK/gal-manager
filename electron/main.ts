@@ -243,4 +243,8 @@ function registerIpcMain() {
   ipcMain.handle('writeVDF', (_event, filePath: string, serializedJSON: string) => {
     return utils.writeVDF(filePath, JSON.parse(serializedJSON));
   });
+  ipcMain.handle('getSteamCategories', (_event, dbPath:string, steamID:string) => {
+    return utils.getSteamCategories(dbPath, steamID);
+  });
+
 }

@@ -33,6 +33,9 @@ function fieldRequired(value: string) {
 function endsWithSlash(path: string) {
   return !path.endsWith("/") || "Path must not ends with a slash";
 }
+function sameSteamID(value: string) {
+  return value.includes(config.value.SteamID) || "Steam ID must be the same";
+}
 
 const wineRunners = ref(["default"]);
 const winePrefixes = ref(["default"]);
@@ -293,9 +296,27 @@ async function saveAndRestart() {
               class="mb-1"
             />
             <v-text-field
+              v-model="config.steamID"
+              label="Steam ID"
+              :rules="[fieldRequired]"
+              :spellcheck="false"
+              variant="outlined"
+              density="compact"
+              class="mb-1"
+            />
+            <v-text-field
               v-model="config.steamShortcutPath"
               label="Steam Shortcuts Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, sameSteamID]"
+              :spellcheck="false"
+              variant="outlined"
+              density="compact"
+              class="mb-1"
+            />
+            <v-text-field
+              v-model="config.steamLocalConfigPath"
+              label="Steam Local Config Path"
+              :rules="[fieldRequired, pathMustExist, sameSteamID]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -304,7 +325,12 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.steamGridPath"
               label="Steam Grid Path"
-              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
+              :rules="[
+                fieldRequired,
+                pathMustExist,
+                endsWithSlash,
+                sameSteamID,
+              ]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -331,7 +357,12 @@ async function saveAndRestart() {
             <v-text-field
               v-model="config.steamControllerConfigPath"
               label="Steam Controller Configurations Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[
+                fieldRequired,
+                pathMustExist,
+                endsWithSlash,
+                sameSteamID,
+              ]"
               :spellcheck="false"
               variant="outlined"
               density="compact"

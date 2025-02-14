@@ -36,7 +36,7 @@ declare global {
     executable: string;
     locale: string;
     controllerLayout: string;
-    steamCollections: string[];
+    steamCategories: string[];
     lutrisCategories: string[];
   }
 
@@ -58,6 +58,13 @@ declare global {
     remotePath: string;
     localPath: string;
     items: string[];
+  }
+
+  interface SteamCategory {
+    id: string;
+    name: string;
+    addded: number[];
+    removed: number[];
   }
 }
 export {};

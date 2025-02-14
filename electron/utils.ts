@@ -13,63 +13,9 @@ import KuromojiAnalyzer from "@sglkc/kuroshiro-analyzer-kuromoji";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const SqliteDB = require("better-sqlite3");
-// const SteamCategories = require("steam-categories");
+import { SteamCategories } from "./steam-categories";
 
-// const levelDBPath =
-//   "/home/deck/.steam/steam/config/htmlcache/Local Storage/leveldb";
-// const cats = new SteamCat(levelDBPath, "341355059");
-// const collections = await cats.read();
-
-// 使用 async/await 方式
-// (async () => {
-//   try {
-//     // 创建 SteamCategories 实例
-//     const steamCategories = new SteamCategories(levelDBPath, "341355059");
-
-//     // 从数据库中读取 collections（read() 返回一个 Promise）
-//     const collections = await steamCategories.read();
-//     console.log("已加载 collections:", collections);
-
-//     // 获取所有 collection 的名称（移除了 "user-collections." 前缀）
-//     const names = steamCategories.list();
-//     console.log("Collection 名称列表:", names);
-
-//     const serializedCollections =
-//       steamCategories.serializeCollections(collections);
-//     console.log("序列化的 collections:", serializedCollections);
-
-//     const input = serializedCollections;
-//     let transformed = input.substr(0,2)==='01'?input.slice(2).match(/.{1,2}/g).join('00').concat('00'): input.slice(2);
-//     let iBuf = Buffer.from(transformed,'hex');
-//     let decoded = iconv.decode(iBuf,'utf16le');
-
-//     // 如果需要，可以通过 get() 方法获取某个具体的 collection 数据
-//     // const collectionData = steamCategories.get("someCollectionId");
-//     // console.log("某个 collection 的数据:", collectionData);
-
-//     // 添加一个新的 collection：
-//     // 参数 1 是 collection 的 id，参数 2 是包含其他数据的对象
-//     // const newCollection = steamCategories.add("newCollectionId", {
-//     //   exampleKey: "exampleValue",
-//     // });
-//     // console.log("添加的新 collection:", newCollection);
-
-//     // 如果需要删除某个 collection，可以调用 remove() 方法
-//     // const removed = steamCategories.remove("collectionIdToRemove");
-//     // console.log("删除操作是否成功:", removed);
-
-//     // 将修改后的 collections 保存回数据库
-//     // await steamCategories.save();
-//     // console.log("数据已保存");
-
-//     // 关闭数据库连接
-//     await steamCategories.close();
-//     console.log("数据库已关闭");
-//   } catch (err) {
-//     console.error("发生错误:", err);
-//   }
-// })();
-
+let steamCat: SteamCategories;
 let sqliteDB: DatabaseType;
 const kuroshiro = new Kuroshiro();
 // (async () => {
@@ -702,6 +648,27 @@ async function writeVDF(filePath: string, json: any): Promise<void> {
   }
 }
 
+async function getSteamCategories(dbPath: string, steamId: string) {
+  try {
+    steamCat = new SteamCategories(dbPath, steamId);
+    const categories = await steamCat.read();
+    await steamCat.close();
+
+    return Object.values(categories["1"])
+      .filter(
+        (category: any) =>
+          category.is_deleted !== true &&
+          category.key.includes("user-collections")
+      )
+      .map((category: any) => category.value);
+    // category.value.added stores the AppID of steam games
+    // we only need category.value.id and category.value.name
+  } catch (error) {
+    console.error("Error setting up SteamCategories:", error);
+    return [];
+  }
+}
+
 export default {
   scanDir,
   getDirDiskUsage,
@@ -728,4 +695,5 @@ export default {
   getFileInfos,
   readVDF,
   writeVDF,
+  getSteamCategories,
 };
