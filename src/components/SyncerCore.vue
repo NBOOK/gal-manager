@@ -32,7 +32,7 @@ const totalSize = computed(() => {
       accDir +
       dirSyncer.fileSyncers.reduce(
         (accFile: number, fileSyncer: FileSyncer) => {
-          if (fileSyncer.behavior.startsWith("delete"))
+          if (fileSyncer.behavior.startsWith("deleteGame"))
             // no file copy here
             return accFile;
           else if (fileSyncer.behavior.endsWith("R"))

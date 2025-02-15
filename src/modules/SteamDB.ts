@@ -1,7 +1,6 @@
 import GameEntry from "@/modules/GameEntry";
 import { VdfMap } from "steam-binary-vdf";
 import { Mutex } from "async-mutex";
-import { de } from "vuetify/locale";
 
 class SteamDB {
   // paths, ID
@@ -128,6 +127,7 @@ class SteamDB {
     );
     console.log("VDF- file written");
 
+    // ---------- Unlink image assets ----------
     console.log("Unlinking image assets", game, appID);
     await this.unlinkImageAssets(game, appID);
     console.log("Image assets unlinked");
@@ -225,6 +225,7 @@ class SteamDB {
     );
     console.log("VDF+ file written");
 
+    // ---------- Link image assets ----------
     console.log("Linking image assets", game, appID);
     await this.linkImageAssets(game, appID);
     console.log("Image assets linked");

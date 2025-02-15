@@ -19,6 +19,7 @@ class LutrisDB {
   private lutrisGameList: Record<string, string> = {}; // read cache game list
   private lutrisGameIndices: Record<string, number> = {};
   private lustrisPerGameConfigs: Record<string, any> = {}; // read game yaml config
+  lutrisCategories: Record<string, number> = {}; // cat name to index
 
   private mutex = new Mutex();
 
@@ -88,6 +89,11 @@ class LutrisDB {
 
       this.lutrisGameIndices[gameName] = lutrisGameIndex;
     });
+
+    this.lutrisCategories = await window.ipcRenderer.invoke(
+      "sqliteDBOp",
+      "getCategories"
+    );
   }
 
   async addGame(game: GameEntry, gameConfig: GameConfig) {
@@ -125,7 +131,7 @@ class LutrisDB {
       lutrisPerGameConfig.wine = { version: gameConfig.wineRunner };
     }
 
-    // save per game config
+    // -------------------- save per game config --------------------
     console.log("Saving pergame config: ", lutrisPerGameConfig);
     await window.ipcRenderer.invoke(
       "saveYamlConfig",
@@ -135,7 +141,7 @@ class LutrisDB {
     this.lustrisPerGameConfigs[game.gameName] = lutrisPerGameConfig;
     console.log("Per game config saved");
 
-    // update lutris game-paths.json
+    // -------------------- update lutris game-paths.json --------------------
     console.log("Updating game list");
     const lutrisGameIndex = this.getGameIndex(game);
     this.lutrisGameIndices[game.gameName] = lutrisGameIndex;
@@ -147,9 +153,9 @@ class LutrisDB {
     );
     console.log("Game list updated");
 
-    // update lutrisDB
+    // -------------------- update lutrisDB --------------------
     console.log("Updating lutrisDB+");
-    await window.ipcRenderer.invoke("sqliteDBOp", "insert", {
+    await window.ipcRenderer.invoke("sqliteDBOp", "insertGame", {
       gameNameEN: gameConfig.gameNameEN,
       gameNameSlug: gameConfig.gameNameSlug,
       lutrisGameIndex: lutrisGameIndex,
@@ -157,10 +163,24 @@ class LutrisDB {
     });
     console.log("lutrisDB updated+");
 
-    // link images, not awaiting is OK
+    // -------------------- link images, not awaiting is OK --------------------
     console.log("Linking images");
     await this.linkImageAssets(game, gameConfig);
     console.log("Images linked");
+
+    // -------------------- update lutrisDB Categories --------------------
+    console.log("Updating lutrisDB Categories");
+    console.log("lutrisCategories: ", this.lutrisCategories);
+    console.log("gameConfig.lutrisCategories: ", gameConfig.lutrisCategories);
+    const lutrisCategoryIndeces = gameConfig.lutrisCategories.map(
+      (category) => this.lutrisCategories[category]
+    );
+    console.log("lutrisCategoryIndeces: ", lutrisCategoryIndeces);
+    await window.ipcRenderer.invoke("sqliteDBOp", "setGameCategories", {
+      lutrisGameIndex: lutrisGameIndex,
+      lutrisCategoryIndeces: JSON.stringify(lutrisCategoryIndeces),
+    });
+    console.log("lutrisDB Categories updated");
   }
 
   private async linkImageAssets(game: GameEntry, gameConfig: GameConfig) {
@@ -222,7 +242,7 @@ class LutrisDB {
 
     // update lutrisDB
     console.log("Updating lutrisDB-");
-    await window.ipcRenderer.invoke("sqliteDBOp", "delete", {
+    await window.ipcRenderer.invoke("sqliteDBOp", "deleteGame", {
       lutrisGameIndex: lutrisGameIndex,
     });
     console.log("lutrisDB- updated");
@@ -242,22 +262,13 @@ class LutrisDB {
       `${this.lutrisIconPath}/lutris_${game.gameNameSlug}.png`
     );
     console.log("Images unlinked");
+
+    // update lutrisDB Categories
+    await window.ipcRenderer.invoke("sqliteDBOp", "setGameCategories", {
+      lutrisGameIndex: lutrisGameIndex,
+      lutrisCategoryIndeces: JSON.stringify([]),
+    });
   }
-
-  // async getGameConfig(gameConfigName: string): Promise<Record<string, string>> {
-  //   return await window.ipcRenderer.invoke(
-  //     "fetchYamlConfig",
-  //     `${this.lutrisGameConfigPath}/${gameConfigName}.yml`
-  //   );
-  // }
-
-  // async saveGameConfig(gameConfigName: string, config: Record<string, string>) {
-  //   return await window.ipcRenderer.invoke(
-  //     "saveYamlConfig",
-  //     config,
-  //     `${this.lutrisGameConfigPath}/${gameConfigName}.yml`
-  //   );
-  // }
 
   inDB(game: GameEntry): boolean {
     return this.lutrisGameIndices[game.gameName] !== undefined;
@@ -282,7 +293,7 @@ class LutrisDB {
     const lutrisGameIndex = this.getGameIndex(game);
     const gameProperties = await window.ipcRenderer.invoke(
       "sqliteDBOp",
-      "query",
+      "queryGame",
       {
         lutrisGameIndex: lutrisGameIndex,
       }
@@ -303,6 +314,21 @@ class LutrisDB {
 
   getPerGameConfig(game: GameEntry): Record<string, any> {
     return this.lustrisPerGameConfigs[game.gameName];
+  }
+
+  async categoriesForGame(game: GameEntry): Promise<string[]> {
+    if (!this.inDB(game)) {
+      return [];
+    }
+    const lutrisGameIndex = this.getGameIndex(game);
+    const categories = (await window.ipcRenderer.invoke(
+      "sqliteDBOp",
+      "getGameCategories",
+      {
+        lutrisGameIndex: lutrisGameIndex,
+      }
+    )) as { id: number; name: string }[];
+    return categories.map((category) => category.name);
   }
 }
 

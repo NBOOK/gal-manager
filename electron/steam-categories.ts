@@ -34,11 +34,11 @@ export class SteamCategories {
   private keyPrefix: string;
 
   constructor(dbPath: string, steamid: string) {
-    console.log("SteamCategories constructor", dbPath, steamid);
+    // console.log("SteamCategories constructor", dbPath, steamid);
     this.dbPath = dbPath;
     this.steam3Id = steamid;
     this.keyPrefix = `_https://steamloopback.host\u0000\u0001U${this.steam3Id}-cloud-storage-namespace`;
-    console.log("SteamCategories constructor", this.keyPrefix);
+    // console.log("SteamCategories constructor", this.keyPrefix);
   }
 
   /**

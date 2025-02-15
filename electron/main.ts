@@ -1,14 +1,8 @@
-import { app, BrowserWindow, ipcMain, RelaunchOptions, shell } from "electron";
-// import { createRequire } from 'node:module'
+import { app, BrowserWindow, dialog } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import os from "node:os";
-import fs from "node:fs";
-import { VdfMap } from "steam-binary-vdf";
-import utils from "./utils";
-import { execFile } from "node:child_process";
-// import { fstat } from 'node:fs';
-
+import { execSync } from "node:child_process";
+import registerIpcMain from "./ipc-registration";
 // check if we are running in development mode
 const isDev = process.env.NODE_ENV === "development";
 
@@ -81,170 +75,64 @@ app.on("activate", () => {
 });
 
 app.whenReady().then(() => {
-  registerIpcMain();
+  closeSteamOrQuit();
+  registerIpcMain(win, MAIN_DIST);
   createWindow();
   // Menu.setApplicationMenu(null)
 });
 
-// prettier-ignore
-function registerIpcMain() {
-  ipcMain.handle('restartApp', () => {
-    const options: RelaunchOptions = {
-      args: process.argv.slice(1).concat(['--relaunch']),
-      execPath: process.execPath
-    };
-    // Fix for .AppImage
-    if (app.isPackaged && process.env.APPIMAGE) {
-      execFile(process.env.APPIMAGE, options.args);
-      app.quit();
-      return;
-    }
-    app.relaunch(options);
-    app.quit();
-  });
-  ipcMain.handle('quitApp', () => {
-    app.quit();
-  });
-  ipcMain.handle('openDevTools', () => {
-    win?.webContents.openDevTools();
-  });
-  ipcMain.handle('scanDir', (_event, dirPath: string) => {
-    if (dirPath.startsWith("<MAIN_DIST>")) {
-      dirPath = path.join(MAIN_DIST, dirPath.slice(11));
-    } else if (dirPath.startsWith("<HOME>")) {
-      dirPath = path.join(os.homedir(), dirPath.slice(6));
-    }
-    return utils.scanDir(dirPath)
-  });
-  ipcMain.handle('getDirDiskUsage', (_event, dirPath: string) => {
-    return utils.getDirDiskUsage(dirPath)
-  });
-  ipcMain.handle('getDiskUsage', (_event, dirPath: string) => {
-    return utils.getDiskUsage(dirPath)
-  });
-  ipcMain.handle('fileExists', (_event, filePath: string) => {
-    if (filePath.startsWith("<MAIN_DIST>")) {
-      filePath = path.join(MAIN_DIST, filePath.slice(11));
-    } else if (filePath.startsWith("<HOME>")) {
-      filePath = path.join(os.homedir(), filePath.slice(6));
-    }
-    return utils.fileExists(filePath)
-  });
-  ipcMain.handle('resizeImage', (_event, sourcePath: string, targetWidth: number, format: 'jpg' | 'webp', compression: number) => {
-    return utils.resizeImage(sourcePath, targetWidth, format, compression)
-  });
-  ipcMain.handle('fetchJsonConfig', (_event, jsonPath?: string) => {
-    return utils.fetchJsonConfig(jsonPath)
-  });
-  ipcMain.handle('saveJsonConfig', (_event, serializedConfig: string, jsonPath?: string) => {
-    const config = JSON.parse(serializedConfig)
-    return utils.saveJsonConfig(config, jsonPath)
-  });
-  ipcMain.handle('fetchYamlConfig', (_event, yamlPath: string) => {
-    return utils.fetchYamlConfig(yamlPath)
-  });
-  ipcMain.handle('saveYamlConfig', (_event, serializedConfig: string, yamlPath: string) => {
-    const config = JSON.parse(serializedConfig)
-    return utils.saveYamlConfig(config, yamlPath)
-  });
-  ipcMain.handle('createSymbolicLink', (_event, source: string, target: string) => {
-    return utils.createSymbolicLink(source, target)
-  });
-  ipcMain.handle('removeSymbolicLink', (_event, target: string) => {
-    return utils.removeSymbolicLink(target)
-  });
-  ipcMain.handle('readVdfFile', (_event, filePath: string) => {
-    return utils.readVdfFile(filePath)
-  });
-  ipcMain.handle('writeVdfFile', (_event, filePath: string, serializedVDF: string) => {
-    const vdf: VdfMap = JSON.parse(serializedVDF)
-    return utils.writeVdfFile(filePath, vdf)
-  });
-  ipcMain.handle('getGameID', (_event, name: string) => {
-    return utils.getGameID(name)
-  });
-  ipcMain.handle('readFile', (_event, filePath: string, options?: { encoding?: BufferEncoding, flag?: string }) => {
-    return fs.promises.readFile(filePath, options || 'utf-8');
-  });
-  ipcMain.handle('writeFile', (_event, filePath: string, data: any, options?: { encoding?: BufferEncoding, flag?: string }) => {
-    return fs.promises.writeFile(filePath, data, options || 'utf-8');
-  });
-  ipcMain.handle('sqliteDBOp', (_event, op: string, params: any) => {
-    return utils.sqliteDBOp(op, params);
-  });
-  ipcMain.handle('kuroshiroOp', (_event, op: string, params: any) => {
-    return utils.kuroshiroOp(op, params)
-  });
-  ipcMain.handle('openExternal', (_event, url: string) => {
-    return shell.openExternal(url)
-  });
-  ipcMain.handle('openPath', (_event, openpath: string) => {
-    if (openpath.startsWith("<MAIN_DIST>")) {
-      openpath = path.join(MAIN_DIST, openpath.slice(11));
-    } else if (openpath.startsWith("<HOME>")) {
-      openpath = path.join(os.homedir(), openpath.slice(6));
-    }
-    return shell.openPath(openpath)
-  });
-  ipcMain.handle('showItemInFolder', (_event, openpath: string) => {
-    if (openpath.startsWith("<MAIN_DIST>")) {
-      openpath = path.join(MAIN_DIST, openpath.slice(11));
-    } else if (openpath.startsWith("<HOME>")) {
-      openpath = path.join(os.homedir(), openpath.slice(6));
-    }
-    return shell.showItemInFolder(openpath)
-  });
-  ipcMain.handle('getFileNameWithType', (_event, filePath: string, format?: string) => {
-    return utils.getFileNameWithType(filePath, format)
-  });
-  ipcMain.handle('renameItem', (_event, oldPath: string, newPath: string) => {
-    return utils.renameItem(oldPath, newPath)
-  });
-  ipcMain.handle('removeItem', (_event, path: string) => {
-    return utils.removeItem(path)
-  });
-  ipcMain.handle('start-copy', async (event, source:string, destination:string, dirOnly=false, include:string[]=[], exclude:string[]=[]) => {
-    if (source.startsWith("<MAIN_DIST>")) {
-      source = path.join(MAIN_DIST, source.slice(11));
-    } else if (source.startsWith("<HOME>")) {
-      source = path.join(os.homedir(), source.slice(6));
-    }
-    if (destination.startsWith("<MAIN_DIST>")) {
-      destination = path.join(MAIN_DIST, destination.slice(11));
-    } else if (destination.startsWith("<HOME>")) {
-      destination = path.join(os.homedir(), destination.slice(6));
-    }
-    try {
-      if ((await fs.promises.stat(source)).isDirectory()) {
-        await utils.copyDirectory(source, destination, dirOnly, include, exclude, event);
-      } 
-      else {
-        const startWithExclude = exclude.some((excludePath) => {
-          return source.startsWith(excludePath);
-        });
-        const isInclude = include.includes(source);
-        if (startWithExclude && !isInclude) return;
-        await utils.copyFileWithProgress(source, destination, event);
-      }
-      event.sender.send('copy-finished', { success: true });
-    } catch (error) {
-      event.sender.send('copy-finished', { success: false, error: (error as Error).message });
-    }
-  });
-  ipcMain.handle('readlink', (_event, path: string) => {
-    return fs.promises.readlink(path);
-  });
-  ipcMain.handle('getFileInfos', (_event, filePath: string) => {
-    return utils.getFileInfos(filePath);
-  });
-  ipcMain.handle('readVDF', (_event, filePath: string) => {
-    return utils.readVDF(filePath);
-  });
-  ipcMain.handle('writeVDF', (_event, filePath: string, serializedJSON: string) => {
-    return utils.writeVDF(filePath, JSON.parse(serializedJSON));
-  });
-  ipcMain.handle('getSteamCategories', (_event, dbPath:string, steamID:string) => {
-    return utils.getSteamCategories(dbPath, steamID);
-  });
+function closeSteamOrQuit() {
+  if (isSteamRunning()) {
+    const result = dialog.showMessageBoxSync({
+      type: "warning",
+      title: "Steam is Running",
+      message:
+        "Please close Steam before running this application. Do you want to close Steam now?",
+      buttons: ["Yes", "No"],
+      defaultId: 0, // 默认选中 Yes
+      cancelId: 1, // 按 Esc 或关闭窗口时视为 No
+    });
 
+    if (result === 0) {
+      // 用户选择 Yes
+      killSteam();
+    } else {
+      // 用户选择 No
+      app.quit();
+    }
+  }
+}
+
+function isSteamRunning() {
+  try {
+    execSync("pgrep -x steam"); // 成功执行表示 Steam 运行中
+    return true;
+  } catch (error) {
+    return false; // 没找到进程
+  }
+}
+
+function killSteam() {
+  try {
+    execSync("pkill -x steam"); // 直接结束所有 steam 进程
+    console.log("Steam 终止命令已发送，等待进程退出...");
+
+    // 轮询检测 Steam 是否彻底关闭
+    let maxRetries = 20;
+    while (isSteamRunning() && maxRetries > 0) {
+      console.log(`Steam 未关闭，剩余重试次数：${maxRetries}`);
+      execSync("sleep 1"); // 等待 1 秒
+      maxRetries--;
+    }
+
+    if (isSteamRunning()) {
+      console.log("Steam 未能成功关闭");
+      app.quit();
+    } else {
+      console.log("Steam 已成功关闭");
+    }
+  } catch (error) {
+    console.error("关闭 Steam 失败:", error);
+    app.quit();
+  }
 }

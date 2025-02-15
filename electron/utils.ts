@@ -335,7 +335,7 @@ async function sqliteDBConnect(dbPath: string): Promise<void> {
   sqliteDB = new SqliteDB(dbPath);
 }
 
-async function sqliteDBInsert(
+async function sqliteDBInsertGame(
   gameNameEN: string,
   gameNameSlug: string,
   lutrisGameIndex: number,
@@ -370,7 +370,7 @@ async function sqliteDBDelete(lutrisGameIndex: number): Promise<void> {
   statement.run(lutrisGameIndex);
 }
 
-async function sqliteDBQuery(lutrisGameIndex: number): Promise<{
+async function sqliteDBQueryGame(lutrisGameIndex: number): Promise<{
   gameNameEN: string;
   gameNameSlug: string;
   gameConfigName: string;
@@ -392,29 +392,86 @@ async function sqliteDBQuery(lutrisGameIndex: number): Promise<{
     : null;
 }
 
+async function sqliteDBGetCategories(): Promise<Record<string, number>> {
+  const sqlQuery = `SELECT id, name FROM categories;`;
+  const statement: Statement = sqliteDB.prepare(sqlQuery);
+  const results = statement.all() as { id: number; name: string }[];
+  const categories: Record<string, number> = {};
+  results.forEach((result) => {
+    categories[result.name] = result.id;
+  });
+  return categories;
+}
+
+async function sqliteDBGetGameCategories(lutrisGameIndex: number) {
+  const sqlQuery = `
+    SELECT categories.id, categories.name
+    FROM categories
+    JOIN games_categories ON categories.id = games_categories.category_id
+    WHERE games_categories.game_id = ?;
+  `;
+  const statement: Statement = sqliteDB.prepare(sqlQuery);
+  const results = statement.all(lutrisGameIndex) as {
+    id: number;
+    name: string;
+  }[];
+  return results;
+}
+
+async function sqliteDBSetGameCategories(
+  lutrisGameIndex: number,
+  lutrisCategoryIndeces: number[]
+) {
+  const sqlDelete = `DELETE FROM games_categories WHERE game_id = ?;`;
+  let statement: Statement = sqliteDB.prepare(sqlDelete);
+  statement.run(lutrisGameIndex);
+  lutrisCategoryIndeces.forEach((categoryIndex) => {
+    const sqlInsert = `INSERT INTO games_categories (game_id, category_id) VALUES (?, ?);`;
+    const data = [lutrisGameIndex, categoryIndex];
+    statement = sqliteDB.prepare(sqlInsert);
+    statement.run(data);
+  });
+}
+
 async function sqliteDBOp(op: string, params: any): Promise<any> {
   try {
     switch (op) {
       case "connect":
-        // Connect operation requires dbPath
         return await sqliteDBConnect(params.dbPath);
 
-      case "insert":
+      case "insertGame":
         // Insert operation requires gameNameEN, gameNameSlug, lutrisGameIndex, and timestamp
-        return await sqliteDBInsert(
+        return await sqliteDBInsertGame(
           params.gameNameEN,
           params.gameNameSlug,
           params.lutrisGameIndex,
           params.timestamp
         );
 
-      case "delete":
+      case "deleteGame":
         // Delete operation requires lutrisGameIndex
         return await sqliteDBDelete(params.lutrisGameIndex);
 
-      case "query":
+      case "queryGame":
         // Query operation requires lutrisGameIndex
-        return await sqliteDBQuery(params.lutrisGameIndex);
+        return await sqliteDBQueryGame(params.lutrisGameIndex);
+
+      case "getCategories":
+        return await sqliteDBGetCategories();
+
+      case "getGameCategories":
+        return await sqliteDBGetGameCategories(params.lutrisGameIndex);
+
+      case "setGameCategories":
+        console.log("setGameCategories:", params);
+        console.log(
+          "categoryIndices:",
+          JSON.parse(params.lutrisCategoryIndeces)
+        );
+        return await sqliteDBSetGameCategories(
+          params.lutrisGameIndex,
+          JSON.parse(params.lutrisCategoryIndeces)
+        );
 
       default:
         throw new Error(`Unsupported operation: ${op}`);
@@ -651,8 +708,22 @@ async function writeVDF(filePath: string, json: any): Promise<void> {
 async function getSteamCategories(dbPath: string, steamId: string) {
   try {
     steamCat = new SteamCategories(dbPath, steamId);
-    const categories = await steamCat.read();
+    let categories;
+    for (let i = 0; i < 20; i++) {
+      try {
+        categories = await steamCat.read();
+        break;
+      } catch (error) {
+        console.error(`Attempt ${i + 1} failed`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+    if (!categories) {
+      return [];
+    }
     await steamCat.close();
+
+    console.log("SteamCategories read.");
 
     return Object.values(categories["1"])
       .filter(

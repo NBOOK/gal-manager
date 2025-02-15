@@ -10,6 +10,7 @@ const props = defineProps<{ game: GameEntry }>();
 const game = computed(() => props.game);
 const gameNameENCandidates = ref<VNTitle[]>([]);
 const allSteamCategories = ref<string[]>([]);
+const allLutrisCategories = ref<string[]>([]);
 const isMenuOpen = ref(false);
 const slugSync = ref(true);
 const executables = ref<string[]>([]);
@@ -115,6 +116,18 @@ watch(
     if (gameStore.config.locale) gameConfig.locale = gameStore.config.locale;
     else gameConfig.locale = "ja_JP.utf8";
 
+    allLutrisCategories.value = Object.keys(
+      gameStore.lutrisDB.lutrisCategories
+    ).sort();
+    gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
+      props.game
+    );
+    if (
+      gameConfig.lutrisCategories.length === 0 &&
+      allLutrisCategories.value.includes("Gal")
+    )
+      gameConfig.lutrisCategories.push("Gal");
+
     // Steam
     allSteamCategories.value = gameStore.steamDB.steamCategoriesNames.sort();
     gameConfig.steamCategories = gameStore.steamDB.categoriesForGame(
@@ -159,341 +172,337 @@ async function removeGameFromDB() {
 
 <template>
   <v-carousel-item>
-    <v-card rounded="lg" height="100%" class="pa-8 d-flex flex-column">
-      <!-- ------------------------- Orig Title ------------------------------- -->
-      <v-row class="flex-grow-0">
-        <v-text-field
-          density="compact"
-          label="Orig Title"
-          variant="outlined"
-          clearable
-          clear-icon="$mdiBackspaceOutline"
-          placeholder="Game's orginal title."
-          prepend-icon="$mdiIdeogramCjkVariant"
-          :spellcheck="false"
-          v-model="gameConfig.gameName"
-          class="vn-title-textinput"
-        >
-          <template #append-inner>
-            <v-icon
-              style="cursor: pointer"
-              icon="$mdiSearchWeb"
-              @click="getGameNameENCandidates"
-            ></v-icon>
-          </template> </v-text-field
-      ></v-row>
-
-      <!-- ------------------------- Eng Title ------------------------------- -->
-      <v-row class="flex-grow-0">
-        <v-text-field
-          density="compact"
-          label="EN Title"
-          variant="outlined"
-          clearable
-          clear-icon="$mdiBackspaceOutline"
-          placeholder="Game's English/romanized title."
-          prepend-icon="$mdiAlphabeticalVariant"
-          :spellcheck="false"
-          :loading="enTitleLoading"
-          v-model="gameConfig.gameNameEN"
-          :bg-color="gameConfig.gameNameEN ? enTitleColor : ''"
-          @input="
-            () => {
-              enTitleColor = '';
-              slugTitleColor = '';
-              isMenuOpen = false;
-            }
-          "
-          class="vn-title-textinput"
-        >
-          <template #append-inner>
-            <v-icon
-              style="cursor: pointer"
-              :class="{ 'rotate-icon': isMenuOpen }"
-              icon="$mdiMenuDown"
-            ></v-icon>
-          </template>
-          <v-menu
-            activator="parent"
-            location="bottom center"
-            origin="top center"
-            max-height="300"
-            v-model="isMenuOpen"
-            transition="slide-y-transition"
+    <v-card rounded="lg" height="100%" class="pa-0 d-flex flex-column">
+      <v-list class="ma-0 pa-8">
+        <!-- ------------------------- Orig Title ------------------------------- -->
+        <v-row class="flex-grow-0">
+          <v-text-field
+            density="compact"
+            label="Orig Title"
+            variant="outlined"
+            clearable
+            clear-icon="$mdiBackspaceOutline"
+            placeholder="Game's orginal title."
+            prepend-icon="$mdiIdeogramCjkVariant"
+            :spellcheck="false"
+            v-model="gameConfig.gameName"
+            class="vn-title-textinput"
           >
-            <v-list color="primary">
+            <template #append-inner>
+              <v-icon
+                style="cursor: pointer"
+                icon="$mdiSearchWeb"
+                @click="getGameNameENCandidates"
+              ></v-icon>
+            </template> </v-text-field
+        ></v-row>
+
+        <!-- ------------------------- Eng Title ------------------------------- -->
+        <v-row class="flex-grow-0">
+          <v-text-field
+            density="compact"
+            label="EN Title"
+            variant="outlined"
+            clearable
+            clear-icon="$mdiBackspaceOutline"
+            placeholder="Game's English/romanized title."
+            prepend-icon="$mdiAlphabeticalVariant"
+            :spellcheck="false"
+            :loading="enTitleLoading"
+            v-model="gameConfig.gameNameEN"
+            :bg-color="gameConfig.gameNameEN ? enTitleColor : ''"
+            @input="
+              () => {
+                enTitleColor = '';
+                slugTitleColor = '';
+                isMenuOpen = false;
+              }
+            "
+            class="vn-title-textinput"
+          >
+            <template #append-inner>
+              <v-icon
+                style="cursor: pointer"
+                :class="{ 'rotate-icon': isMenuOpen }"
+                icon="$mdiMenuDown"
+              ></v-icon>
+            </template>
+            <v-menu
+              activator="parent"
+              location="bottom center"
+              origin="top center"
+              max-height="300"
+              v-model="isMenuOpen"
+              transition="slide-y-transition"
+            >
+              <v-list color="primary">
+                <v-list-item
+                  v-for="item in gameNameENCandidates"
+                  border
+                  :key="item.title"
+                  :value="item.title"
+                  :title="item.title"
+                  :subtitle="item.origTitle"
+                  :class="'vn-title-kind-' + item.kind"
+                  @click="
+                    () => {
+                      gameConfig.gameNameEN = item.title;
+                      enTitleColor = titleKindColor[item.kind];
+                      slugTitleColor = '';
+                    }
+                  "
+                >
+                  <template #append>
+                    <v-progress-circular
+                      :model-value="item.weight"
+                      :width="3"
+                      size="24"
+                      color="grey-darken-4"
+                    ></v-progress-circular>
+                  </template>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </v-text-field>
+        </v-row>
+
+        <!-- ------------------------- Slug Title ------------------------------- -->
+        <v-row class="flex-grow-0">
+          <v-text-field
+            density="compact"
+            label="Slug"
+            variant="outlined"
+            clearable
+            clear-icon="$mdiBackspaceOutline"
+            placeholder="Game's title slug (identifier)."
+            prepend-icon="$mdiFingerprint"
+            :spellcheck="false"
+            v-model="gameConfig.gameNameSlug"
+            :bg-color="gameConfig.gameNameSlug ? slugTitleColor : ''"
+            @input="
+              () => {
+                slugTitleColor = '';
+                slugSync = false;
+              }
+            "
+            class="vn-title-textinput"
+          >
+            <template #append-inner>
+              <v-icon
+                style="cursor: pointer"
+                :icon="slugSync ? '$mdiAutorenew' : '$mdiSyncOff'"
+                @click="slugSync = !slugSync"
+              ></v-icon>
+            </template> </v-text-field
+        ></v-row>
+
+        <!-- ------------------------- Lutris Categories ------------------------------- -->
+        <v-row class="flex-grow-0">
+          <v-select
+            label="Lutris Categories"
+            density="compact"
+            clearable
+            chips
+            closable-chips
+            hide-selected
+            multiple
+            :items="allLutrisCategories"
+            v-model="gameConfig.lutrisCategories"
+            variant="outlined"
+            prepend-icon="$mdiTagMultiple"
+            clear-icon="$mdiBackspaceOutline"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+          ></v-select>
+        </v-row>
+
+        <!-- ------------------------- Steam Categories ------------------------------- -->
+        <v-row class="flex-grow-0">
+          <v-select
+            label="Steam Categories"
+            density="compact"
+            clearable
+            chips
+            closable-chips
+            hide-selected
+            multiple
+            :items="allSteamCategories"
+            v-model="gameConfig.steamCategories"
+            variant="outlined"
+            prepend-icon="$mdiTagMultiple"
+            clear-icon="$mdiBackspaceOutline"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+          ></v-select>
+        </v-row>
+
+        <!-- ------------------------- Steam Controller Layout ------------------------------- -->
+        <v-row class="flex-grow-0">
+          <v-select
+            label="Steam Controller Layout"
+            density="compact"
+            :items="gameStore.steamDB.controllerLayouts"
+            v-model="gameConfig.controllerLayout"
+            variant="outlined"
+            prepend-icon="$mdiController"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+          ></v-select>
+        </v-row>
+
+        <!-- ------------------------- Lutris Env Setup ------------------------------- -->
+        <v-row class="flex-grow-0 justify-space-between flex-nowrap">
+          <!-- <v-col> -->
+          <v-card
+            border
+            elevation="0"
+            rounded="10"
+            width="100%"
+            style="margin-left: 40px"
+            :loading="executablesLoading"
+          >
+            <v-list-subheader class="lutris-subheader">
+              <v-icon
+                icon="$mdiApplicationOutline"
+                class="mx-1"
+                style="padding-bottom: 3px"
+              />
+              <span>Game Executable</span>
+            </v-list-subheader>
+            <v-divider></v-divider>
+            <v-list
+              density="compact"
+              @click:select="(value) => gameConfig.executable = value.id as string"
+              :selected="[gameConfig.executable]"
+              base-color="grey-darken-2"
+              height="100%"
+              max-height="150px"
+            >
               <v-list-item
-                v-for="item in gameNameENCandidates"
-                border
-                :key="item.title"
-                :value="item.title"
-                :title="item.title"
-                :subtitle="item.origTitle"
-                :class="'vn-title-kind-' + item.kind"
-                @click="
-                  () => {
-                    gameConfig.gameNameEN = item.title;
-                    enTitleColor = titleKindColor[item.kind];
-                    slugTitleColor = '';
-                  }
-                "
+                v-for="item in executables"
+                :key="item"
+                :value="item"
+                class="lutris-item"
               >
-                <template #append>
-                  <v-progress-circular
-                    :model-value="item.weight"
-                    :width="3"
-                    size="24"
-                    color="grey-darken-4"
-                  ></v-progress-circular>
-                </template>
+                <v-list-item-title>{{ item }}</v-list-item-title>
               </v-list-item>
             </v-list>
-          </v-menu>
-        </v-text-field>
-      </v-row>
-
-      <!-- ------------------------- Slug Title ------------------------------- -->
-      <v-row class="flex-grow-0">
-        <v-text-field
-          density="compact"
-          label="Slug"
-          variant="outlined"
-          clearable
-          clear-icon="$mdiBackspaceOutline"
-          placeholder="Game's title slug (identifier)."
-          prepend-icon="$mdiFingerprint"
-          :spellcheck="false"
-          v-model="gameConfig.gameNameSlug"
-          :bg-color="gameConfig.gameNameSlug ? slugTitleColor : ''"
-          @input="
-            () => {
-              slugTitleColor = '';
-              slugSync = false;
-            }
-          "
-          class="vn-title-textinput"
-        >
-          <template #append-inner>
-            <v-icon
-              style="cursor: pointer"
-              :icon="slugSync ? '$mdiAutorenew' : '$mdiSyncOff'"
-              @click="slugSync = !slugSync"
-            ></v-icon>
-          </template> </v-text-field
-      ></v-row>
-
-      <!-- ------------------------- Steam/Lutris Categories ------------------------------- -->
-      <!-- @TODO add lutris category support -->
-      <v-row class="flex-grow-0">
-        <v-select
-          label="Steam Categories"
-          density="compact"
-          clearable
-          chips
-          closable-chips
-          hide-selected
-          multiple
-          :items="allSteamCategories"
-          v-model="gameConfig.steamCategories"
-          variant="outlined"
-          prepend-icon="$mdiTagMultiple"
-          clear-icon="$mdiBackspaceOutline"
-          :menu-props="{ transition: 'slide-y-transition' }"
-          class="vn-title-textinput"
-        ></v-select>
-      </v-row>
-
-      <!-- ------------------------- Steam Controller Layout ------------------------------- -->
-      <!-- @TODO add lutris category support -->
-      <v-row class="flex-grow-0">
-        <v-select
-          label="Steam Controller Layout"
-          density="compact"
-          :items="gameStore.steamDB.controllerLayouts"
-          v-model="gameConfig.controllerLayout"
-          variant="outlined"
-          prepend-icon="$mdiController"
-          :menu-props="{ transition: 'slide-y-transition' }"
-          class="vn-title-textinput"
-        ></v-select>
-      </v-row>
-
-      <!-- ------------------------- Lutris Env Setup ------------------------------- -->
-      <v-row class="flex-grow-0 justify-space-between flex-nowrap">
-        <!-- <v-col> -->
-        <v-card
-          border
-          elevation="0"
-          rounded="10"
-          width="100%"
-          style="margin-left: 40px"
-          :loading="executablesLoading"
-        >
-          <v-list-subheader
-            style="
-              height: 32px !important;
-              min-height: 10px !important;
-              font-size: 16px !important;
-            "
-          >
-            <v-icon
-              icon="$mdiApplicationOutline"
-              class="mx-1"
-              style="padding-bottom: 3px"
-            />
-            <span>Game Executable</span>
-          </v-list-subheader>
-          <v-divider></v-divider>
-          <v-list
-            density="compact"
-            @click:select="(value) => gameConfig.executable = value.id as string"
-            :selected="[gameConfig.executable]"
-            base-color="grey-darken-2"
-            height="100%"
-            max-height="150px"
-          >
-            <v-list-item
-              v-for="item in executables"
-              :key="item"
-              :value="item"
-              style="min-height: 10px !important; height: 24px !important"
+          </v-card>
+          <!-- </v-col> -->
+          <v-spacer class="lutris-config-spacer"></v-spacer>
+          <!-- <v-col> -->
+          <v-card border elevation="0" rounded="10" width="100%">
+            <v-list-subheader class="lutris-subheader">
+              <v-icon
+                icon="$mdiPackageVariantClosed"
+                class="mx-1"
+                style="padding-bottom: 3px"
+              />
+              <span>Wine Prefix</span>
+            </v-list-subheader>
+            <v-divider></v-divider>
+            <v-list
+              density="compact"
+              @click:select="(value) => gameConfig.winePrefix = value.id as string"
+              :selected="[gameConfig.winePrefix]"
+              base-color="grey-darken-2"
+              height="100%"
+              max-height="150px"
             >
-              <v-list-item-title>{{ item }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card>
-        <!-- </v-col> -->
-        <v-spacer class="lutris-config-spacer"></v-spacer>
-        <!-- <v-col> -->
-        <v-card border elevation="0" rounded="10" width="100%">
-          <v-list-subheader
-            style="
-              height: 32px !important;
-              min-height: 10px !important;
-              font-size: 16px !important;
-            "
-          >
-            <v-icon
-              icon="$mdiPackageVariantClosed"
-              class="mx-1"
-              style="padding-bottom: 3px"
-            />
-            <span>Wine Prefix</span>
-          </v-list-subheader>
-          <v-divider></v-divider>
-          <v-list
-            density="compact"
-            @click:select="(value) => gameConfig.winePrefix = value.id as string"
-            :selected="[gameConfig.winePrefix]"
-            base-color="grey-darken-2"
-            height="100%"
-            max-height="150px"
-          >
-            <v-list-item
-              v-for="item in gameStore.lutrisDB.winePrefixes"
-              :key="item"
-              :value="item"
-              style="min-height: 10px !important; height: 24px !important"
+              <v-list-item
+                v-for="item in gameStore.lutrisDB.winePrefixes"
+                :key="item"
+                :value="item"
+                class="lutris-item"
+              >
+                <v-list-item-title>{{ item }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-card>
+          <!-- </v-col> -->
+
+          <v-spacer class="lutris-config-spacer"></v-spacer>
+
+          <!-- <v-col> -->
+          <v-card border elevation="0" rounded="10" width="100%">
+            <v-list-subheader class="lutris-subheader">
+              <v-icon
+                icon="$customWineEmptyVariant"
+                class="mx-1"
+                style="padding-bottom: 3px"
+              />
+              <span>Wine Runner</span>
+            </v-list-subheader>
+            <v-divider></v-divider>
+            <v-list
+              density="compact"
+              @click:select="(value) => gameConfig.wineRunner = value.id as string"
+              :selected="[gameConfig.wineRunner]"
+              base-color="grey-darken-2"
+              height="100%"
+              max-height="150px"
             >
-              <v-list-item-title>{{ item }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card>
-        <!-- </v-col> -->
+              <v-list-item
+                v-for="item in gameStore.lutrisDB.wineRunners"
+                :key="item"
+                :value="item"
+                class="lutris-item"
+              >
+                <v-list-item-title>{{ item }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-card>
+          <!-- </v-col> -->
 
-        <v-spacer class="lutris-config-spacer"></v-spacer>
+          <v-spacer class="lutris-config-spacer"></v-spacer>
 
-        <!-- <v-col> -->
-        <v-card border elevation="0" rounded="10" width="100%">
-          <v-list-subheader
-            style="
-              height: 32px !important;
-              min-height: 10px !important;
-              font-size: 16px !important;
-            "
+          <!-- <v-col> -->
+          <v-card
+            border
+            elevation="0"
+            rounded="10"
+            width="100%"
+            max-width="85px"
           >
-            <v-icon
-              icon="$customWineEmptyVariant"
-              class="mx-1"
-              style="padding-bottom: 3px"
-            />
-            <span>Wine Runner</span>
-          </v-list-subheader>
-          <v-divider></v-divider>
-          <v-list
-            density="compact"
-            @click:select="(value) => gameConfig.wineRunner = value.id as string"
-            :selected="[gameConfig.wineRunner]"
-            base-color="grey-darken-2"
-            height="100%"
-            max-height="150px"
-          >
-            <v-list-item
-              v-for="item in gameStore.lutrisDB.wineRunners"
-              :key="item"
-              :value="item"
-              style="min-height: 10px !important; height: 24px !important"
+            <v-list-subheader class="lutris-subheader">
+              <v-icon icon="$mdiWeb" class="mx-1" style="padding-bottom: 3px" />
+              Locale
+            </v-list-subheader>
+            <v-divider></v-divider>
+            <v-list
+              density="compact"
+              @click:select="(value) => gameConfig.locale = value.id as string"
+              :selected="[gameConfig.locale]"
+              base-color="grey-darken-2"
+              height="100%"
+              max-height="150px"
             >
-              <v-list-item-title>{{ item }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card>
-        <!-- </v-col> -->
-
-        <v-spacer class="lutris-config-spacer"></v-spacer>
-
-        <!-- <v-col> -->
-        <v-card
-          border
-          elevation="0"
-          rounded="10"
-          width="100%"
-          max-width="103px"
-        >
-          <v-list-subheader
-            style="
-              height: 32px !important;
-              min-height: 10px !important;
-              font-size: 16px !important;
-            "
-          >
-            <v-icon icon="$mdiWeb" class="mx-1" style="padding-bottom: 3px" />
-            Locale
-          </v-list-subheader>
-          <v-divider></v-divider>
-          <v-list
-            density="compact"
-            @click:select="(value) => gameConfig.locale = value.id as string"
-            :selected="[gameConfig.locale]"
-            base-color="grey-darken-2"
-            height="100%"
-            max-height="150px"
-          >
-            <v-list-item
-              v-for="item in [
-                'ja_JP.utf8',
-                'zh_CN.utf8',
-                'zh_HK.utf8',
-                'en_US.utf8',
-              ]"
-              :key="item"
-              :value="item"
-              style="min-height: 10px !important; height: 24px !important"
-            >
-              <v-list-item-title style="text-align: center">
-                <img
-                  :src="`icons/${item}.svg`"
-                  style="height: 24px; width: 24px"
-                />
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card>
-        <!-- </v-col> -->
-      </v-row>
+              <v-list-item
+                v-for="item in [
+                  'ja_JP.utf8',
+                  'zh_CN.utf8',
+                  'zh_HK.utf8',
+                  'en_US.utf8',
+                ]"
+                :key="item"
+                :value="item"
+                class="lutris-item"
+              >
+                <v-list-item-title style="text-align: center">
+                  <img
+                    :src="`icons/${item}.svg`"
+                    style="height: 18px; margin-top: 6px"
+                  />
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-card>
+          <!-- </v-col> -->
+        </v-row>
+      </v-list>
 
       <!-- ------------------------- Bottom Nav Btns ------------------------------- -->
-      <v-row class="align-self-end align-end">
+      <v-row class="align-self-end align-end pa-8">
         <v-hover>
           <template v-slot:default="{ isHovering, props }">
             <v-btn
@@ -599,5 +608,17 @@ async function removeGameFromDB() {
 
 .v-list-item-title {
   font-size: 14px;
+}
+
+.lutris-subheader.v-list-subheader {
+  height: 24px !important;
+  min-height: 10px !important;
+  font-size: 12px !important;
+  padding-left: 0px !important;
+}
+
+.lutris-item {
+  min-height: 10px !important;
+  height: 20px !important;
 }
 </style>
