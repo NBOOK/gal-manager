@@ -290,7 +290,7 @@ async function removeGameFromDB() {
     <v-card rounded="lg" height="100%" class="pa-0 d-flex flex-column">
       <v-list class="ma-0 pa-8 flex-grow-1">
         <!-- ------------------------- Orig Title ------------------------------- -->
-        <v-row class="flex-grow-0 mb-1">
+        <v-row class="flex-grow-0 mb-0">
           <v-text-field
             density="compact"
             label="Folder Name"
@@ -335,7 +335,7 @@ async function removeGameFromDB() {
         </v-row>
 
         <!-- ------------------------- Eng Title ------------------------------- -->
-        <v-row class="flex-grow-0 mb-1">
+        <v-row class="flex-grow-0 mb-0">
           <v-text-field
             density="compact"
             label="EN Title"
@@ -423,7 +423,7 @@ async function removeGameFromDB() {
         </v-row>
 
         <!-- ------------------------- Eng BrandName ------------------------------- -->
-        <v-row class="flex-grow-0 mb-1">
+        <v-row class="flex-grow-0 mb-0">
           <v-text-field
             density="compact"
             label="EN Brand Name"
@@ -512,7 +512,7 @@ async function removeGameFromDB() {
         </v-row>
 
         <!-- ------------------------- Slug Title ------------------------------- -->
-        <v-row class="flex-grow-0">
+        <v-row class="flex-grow-0 mb-0">
           <v-text-field
             density="compact"
             label="Slug"
@@ -549,28 +549,8 @@ async function removeGameFromDB() {
           </v-text-field>
         </v-row>
 
-        <!-- ------------------------- Lutris Categories ------------------------------- -->
-        <v-row class="flex-grow-0">
-          <v-select
-            label="Lutris Categories"
-            density="compact"
-            clearable
-            chips
-            closable-chips
-            hide-selected
-            multiple
-            :items="allLutrisCategories"
-            v-model="gameConfig.lutrisCategories"
-            variant="outlined"
-            prepend-icon="$mdiTagMultiple"
-            clear-icon="$mdiBackspaceOutline"
-            :menu-props="{ transition: 'slide-y-transition' }"
-            class="vn-title-textinput"
-          />
-        </v-row>
-
-        <!-- ------------------------- Steam Categories ------------------------------- -->
-        <v-row class="flex-grow-0">
+        <!-- ------------------------- Steam Categories / Steam Controller Layout ------------------------------- -->
+        <v-row class="flex-grow-0 flex-nowrap">
           <v-select
             label="Steam Categories"
             density="compact"
@@ -586,13 +566,13 @@ async function removeGameFromDB() {
             clear-icon="$mdiBackspaceOutline"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
+            style="max-width: calc(100% - 200px)"
           />
-        </v-row>
 
-        <!-- ------------------------- Steam Controller Layout ------------------------------- -->
-        <v-row class="flex-grow-0">
+          <div style="width: 40px"></div>
+
           <v-select
-            label="Steam Controller Layout"
+            label="Layout"
             density="compact"
             :items="gameStore.steamDB.controllerLayouts"
             v-model="gameConfig.controllerLayout"
@@ -600,6 +580,84 @@ async function removeGameFromDB() {
             prepend-icon="$mdiController"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
+            style="max-width: 160px"
+          />
+        </v-row>
+
+        <!-- ------------------------- Lutris Categories / Locale ------------------------------- -->
+        <v-row class="flex-grow-0 flex-nowrap">
+          <v-select
+            label="Lutris Categories"
+            density="compact"
+            clearable
+            chips
+            closable-chips
+            hide-selected
+            multiple
+            :items="allLutrisCategories"
+            v-model="gameConfig.lutrisCategories"
+            variant="outlined"
+            prepend-icon="$mdiTagMultiple"
+            clear-icon="$mdiBackspaceOutline"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc(100% - 200px)"
+          />
+
+          <div style="width: 40px"></div>
+
+          <v-select
+            label="Locale"
+            density="compact"
+            :items="['ja_JP.utf8', 'zh_CN.utf8', 'zh_HK.utf8', 'en_US.utf8']"
+            v-model="gameConfig.locale"
+            :item-title="(item) => item.slice(3, -5)"
+            :item-value="(item) => item"
+            variant="outlined"
+            prepend-icon="$mdiWeb"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: 160px"
+          >
+            <template #prepend-inner>
+              <img :src="`icons/${gameConfig.locale}.svg`" />
+            </template>
+            <template #item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.raw.slice(3, -5)">
+                <template #prepend>
+                  <img :src="`icons/${item.raw}.svg`" class="mr-3" />
+                </template>
+              </v-list-item>
+            </template>
+          </v-select>
+        </v-row>
+
+        <!-- ------------------------- Wine Prefix / Runners ------------------------------- -->
+        <v-row class="flex-grow-0 flex-nowrap">
+          <v-select
+            label="Wine Prefix"
+            density="compact"
+            :items="gameStore.lutrisDB.winePrefixes"
+            v-model="gameConfig.winePrefix"
+            variant="outlined"
+            prepend-icon="$mdiPackageVariantClosed"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc(50% - 20px) !important"
+          />
+
+          <div style="width: 40px"></div>
+
+          <v-select
+            label="Wine Runner"
+            density="compact"
+            :items="gameStore.lutrisDB.wineRunners"
+            v-model="gameConfig.wineRunner"
+            variant="outlined"
+            prepend-icon="$customWineEmptyVariant"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc(50% - 20px)"
           />
         </v-row>
 
@@ -642,10 +700,10 @@ async function removeGameFromDB() {
               </v-list-item>
             </v-list>
           </v-card>
-          <!-- </v-col> -->
-          <v-spacer class="lutris-config-spacer"></v-spacer>
-          <!-- <v-col> -->
-          <v-card border elevation="0" rounded="10" width="100%">
+
+          <!-- <v-spacer class="lutris-config-spacer"></v-spacer> -->
+
+          <!-- <v-card border elevation="0" rounded="10" width="100%">
             <v-list-subheader class="lutris-subheader">
               <v-icon
                 icon="$mdiPackageVariantClosed"
@@ -671,13 +729,11 @@ async function removeGameFromDB() {
                 <v-list-item-title>{{ item }}</v-list-item-title>
               </v-list-item>
             </v-list>
-          </v-card>
-          <!-- </v-col> -->
+          </v-card> -->
 
-          <v-spacer class="lutris-config-spacer"></v-spacer>
+          <!-- <v-spacer class="lutris-config-spacer"></v-spacer> -->
 
-          <!-- <v-col> -->
-          <v-card border elevation="0" rounded="10" width="100%">
+          <!-- <v-card border elevation="0" rounded="10" width="100%">
             <v-list-subheader class="lutris-subheader">
               <v-icon
                 icon="$customWineEmptyVariant"
@@ -703,13 +759,12 @@ async function removeGameFromDB() {
                 <v-list-item-title>{{ item }}</v-list-item-title>
               </v-list-item>
             </v-list>
-          </v-card>
-          <!-- </v-col> -->
+          </v-card> -->
 
-          <v-spacer class="lutris-config-spacer"></v-spacer>
+          <!-- <v-spacer class="lutris-config-spacer"></v-spacer> -->
 
-          <!-- <v-col> -->
-          <v-card
+          <!-- -------------------- Locale --------------------------- -->
+          <!-- <v-card
             border
             elevation="0"
             rounded="10"
@@ -747,13 +802,14 @@ async function removeGameFromDB() {
                 </v-list-item-title>
               </v-list-item>
             </v-list>
-          </v-card>
-          <!-- </v-col> -->
+          </v-card> -->
         </v-row>
       </v-list>
 
       <!-- ------------------------- Bottom Nav Btns ------------------------------- -->
-      <v-row class="align-self-end align-end pr-8 pb-8 mt-8 flex-grow-0">
+      <v-row
+        class="align-self-end align-end pr-8 pb-8 mt-5 flex-grow-0 flex-nowrap"
+      >
         <v-hover>
           <template v-slot:default="{ isHovering, props }">
             <v-btn
@@ -888,5 +944,14 @@ async function removeGameFromDB() {
 
 .lutris-item.v-list-item .v-list-item-title {
   font-size: 12px !important;
+}
+.vn-title-textinput :deep(.v-chip__close) {
+  margin-inline-start: -15px !important;
+}
+
+.vn-title-textinput :deep(.v-input__details) {
+  min-height: 0px !important;
+  padding-top: 3px !important;
+  /* height: 100px !important; */
 }
 </style>

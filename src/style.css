@@ -92,11 +92,6 @@ button:focus-visible {
   }
 }
 
-.vn-title-textinput .v-input__details {
-  min-height: 0px !important;
-  padding-top: 0px !important;
-  /* height: 100px !important; */
-}
 
 .behavior-toggle-btn .v-btn__overlay {
   background-color: transparent;
