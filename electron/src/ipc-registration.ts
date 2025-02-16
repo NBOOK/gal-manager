@@ -6,6 +6,7 @@ import path from "node:path";
 import { VdfMap } from "steam-binary-vdf";
 import utils from "./utils";
 import { execFile } from "node:child_process";
+// import { getFileIcon } from "./ico";
 
 // prettier-ignore
 function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) {
@@ -167,6 +168,10 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
     ipcMain.handle('getSteamCategories', (_event, dbPath:string, steamID:string) => {
       return utils.getSteamCategories(dbPath, steamID);
     });
+    ipcMain.handle('getFileIcon', (_event, path: string) => {
+      return utils.getFileIcon(path);
+    }
+    );
   
   }
 

@@ -34,7 +34,7 @@ function endsWithSlash(path: string) {
   return !path.endsWith("/") || "Path must not ends with a slash";
 }
 function sameSteamID(value: string) {
-  return value.includes(config.value.SteamID) || "Steam ID must be the same";
+  return value.includes(config.value.steamID) || "Steam ID must be the same";
 }
 
 const wineRunners = ref(["default"]);

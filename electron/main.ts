@@ -2,7 +2,10 @@ import { app, BrowserWindow, dialog } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { execSync } from "node:child_process";
-import registerIpcMain from "./ipc-registration";
+import registerIpcMain from "./src/ipc-registration";
+
+import { getFileIcon } from "./src/ico";
+
 // check if we are running in development mode
 const isDev = process.env.NODE_ENV === "development";
 
@@ -136,3 +139,5 @@ function killSteam() {
     app.quit();
   }
 }
+
+// getFileIcon("/home/deck/Games/Gal/ALcot - LOVEREC/LOVEREC.exe", 0);

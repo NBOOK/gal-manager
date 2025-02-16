@@ -1,7 +1,7 @@
 {
   "name": "gal-manager",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,6 +16,7 @@
     "level": "^9.0.0",
     "p-limit": "^6.2.0",
     "pinia": "^2.3.0",
+    "resedit": "^2.0.3",
     "sharp": "^0.33.5",
     "steam-binary-vdf": "^0.1.0",
     "vdf": "^0.0.2",

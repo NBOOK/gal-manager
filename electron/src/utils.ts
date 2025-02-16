@@ -1,13 +1,14 @@
 import fs from "node:fs";
 import os from "node:os";
+import path from "node:path";
 import { spawn, exec } from "node:child_process";
 import sharp from "sharp";
-import path from "node:path";
+import * as ResEdit from "resedit";
 import { readVdf, VdfMap, writeVdf, getShortcutHash } from "steam-binary-vdf";
 import vdf from "vdf";
 import YAML from "yaml";
 import { Database as DatabaseType, Statement } from "better-sqlite3";
-import { MAIN_DIST } from "./main";
+import { MAIN_DIST } from "../main";
 import Kuroshiro from "@sglkc/kuroshiro";
 import KuromojiAnalyzer from "@sglkc/kuroshiro-analyzer-kuromoji";
 import { createRequire } from "module";
@@ -18,16 +19,6 @@ import { SteamCategories } from "./steam-categories";
 let steamCat: SteamCategories;
 let sqliteDB: DatabaseType;
 const kuroshiro = new Kuroshiro();
-// (async () => {
-//   try {
-//     // const kuroshiro = new Kuroshiro();
-//     await kuroshiro.init(new KuromojiAnalyzer());
-//     console.log("Kuroshiro initialized.");
-//     // 其他代码
-//   } catch (error) {
-//     console.error("初始化失败:", error);
-//   }
-// })();
 
 async function scanDir(dirPath: string): Promise<DirEntry[]> {
   try {
@@ -740,6 +731,55 @@ async function getSteamCategories(dbPath: string, steamId: string) {
   }
 }
 
+async function getFileIcon(path: string): Promise<string[]> {
+  //   console.log(path);
+  const results: string[] = [];
+  try {
+    const binary = await fs.promises.readFile(path);
+    const ex = ResEdit.NtExecutable.from(binary, { ignoreCert: true });
+    const exRes = ResEdit.NtExecutableResource.from(ex, true);
+    const iconEntries = ResEdit.Resource.IconGroupEntry.fromEntries(
+      exRes.entries
+    );
+    if (iconEntries.length === 0) {
+      console.warn("No icon entries found in the file.");
+      return results; // 直接返回空数组，不进入循环
+    }
+    for (let i = 0; i < iconEntries.length; i++) {
+      try {
+        const entry = iconEntries[i];
+        // console.log("entry");
+        const iconItems = entry.getIconItemsFromEntries(exRes.entries);
+        // console.log("iconItems");
+        const iconFile = new ResEdit.Data.IconFile();
+        // console.log("iconFile");
+        iconFile.icons = iconItems.map(function (item) {
+          return { data: item };
+        });
+        // console.log("iconFile.icons");
+        // const blob = new Blob([iconFile.generate()], { type: "image/x-icon" });
+        // const url = URL.createObjectURL(blob);
+        // console.log("url", url);
+        // results.push(url);
+
+        // 生成ico文件的二进制数据
+        const iconBuffer = iconFile.generate();
+        // console.log("iconBuffer");
+        // 使用 Node 的 Buffer 将二进制数据转换为 base64 字符串
+        const base64Data = Buffer.from(iconBuffer).toString("base64");
+        // console.log("base64Data");
+        // 拼接data URI前缀后存入结果数组
+        results.push(`data:image/x-icon;base64,${base64Data}`);
+      } catch (error) {
+        console.error("Error getting file icon:", error);
+      }
+    }
+  } catch (error) {
+    console.error("Error reading file:", error);
+  }
+  return results;
+}
+
 export default {
   scanDir,
   getDirDiskUsage,
@@ -767,4 +807,5 @@ export default {
   readVDF,
   writeVDF,
   getSteamCategories,
+  getFileIcon,
 };

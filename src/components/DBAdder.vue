@@ -17,6 +17,7 @@ const isBrandMenuOpen = ref(false);
 const selectedBrands = ref<VNDeveloper[]>([]);
 const slugSync = ref(true);
 const executables = ref<string[]>([]);
+const executableIcons = ref<Record<string, string>>({});
 const enTitleColor = ref("");
 const enBrandColor = ref("");
 const slugTitleColor = ref("");
@@ -114,7 +115,7 @@ watch(
   () => gameConfig.gameBrandEN + gameConfig.gameNameEN,
   () => {
     gameConfig.gameNameSlug = slugify(
-      gameConfig.gameBrandEN + gameConfig.gameNameEN,
+      `${gameConfig.gameBrandEN} - ${gameConfig.gameNameEN}`,
       gameConfig.gameNameSlug
     );
   }
@@ -204,7 +205,7 @@ onMounted(async () => {
     slugTitleColor.value = enTitleColor.value;
   }
 
-  const gamePath = `${props.game.basePath}/${props.game.gameBrand}${props.game.splitter}${props.game.gameName}`;
+  const gamePath = `${props.game.basePath}/${props.game.folderName}`;
   executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
     .filter(
       (file: DirEntry) =>
@@ -212,6 +213,7 @@ onMounted(async () => {
     )
     .map((file: DirEntry) => file.name);
   executables.value = await utils.guessLauncher(executables.value);
+  await getExecutableIcons();
   gameConfig.executable = executables.value[0];
   executablesLoading.value = false;
 
@@ -282,6 +284,23 @@ async function removeGameFromDB() {
   await props.game.removeDB();
   dbRemoving.value = false;
   emit("proceed");
+}
+
+async function getExecutableIcons() {
+  // const fileIcon = ref([]);
+  // async function getFileIcon() {
+  //   fileIcon.value = await window.ipcRenderer.invoke(
+  //     "getFileIcon",
+  //     "/home/deck/Games/Gal/ALcot - LOVEREC/LOVEREC.exe"
+  //   );
+  // }
+  // getFileIcon();
+  for (const executable of executables.value) {
+    const exePath = `${props.game.basePath}/${props.game.folderName}/${executable}`;
+    const iconBase64 = await window.ipcRenderer.invoke("getFileIcon", exePath);
+    if (iconBase64.length > 0)
+      executableIcons.value[executable] = iconBase64[0];
+  }
 }
 </script>
 
@@ -393,7 +412,7 @@ async function removeGameFromDB() {
               <v-list color="primary" style="width: 100%">
                 <v-list-item
                   v-for="item in gameNameENCandidates"
-                  border
+                  :border="true"
                   :key="item.title"
                   :value="item.title"
                   :title="item.title"
@@ -490,7 +509,7 @@ async function removeGameFromDB() {
               >
                 <v-list-item
                   v-for="item in gameBrandENCandidates"
-                  border
+                  :border="true"
                   :key="item.name"
                   :value="item"
                   :title="item.name"
@@ -662,11 +681,83 @@ async function removeGameFromDB() {
         </v-row>
 
         <!-- ------------------------- Lutris Env Setup ------------------------------- -->
-        <v-row
+        <v-row>
+          <v-icon
+            icon="$mdiApplicationOutline"
+            size="20"
+            style="height: 20px; margin: 12px 18px 0 2px; color: #676767"
+          />
+          <v-sheet
+            :border="true"
+            style="
+              width: calc(100% - 40px);
+              border-color: #afafaf;
+              border-radius: 5px;
+              min-height: 78px;
+            "
+            class="d-flex flex-column justify-start"
+          >
+            <div
+              style="
+                position: relative;
+                top: -10px; /* 让文本浮在边框线上 */
+                left: 10px;
+                background: white; /* 避免和边框重叠 */
+                padding: 0 5px;
+                margin-bottom: -10px;
+                font-size: 12px;
+                color: #888888;
+                width: max-content;
+              "
+            >
+              Executable
+            </div>
+            <v-item-group
+              v-model="gameConfig.executable"
+              mandatory
+              class="d-flex flex-row flex-wrap my-1"
+            >
+              <v-item
+                v-for="item in executables"
+                :key="item"
+                :value="item"
+                v-slot="{ isSelected, toggle }"
+              >
+                <v-card
+                  :color="isSelected ? 'blue-lighten-4' : ''"
+                  @click="toggle"
+                  class="d-flex flex-column justify-start align-center mx-1"
+                  style="height: 60px; width: 60px"
+                  flat
+                  :ripple="false"
+                >
+                  <v-img
+                    v-if="executableIcons[item]"
+                    :src="executableIcons[item]"
+                    style="height: 30px; width: 30px; flex-grow: 0"
+                  />
+                  <v-icon
+                    v-else
+                    icon="$mdiApplicationOutline"
+                    color="grey-darken-2"
+                    style="height: 30px; width: 30px; flex-grow: 0"
+                  />
+                  <div
+                    class="text-center"
+                    style="font-size: 10px; max-width: 100%"
+                  >
+                    {{ item }}
+                  </div>
+                </v-card>
+              </v-item>
+            </v-item-group>
+          </v-sheet>
+        </v-row>
+
+        <!-- <v-row
           class="flex-grow-1 flex-shrink-1 justify-space-between flex-nowrap"
-        >
-          <!-- <v-col> -->
-          <v-card
+        > -->
+        <!-- <v-card
             border
             elevation="0"
             rounded="10"
@@ -699,11 +790,11 @@ async function removeGameFromDB() {
                 <v-list-item-title>{{ item }}</v-list-item-title>
               </v-list-item>
             </v-list>
-          </v-card>
+          </v-card> -->
 
-          <!-- <v-spacer class="lutris-config-spacer"></v-spacer> -->
+        <!-- <v-spacer class="lutris-config-spacer"></v-spacer> -->
 
-          <!-- <v-card border elevation="0" rounded="10" width="100%">
+        <!-- <v-card border elevation="0" rounded="10" width="100%">
             <v-list-subheader class="lutris-subheader">
               <v-icon
                 icon="$mdiPackageVariantClosed"
@@ -731,9 +822,9 @@ async function removeGameFromDB() {
             </v-list>
           </v-card> -->
 
-          <!-- <v-spacer class="lutris-config-spacer"></v-spacer> -->
+        <!-- <v-spacer class="lutris-config-spacer"></v-spacer> -->
 
-          <!-- <v-card border elevation="0" rounded="10" width="100%">
+        <!-- <v-card border elevation="0" rounded="10" width="100%">
             <v-list-subheader class="lutris-subheader">
               <v-icon
                 icon="$customWineEmptyVariant"
@@ -761,10 +852,10 @@ async function removeGameFromDB() {
             </v-list>
           </v-card> -->
 
-          <!-- <v-spacer class="lutris-config-spacer"></v-spacer> -->
+        <!-- <v-spacer class="lutris-config-spacer"></v-spacer> -->
 
-          <!-- -------------------- Locale --------------------------- -->
-          <!-- <v-card
+        <!-- -------------------- Locale --------------------------- -->
+        <!-- <v-card
             border
             elevation="0"
             rounded="10"
@@ -803,7 +894,7 @@ async function removeGameFromDB() {
               </v-list-item>
             </v-list>
           </v-card> -->
-        </v-row>
+        <!-- </v-row> -->
       </v-list>
 
       <!-- ------------------------- Bottom Nav Btns ------------------------------- -->
