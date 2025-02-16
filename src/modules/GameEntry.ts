@@ -103,8 +103,6 @@ class GameEntry {
     // }
     if (entry.name.includes(" ‐ ")) this.splitter = " ‐ ";
     this.gameBrand = entry.name.split(this.splitter)[0];
-    // this.gameBrandEN = this.gameBrand;
-    this.gameBrandEN = await utils.romanize(this.gameBrand);
     this.gameName = entry.name
       .split(this.splitter)
       .slice(1)
@@ -132,9 +130,15 @@ class GameEntry {
     if (this.inLutrisDB) {
       const gameProperties = await gameStore.lutrisDB.getGameProperties(this);
       this.gameNameEN = gameProperties.gameNameEN;
+      if (gameProperties.gameBrandEN) {
+        this.gameBrandEN = gameProperties.gameBrandEN;
+      } else {
+        this.gameBrandEN = await utils.romanize(this.gameBrand);
+      }
       this.gameNameSlug = gameProperties.gameNameSlug;
     } else {
       this.gameNameEN = await utils.romanize(this.gameName);
+      this.gameBrandEN = await utils.romanize(this.gameBrand);
       this.gameNameSlug = utils.slugify(this.gameNameEN);
     }
     // this.inSteamDB = gameStore.steamDB.inDB(this);

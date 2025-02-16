@@ -265,6 +265,7 @@ async function addGameToDB() {
   if (props.game.inDatabase > 0) {
     console.log("Game already in database! Removing it...");
     // set reAdd to true if the game name is not changed
+    // so the controller config will not be removed
     await props.game.removeDB(!nameChanged);
   }
   if (nameChanged) {
