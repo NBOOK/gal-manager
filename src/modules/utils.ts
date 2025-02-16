@@ -248,11 +248,131 @@ function editRatio(s: string, t: string, trim: boolean = true): number {
   return 1 - distance / Math.max(lenS, lenT);
 }
 
+function releaseTitleCleaner(title: string, origTitle: string) {
+  const dash = ["-", "‐", "～", "~", "―", "－"];
+  const prefix = ["\\(", "（", "\\[", "【", "「", "『"];
+  const suffix = ["\\)", "）", "\\]", "】", "」", "』"];
+
+  const keywords = [
+    ...dash,
+    ...prefix,
+    ...suffix,
+    "first",
+    "press",
+    "limited",
+    "regular",
+    "deluxe",
+    "trial",
+    "premium",
+    "web",
+    "download",
+    "dl",
+    "package",
+    "pkg",
+    "popular",
+    "standard",
+    "complete",
+    "new",
+    "disk",
+    "dvd",
+    "cd",
+    "rom",
+    "pc",
+    "pack",
+    "edition",
+    "ver[.\\d]*",
+    "version[.\\d]*",
+    "box",
+    "basic",
+    "set",
+    "for",
+    "collection",
+    "patch",
+    "aniversary",
+    "dmm",
+    "dlsite",
+    "steam",
+    "support",
+    "exclusive",
+    "初回",
+    "限定",
+    "通常",
+    "豪華",
+    "体験",
+    "完全",
+    "生産",
+    "販売",
+    "一般",
+    "ロイヤル",
+    "プレミアム",
+    "スタンダード",
+    "ダウンロード",
+    "コンプリート",
+    "パッケージ",
+    "パック",
+    "エディション",
+    "アップデート",
+    "コレクション",
+    "ボックス",
+    "バージョン",
+    "スーパー",
+    "セット",
+    "パッチ",
+    "\\d*th",
+    "win\\d*",
+    "dows\\d*",
+    "\\d*周年",
+    "記念",
+    "対応",
+    "新装",
+    "再販",
+    "独占",
+    "版",
+  ];
+
+  const keywordPattern = `(?:${[...keywords, ...prefix, ...suffix].join("|")})`;
+  const suffixPattern = `(?:${[...dash, ...suffix].join("|")})`;
+
+  const suffixRegex = new RegExp(
+    `(?:\\s+${suffixPattern})?(?!${suffixPattern})(?:\\s*${keywordPattern})+(?:\\s*-?\\s*)$`,
+    "i"
+  );
+
+  // const suffixRegex = new RegExp(
+  //   `(?:\\s+-)?(?:\\s*${keywordPattern})+(?:\\s*-?\\s*)$`,
+  //   "i"
+  // );
+
+  title = title.replace(suffixRegex, "").trim();
+  let lastChar = title.at(-1);
+  if (
+    lastChar &&
+    dash.includes(lastChar) &&
+    title.split(lastChar).length === 2
+  ) {
+    title = title.slice(0, -1).trim();
+  }
+
+  origTitle = origTitle.replace(suffixRegex, "").trim();
+  lastChar = origTitle.at(-1);
+  if (
+    lastChar &&
+    dash.includes(lastChar) &&
+    origTitle.split(lastChar).length === 2
+  ) {
+    origTitle = origTitle.slice(0, -1).trim();
+  }
+
+  return [title, origTitle];
+}
+
 async function vndbQueryName(
   gameName: string,
-  romanized: string
-): Promise<VNTitle[]> {
-  const results: VNTitle[] = [];
+  gameBrand: string,
+  romanizedName: string
+) {
+  const gameResults: VNTitle[] = [];
+  const brandResults: VNDeveloper[] = [];
 
   const cjkRegex =
     /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u309F\u30A0-\u30FF]/;
@@ -266,12 +386,16 @@ async function vndbQueryName(
         filters: [
           "and",
           ["search", "=", gameName],
-          ["or", ["lang", "=", "en"], ["lang", "=", "ja"], ["lang", "=", "zh"]],
+          ["lang", "=", "ja"],
+          // ["developer", "=", ["search", "=", gameBrand]],
+          ...gameBrand
+            .split("×")
+            .map((brand) => ["developer", "=", ["search", "=", brand]]),
         ],
         fields:
-          "titles.official, titles.main, titles.lang, titles.latin, titles.title, aliases, developers.name, developers.original",
+          "titles{official, main, lang, latin, title}, developers{name, original}, aliases",
         sort: "searchrank",
-        results: 15,
+        results: 20,
       }),
     });
 
@@ -279,10 +403,19 @@ async function vndbQueryName(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        filters: ["search", "=", gameName],
-        fields: "title, alttitle, producers.name, producers.original",
+        filters: [
+          "and",
+          ["search", "=", gameName],
+          ["lang", "=", "ja"],
+          ["platform", "=", "win"],
+          // ["producer", "=", ["search", "=", gameBrand]],
+          ...gameBrand
+            .split("×")
+            .map((brand) => ["producer", "=", ["search", "=", brand]]),
+        ],
+        fields: "title, alttitle, producers{name, original}",
         sort: "searchrank",
-        results: 15,
+        results: 20,
       }),
     });
 
@@ -312,27 +445,37 @@ async function vndbQueryName(
         let weight = 1.1 - idx * 0.2;
         if (
           !title.official ||
-          !["en", "ja", "zh-Hans", "zh-Hant"].includes(title.lang)
+          title.lang !== "ja"
+          // !["en", "ja", "zh-Hans", "zh-Hant"].includes(title.lang)
         )
           continue;
         if (title.main) weight *= 1.1;
-        results.push({
+        gameResults.push({
           title: title.latin ? title.latin : title.title,
           origTitle: title.title,
           kind: "title",
           weight:
             weight *
-            editRatio(romanized, title.latin ? title.latin : title.title),
+            editRatio(romanizedName, title.latin ? title.latin : title.title),
         });
       }
       for (const alias of vn.aliases) {
         let weight = 0.9 - idx * 0.2;
         if (cjkRegex.test(alias)) continue; // 只保留拉丁化别名
-        results.push({
+        gameResults.push({
           title: alias,
           origTitle: "",
           kind: "alias",
-          weight: weight * editRatio(romanized, alias),
+          weight: weight * editRatio(romanizedName, alias),
+        });
+      }
+      for (const developer of vn.developers) {
+        if (brandResults.some((brand) => brand.name === developer.name))
+          continue;
+        brandResults.push({
+          name: developer.name,
+          origName: developer.original ? developer.original : developer.name,
+          kind: "developer",
         });
       }
     }
@@ -340,63 +483,83 @@ async function vndbQueryName(
     // 处理 Release 数据
     for (const [idx, release] of releaseData.results.entries()) {
       let weight = 1 - idx * 0.05;
-      results.push({
-        title: release.title,
-        origTitle: release.alttitle,
+      const [title, origTitle] = releaseTitleCleaner(
+        release.title,
+        release.alttitle ? release.alttitle : release.title
+      );
+      gameResults.push({
+        title: title,
+        origTitle: origTitle,
         kind: "releaseTitle",
-        weight: weight * editRatio(romanized, release.title),
+        weight: weight * editRatio(romanizedName, title),
       });
+
+      for (const producer of release.producers) {
+        if (brandResults.some((brand) => brand.name === producer.name))
+          continue;
+        brandResults.push({
+          name: producer.name,
+          origName: producer.original ? producer.original : producer.name,
+          kind: "publisher",
+        });
+      }
     }
   } catch (error) {
     console.error("Error fetching data:", error);
   }
 
-  return results;
+  return { titles: gameResults, brands: brandResults };
 }
 
-async function getGameNameEN(gameName: string): Promise<VNTitle[]> {
-  const romanized = await romanize(gameName);
-  const candidates = (await vndbQueryName(gameName, romanized)).sort(
-    (a, b) => b.weight - a.weight
-  );
+async function getGameNameEN(gameName: string, gameBrnad: string) {
+  const romanizedName = await romanize(gameName);
+  const romanizedBrand = await romanize(gameBrnad);
+  const results = await vndbQueryName(gameName, gameBrnad, romanizedName);
+  console.log("boundle:", results);
+  const titleCandidates = results.titles;
+  const brandCandidates = results.brands;
+  titleCandidates.sort((a, b) => b.weight - a.weight);
 
   const uniqueCandidates: Record<string, VNTitle> = {};
 
-  candidates
+  titleCandidates
     .filter((item) => item.kind === "title")
     .forEach((item) => {
       if (!(slugify(item.title) in uniqueCandidates))
         uniqueCandidates[slugify(item.title)] = item;
     });
 
-  candidates
+  titleCandidates
     .filter((item) => item.kind === "releaseTitle")
     .forEach((item) => {
       if (!(slugify(item.title) in uniqueCandidates))
         uniqueCandidates[slugify(item.title)] = item;
     });
 
-  candidates
-    .filter((item) => item.kind === "alias")
-    .forEach((item) => {
-      if (!(slugify(item.title) in uniqueCandidates))
-        uniqueCandidates[slugify(item.title)] = item;
-    });
+  // alias are too noisy, skip them
+  // titleCandidates
+  //   .filter((item) => item.kind === "alias")
+  //   .forEach((item) => {
+  //     if (!(slugify(item.title) in uniqueCandidates))
+  //       uniqueCandidates[slugify(item.title)] = item;
+  //   });
 
   const cleanedCandidates = Object.values(uniqueCandidates).sort(
     (a, b) => b.weight - a.weight
   );
 
-  const romanizedTitle: VNTitle = {
-    title: romanized,
-    origTitle: "",
-    kind: "romanized",
-    weight: 1,
-  };
-  if (cleanedCandidates.length >= 6) {
-    cleanedCandidates.splice(5, 0, romanizedTitle);
-  } else {
-    cleanedCandidates.push(romanizedTitle);
+  if (!cleanedCandidates.some((title) => title.title === romanizedName)) {
+    const romanizedTitle: VNTitle = {
+      title: romanizedName,
+      origTitle: gameName,
+      kind: "romanized",
+      weight: 1,
+    };
+    if (cleanedCandidates.length >= 6) {
+      cleanedCandidates.splice(5, 0, romanizedTitle);
+    } else {
+      cleanedCandidates.push(romanizedTitle);
+    }
   }
 
   // Normalize weights to 0-100
@@ -406,7 +569,17 @@ async function getGameNameEN(gameName: string): Promise<VNTitle[]> {
   for (const title of cleanedCandidates) {
     title.weight = ((title.weight - minWeight) / (maxWeight - minWeight)) * 100;
   }
-  return cleanedCandidates;
+
+  if (!brandCandidates.some((brand) => brand.name === romanizedBrand)) {
+    const romanizedDeveloper: VNDeveloper = {
+      name: romanizedBrand,
+      origName: gameBrnad,
+      kind: "romanized",
+    };
+    brandCandidates.push(romanizedDeveloper);
+  }
+
+  return { titles: cleanedCandidates, brands: brandCandidates };
 }
 
 async function guessLauncher(executables: string[]): Promise<string[]> {

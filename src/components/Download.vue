@@ -25,7 +25,6 @@ const pathIconMap: { [key: string]: string } = {
   [gameStore.config.value.gamesMainPath]: "$mdiHome",
   [gameStore.config.value.gamesDataPath]: "$mdiGamepadSquare",
   [gameStore.config.value.gamesSDPath]: "$mdiMicroSd",
-  [gameStore.config.value.gamesUSBPath]: "$mdiUsb",
   [gameStore.config.value.gamesNetPath]: "$mdiCloud",
   [gameStore.config.value.gamesExternalPath]: "$mdiCloud",
 };

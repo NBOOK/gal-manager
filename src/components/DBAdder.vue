@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch, onMounted } from "vue";
 import { useGameStore } from "@/store/global-store";
 import GameEntry from "@/modules/GameEntry";
 import utils from "@/modules/utils";
@@ -9,12 +9,16 @@ const emit = defineEmits(["proceed", "abort"]);
 const props = defineProps<{ game: GameEntry }>();
 const game = computed(() => props.game);
 const gameNameENCandidates = ref<VNTitle[]>([]);
+const gameBrandENCandidates = ref<VNDeveloper[]>([]);
 const allSteamCategories = ref<string[]>([]);
 const allLutrisCategories = ref<string[]>([]);
-const isMenuOpen = ref(false);
+const isTitleMenuOpen = ref(false);
+const isBrandMenuOpen = ref(false);
+const selectedBrands = ref<VNDeveloper[]>([]);
 const slugSync = ref(true);
 const executables = ref<string[]>([]);
 const enTitleColor = ref("");
+const enBrandColor = ref("");
 const slugTitleColor = ref("");
 
 const enTitleLoading = ref(true);
@@ -34,12 +38,17 @@ const titleKindColor = {
   romanized: "#ffebee",
   releaseTitle: "#e1f5fe",
   alias: "#fff3e0",
+  developer: "#f1f8e9",
+  publisher: "#e1f5fe",
+  stored: "#fff3e0",
+  default: "#ede7f6",
 };
 
 const gameConfig = reactive<GameConfig>({
   gameName: "",
   gameBrand: "",
   gameNameEN: "",
+  gameBrandEN: "",
   gameNameSlug: "",
   winePrefix: "",
   wineRunner: "",
@@ -49,98 +58,203 @@ const gameConfig = reactive<GameConfig>({
   steamCategories: [],
   lutrisCategories: [],
 });
+const folderName = ref("");
+const gameBrandFromFolder = computed(
+  () => folderName.value.split(props.game.splitter)[0]
+);
+const gameNameFromFolder = computed(() =>
+  folderName.value.split(props.game.splitter).slice(1).join(props.game.splitter)
+);
 
-async function getGameNameENCandidates(gameName: string) {
+async function getGameENCandidates() {
+  const gameName = gameConfig.gameName;
+  const gameBrnad = gameConfig.gameBrand;
   enTitleLoading.value = true;
-  gameNameENCandidates.value = await utils.getGameNameEN(gameName);
+  const titlesAndBrands = await utils.getGameNameEN(gameName, gameBrnad);
+  gameNameENCandidates.value = titlesAndBrands.titles;
+  gameBrandENCandidates.value = titlesAndBrands.brands;
   enTitleLoading.value = false;
 }
 
+function checkFolderNameFormat() {
+  if (!folderName.value) return "Folder name is empty.";
+  if (!folderName.value.includes(props.game.splitter))
+    return "Folder name must contain a splitter.";
+
+  const gameBrand = folderName.value.split(props.game.splitter)[0];
+  const gameName = folderName.value
+    .split(props.game.splitter)
+    .slice(1)
+    .join(props.game.splitter);
+  if (!gameBrand || !gameName)
+    return "Folder name must contain a brand and a name.";
+  return true;
+}
+
+function checkWindowsForbiddenChars() {
+  const forbiddenChars = /[<>:"/\\|?*]/;
+  if (forbiddenChars.test(folderName.value))
+    return "Folder name contains forbidden characters.";
+  return true;
+}
+
+function updateGameName() {
+  const gameBrand = folderName.value.split(props.game.splitter)[0];
+  folderName.value = `${gameBrand}${props.game.splitter}${gameConfig.gameName}`;
+}
+function updateGameBrand() {
+  const gameName = folderName.value
+    .split(props.game.splitter)
+    .slice(1)
+    .join(props.game.splitter);
+  folderName.value = `${gameConfig.gameBrand}${props.game.splitter}${gameName}`;
+}
+
 watch(
-  () => gameConfig.gameNameEN,
+  () => gameConfig.gameBrandEN + gameConfig.gameNameEN,
   () => {
     gameConfig.gameNameSlug = slugify(
-      gameConfig.gameNameEN,
+      gameConfig.gameBrandEN + gameConfig.gameNameEN,
       gameConfig.gameNameSlug
     );
   }
 );
 
 watch(
-  () => props.game,
-  async () => {
-    gameConfig.gameName = props.game.gameName;
-    gameConfig.gameBrand = props.game.gameBrand;
+  () => folderName.value,
+  (newValue, oldValue) => {
+    if (
+      checkFolderNameFormat() !== true ||
+      checkWindowsForbiddenChars() !== true
+    )
+      return;
+    const oldBrand = oldValue.split(props.game.splitter)[0];
+    const oldName = oldValue
+      .split(props.game.splitter)
+      .slice(1)
+      .join(props.game.splitter);
+    const newBrand = newValue.split(props.game.splitter)[0];
+    const newName = newValue
+      .split(props.game.splitter)
+      .slice(1)
+      .join(props.game.splitter);
 
-    await getGameNameENCandidates(props.game.gameName);
-
-    if (props.game.inDatabase) {
-      gameConfig.gameNameEN = props.game.gameNameEN;
-      enTitleColor.value = "#EDE7F6";
-      gameConfig.gameNameSlug = props.game.gameNameSlug;
-      slugTitleColor.value = "#EDE7F6";
-    } else {
-      gameConfig.gameNameEN = gameNameENCandidates.value[0].title;
-      enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
-      gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
-      slugTitleColor.value = enTitleColor.value;
+    if (oldBrand !== newBrand) {
+      // selectedBrands.value = [];
+      gameConfig.gameBrand = newBrand;
     }
-
-    const gamePath = `${props.game.basePath}/${props.game.gameBrand}${props.game.splitter}${props.game.gameName}`;
-    executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
-      .filter(
-        (file: DirEntry) =>
-          file.isFile && file.name.toLowerCase().endsWith(".exe")
-      )
-      .map((file: DirEntry) => file.name);
-    executables.value = await utils.guessLauncher(executables.value);
-    gameConfig.executable = executables.value[0];
-    executablesLoading.value = false;
-
-    if (
-      gameStore.lutrisDB.winePrefixes.includes(
-        gameStore.config.lutrisDefaultWinePrefix
-      )
-    )
-      gameConfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
-    else gameConfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
-
-    if (
-      gameStore.lutrisDB.wineRunners.includes(
-        gameStore.config.lutrisDefaultWineRunner
-      )
-    )
-      gameConfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
-    else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
-
-    if (gameStore.config.locale) gameConfig.locale = gameStore.config.locale;
-    else gameConfig.locale = "ja_JP.utf8";
-
-    allLutrisCategories.value = Object.keys(
-      gameStore.lutrisDB.lutrisCategories
-    ).sort();
-    gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
-      props.game
-    );
-    if (
-      gameConfig.lutrisCategories.length === 0 &&
-      allLutrisCategories.value.includes("Gal")
-    )
-      gameConfig.lutrisCategories.push("Gal");
-
-    // Steam
-    allSteamCategories.value = gameStore.steamDB.steamCategoriesNames.sort();
-    gameConfig.steamCategories = gameStore.steamDB.categoriesForGame(
-      props.game
-    );
-    if (
-      gameConfig.steamCategories.length === 0 &&
-      allSteamCategories.value.includes("Gal")
-    )
-      gameConfig.steamCategories.push("Gal");
-  },
-  { immediate: true }
+    if (oldName !== newName) gameConfig.gameName = newName;
+  }
 );
+
+watch(
+  () => selectedBrands.value.length,
+  () => {
+    console.log(selectedBrands.value);
+    const sorted = selectedBrands.value.sort((a, b) => {
+      if (a.kind === "developer" && b.kind === "publisher") return -1;
+      if (a.kind === "publisher" && b.kind === "developer") return 1;
+      return a.name.localeCompare(b.name);
+    });
+    gameConfig.gameBrandEN = sorted.map((brand) => brand.name).join("×");
+    gameConfig.gameBrand = sorted.map((brand) => brand.origName).join("×");
+    enBrandColor.value =
+      titleKindColor[
+        sorted.some((brand) => brand.kind === "developer")
+          ? "developer"
+          : "publisher"
+      ];
+  }
+);
+
+onMounted(async () => {
+  folderName.value = props.game.folderName;
+  // handled by watching folderName later
+  gameConfig.gameName = props.game.gameName;
+  gameConfig.gameBrand = props.game.gameBrand;
+
+  await getGameENCandidates();
+
+  if (props.game.inDatabase) {
+    gameConfig.gameNameEN = props.game.gameNameEN;
+    enTitleColor.value = titleKindColor.stored;
+    gameConfig.gameBrandEN = props.game.gameBrandEN;
+    enBrandColor.value = titleKindColor.stored;
+    gameConfig.gameNameSlug = props.game.gameNameSlug;
+    slugTitleColor.value = titleKindColor.stored;
+  } else {
+    gameConfig.gameName = gameNameENCandidates.value[0].origTitle;
+    gameConfig.gameNameEN = gameNameENCandidates.value[0].title;
+    enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
+    // gameConfig.gameBrand = gameBrandENCandidates.value[0].origName;
+    // gameConfig.gameBrandEN = gameBrandENCandidates.value[0].name;
+    // enBrandColor.value = titleKindColor[gameBrandENCandidates.value[0].kind];
+    selectedBrands.value.push(
+      ...gameBrandENCandidates.value.filter(
+        (brand) => brand.kind === "developer"
+      )
+    );
+    if (selectedBrands.value.length === 0)
+      selectedBrands.value.push(
+        ...gameBrandENCandidates.value.filter(
+          (brand) => brand.kind === "publisher"
+        )
+      );
+    gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
+    slugTitleColor.value = enTitleColor.value;
+  }
+
+  const gamePath = `${props.game.basePath}/${props.game.gameBrand}${props.game.splitter}${props.game.gameName}`;
+  executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
+    .filter(
+      (file: DirEntry) =>
+        file.isFile && file.name.toLowerCase().endsWith(".exe")
+    )
+    .map((file: DirEntry) => file.name);
+  executables.value = await utils.guessLauncher(executables.value);
+  gameConfig.executable = executables.value[0];
+  executablesLoading.value = false;
+
+  if (
+    gameStore.lutrisDB.winePrefixes.includes(
+      gameStore.config.lutrisDefaultWinePrefix
+    )
+  )
+    gameConfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
+  else gameConfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
+
+  if (
+    gameStore.lutrisDB.wineRunners.includes(
+      gameStore.config.lutrisDefaultWineRunner
+    )
+  )
+    gameConfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
+  else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
+
+  if (gameStore.config.locale) gameConfig.locale = gameStore.config.locale;
+  else gameConfig.locale = "ja_JP.utf8";
+
+  allLutrisCategories.value = Object.keys(
+    gameStore.lutrisDB.lutrisCategories
+  ).sort();
+  gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
+    props.game
+  );
+  if (
+    gameConfig.lutrisCategories.length === 0 &&
+    allLutrisCategories.value.includes("Gal")
+  )
+    gameConfig.lutrisCategories.push("Gal");
+
+  // Steam
+  allSteamCategories.value = gameStore.steamDB.steamCategoriesNames.sort();
+  gameConfig.steamCategories = gameStore.steamDB.categoriesForGame(props.game);
+  if (
+    gameConfig.steamCategories.length === 0 &&
+    allSteamCategories.value.includes("Gal")
+  )
+    gameConfig.steamCategories.push("Gal");
+});
 
 async function addGameToDB() {
   dbAdding.value = true;
@@ -173,32 +287,54 @@ async function removeGameFromDB() {
 <template>
   <v-carousel-item>
     <v-card rounded="lg" height="100%" class="pa-0 d-flex flex-column">
-      <v-list class="ma-0 pa-8">
+      <v-list class="ma-0 pa-8 flex-grow-1">
         <!-- ------------------------- Orig Title ------------------------------- -->
-        <v-row class="flex-grow-0">
+        <v-row class="flex-grow-0 mb-1">
           <v-text-field
             density="compact"
-            label="Orig Title"
+            label="Folder Name"
             variant="outlined"
             clearable
             clear-icon="$mdiBackspaceOutline"
             placeholder="Game's orginal title."
-            prepend-icon="$mdiIdeogramCjkVariant"
+            prepend-icon="$mdiFolder"
             :spellcheck="false"
-            v-model="gameConfig.gameName"
+            :rules="[checkFolderNameFormat, checkWindowsForbiddenChars]"
+            :hint="
+              gameConfig.gameBrand +
+                props.game.splitter +
+                gameConfig.gameName ===
+              folderName
+                ? ''
+                : gameConfig.gameBrand +
+                  props.game.splitter +
+                  gameConfig.gameName
+            "
+            persistent-hint
+            v-model="folderName"
             class="vn-title-textinput"
           >
             <template #append-inner>
-              <v-icon
-                style="cursor: pointer"
+              <v-btn
+                v-if="folderName !== props.game.folderName"
+                density="compact"
+                variant="plain"
+                icon="$mdiReload"
+                @click="folderName = props.game.folderName"
+              />
+              <v-btn
+                density="compact"
+                variant="plain"
                 icon="$mdiSearchWeb"
-                @click="getGameNameENCandidates"
-              ></v-icon>
-            </template> </v-text-field
-        ></v-row>
+                @click="async () => getGameENCandidates()"
+                style="margin-right: -4px"
+              />
+            </template>
+          </v-text-field>
+        </v-row>
 
         <!-- ------------------------- Eng Title ------------------------------- -->
-        <v-row class="flex-grow-0">
+        <v-row class="flex-grow-0 mb-1">
           <v-text-field
             density="compact"
             label="EN Title"
@@ -206,36 +342,54 @@ async function removeGameFromDB() {
             clearable
             clear-icon="$mdiBackspaceOutline"
             placeholder="Game's English/romanized title."
-            prepend-icon="$mdiAlphabeticalVariant"
+            prepend-icon="$mdiTranslate"
             :spellcheck="false"
             :loading="enTitleLoading"
             v-model="gameConfig.gameNameEN"
             :bg-color="gameConfig.gameNameEN ? enTitleColor : ''"
+            :hint="gameConfig.gameName"
+            persistent-hint
             @input="
               () => {
                 enTitleColor = '';
                 slugTitleColor = '';
-                isMenuOpen = false;
+                isTitleMenuOpen = false;
               }
             "
+            @click:clear="
+              () => {
+                gameConfig.gameNameEN = '';
+              }
+            "
+            :rules="[
+              () =>
+                gameConfig.gameNameEN.length !== 0 || 'English title is empty.',
+            ]"
             class="vn-title-textinput"
           >
             <template #append-inner>
+              <v-btn
+                v-if="gameNameFromFolder !== gameConfig.gameName"
+                density="compact"
+                variant="plain"
+                icon="$mdiArrowUpRight"
+                @click.stop="updateGameName"
+              />
               <v-icon
                 style="cursor: pointer"
-                :class="{ 'rotate-icon': isMenuOpen }"
+                :class="{ 'rotate-icon': isTitleMenuOpen }"
                 icon="$mdiMenuDown"
-              ></v-icon>
+              />
             </template>
             <v-menu
               activator="parent"
               location="bottom center"
               origin="top center"
               max-height="300"
-              v-model="isMenuOpen"
+              v-model="isTitleMenuOpen"
               transition="slide-y-transition"
             >
-              <v-list color="primary">
+              <v-list color="primary" style="width: 100%">
                 <v-list-item
                   v-for="item in gameNameENCandidates"
                   border
@@ -247,6 +401,7 @@ async function removeGameFromDB() {
                   @click="
                     () => {
                       gameConfig.gameNameEN = item.title;
+                      gameConfig.gameName = item.origTitle;
                       enTitleColor = titleKindColor[item.kind];
                       slugTitleColor = '';
                     }
@@ -258,8 +413,97 @@ async function removeGameFromDB() {
                       :width="3"
                       size="24"
                       color="grey-darken-4"
-                    ></v-progress-circular>
+                    />
                   </template>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </v-text-field>
+        </v-row>
+
+        <!-- ------------------------- Eng BrandName ------------------------------- -->
+        <v-row class="flex-grow-0 mb-1">
+          <v-text-field
+            density="compact"
+            label="EN Brand Name"
+            variant="outlined"
+            clearable
+            clear-icon="$mdiBackspaceOutline"
+            placeholder="Game's English/romanized title."
+            prepend-icon="$mdiDomain"
+            :spellcheck="false"
+            :loading="enTitleLoading"
+            v-model="gameConfig.gameBrandEN"
+            :bg-color="gameConfig.gameBrandEN ? enBrandColor : ''"
+            :hint="gameConfig.gameBrand"
+            persistent-hint
+            @input="
+              () => {
+                enBrandColor = '';
+                slugTitleColor = '';
+                isBrandMenuOpen = false;
+              }
+            "
+            @click:clear="
+              () => {
+                selectedBrands = [];
+                enBrandColor = '';
+              }
+            "
+            :rules="[
+              () =>
+                gameConfig.gameBrandEN.length !== 0 ||
+                'English brand name is empty.',
+            ]"
+            class="vn-title-textinput"
+          >
+            <template #append-inner>
+              <v-btn
+                v-if="gameBrandFromFolder !== gameConfig.gameBrand"
+                density="compact"
+                variant="plain"
+                icon="$mdiArrowUpRight"
+                @click.stop="updateGameBrand"
+              />
+              <v-icon
+                style="cursor: pointer"
+                :class="{ 'rotate-icon': isBrandMenuOpen }"
+                icon="$mdiMenuDown"
+              />
+            </template>
+            <v-menu
+              activator="parent"
+              location="bottom center"
+              origin="top center"
+              max-height="300"
+              v-model="isBrandMenuOpen"
+              :close-on-content-click="false"
+              transition="slide-y-transition"
+            >
+              <v-list
+                color="primary"
+                select-strategy="leaf"
+                v-model:selected="selectedBrands"
+                mandatory
+                style="width: 100%"
+              >
+                <v-list-item
+                  v-for="item in gameBrandENCandidates"
+                  border
+                  :key="item.name"
+                  :value="item"
+                  :title="item.name"
+                  :subtitle="item.origName"
+                  :class="'vn-title-kind-' + item.kind"
+                  @click="
+                    () => {
+                      // if (!selectedBrands.includes(item)) {
+                      //   selectedBrands.push(item);
+                      // }
+                      slugTitleColor = '';
+                    }
+                  "
+                >
                 </v-list-item>
               </v-list>
             </v-menu>
@@ -285,16 +529,24 @@ async function removeGameFromDB() {
                 slugSync = false;
               }
             "
+            :rules="[
+              () =>
+                gameConfig.gameNameSlug.length !== 0 || 'Game slug is empty.',
+            ]"
+            @click:clear="gameConfig.gameNameSlug = ''"
+            s
             class="vn-title-textinput"
           >
             <template #append-inner>
-              <v-icon
-                style="cursor: pointer"
+              <v-btn
+                density="compact"
+                variant="plain"
                 :icon="slugSync ? '$mdiAutorenew' : '$mdiSyncOff'"
                 @click="slugSync = !slugSync"
-              ></v-icon>
-            </template> </v-text-field
-        ></v-row>
+              />
+            </template>
+          </v-text-field>
+        </v-row>
 
         <!-- ------------------------- Lutris Categories ------------------------------- -->
         <v-row class="flex-grow-0">
@@ -313,7 +565,7 @@ async function removeGameFromDB() {
             clear-icon="$mdiBackspaceOutline"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
-          ></v-select>
+          />
         </v-row>
 
         <!-- ------------------------- Steam Categories ------------------------------- -->
@@ -329,11 +581,11 @@ async function removeGameFromDB() {
             :items="allSteamCategories"
             v-model="gameConfig.steamCategories"
             variant="outlined"
-            prepend-icon="$mdiTagMultiple"
+            prepend-icon="$mdiSteam"
             clear-icon="$mdiBackspaceOutline"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
-          ></v-select>
+          />
         </v-row>
 
         <!-- ------------------------- Steam Controller Layout ------------------------------- -->
@@ -347,11 +599,13 @@ async function removeGameFromDB() {
             prepend-icon="$mdiController"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
-          ></v-select>
+          />
         </v-row>
 
         <!-- ------------------------- Lutris Env Setup ------------------------------- -->
-        <v-row class="flex-grow-0 justify-space-between flex-nowrap">
+        <v-row
+          class="flex-grow-1 flex-shrink-1 justify-space-between flex-nowrap"
+        >
           <!-- <v-col> -->
           <v-card
             border
@@ -374,9 +628,8 @@ async function removeGameFromDB() {
               density="compact"
               @click:select="(value) => gameConfig.executable = value.id as string"
               :selected="[gameConfig.executable]"
-              base-color="grey-darken-2"
-              height="100%"
-              max-height="150px"
+              base-color="grey-darken-1"
+              style="padding: 0"
             >
               <v-list-item
                 v-for="item in executables"
@@ -405,9 +658,8 @@ async function removeGameFromDB() {
               density="compact"
               @click:select="(value) => gameConfig.winePrefix = value.id as string"
               :selected="[gameConfig.winePrefix]"
-              base-color="grey-darken-2"
-              height="100%"
-              max-height="150px"
+              base-color="grey-darken-1"
+              style="padding: 0"
             >
               <v-list-item
                 v-for="item in gameStore.lutrisDB.winePrefixes"
@@ -438,9 +690,8 @@ async function removeGameFromDB() {
               density="compact"
               @click:select="(value) => gameConfig.wineRunner = value.id as string"
               :selected="[gameConfig.wineRunner]"
-              base-color="grey-darken-2"
-              height="100%"
-              max-height="150px"
+              base-color="grey-darken-1"
+              style="padding: 0"
             >
               <v-list-item
                 v-for="item in gameStore.lutrisDB.wineRunners"
@@ -473,9 +724,8 @@ async function removeGameFromDB() {
               density="compact"
               @click:select="(value) => gameConfig.locale = value.id as string"
               :selected="[gameConfig.locale]"
-              base-color="grey-darken-2"
-              height="100%"
-              max-height="150px"
+              base-color="grey-darken-1"
+              style="padding: 0"
             >
               <v-list-item
                 v-for="item in [
@@ -502,7 +752,7 @@ async function removeGameFromDB() {
       </v-list>
 
       <!-- ------------------------- Bottom Nav Btns ------------------------------- -->
-      <v-row class="align-self-end align-end pa-8">
+      <v-row class="align-self-end align-end pr-8 pb-8 mt-8 flex-grow-0">
         <v-hover>
           <template v-slot:default="{ isHovering, props }">
             <v-btn
@@ -543,7 +793,14 @@ async function removeGameFromDB() {
           variant="outlined"
           color="green"
           class="ml-2"
-          :disabled="dbRemoving"
+          :disabled="
+            dbRemoving ||
+            checkFolderNameFormat() !== true ||
+            checkWindowsForbiddenChars() !== true ||
+            gameConfig.gameNameEN.length === 0 ||
+            gameConfig.gameBrandEN.length === 0 ||
+            gameConfig.gameNameSlug.length === 0
+          "
           :loading="dbAdding"
           @click="addGameToDB"
           >Add to Database</v-btn
@@ -565,6 +822,12 @@ async function removeGameFromDB() {
 }
 .vn-title-kind-alias {
   background-color: #fff3e0 !important;
+}
+.vn-title-kind-developer {
+  background-color: #f1f8e9 !important;
+}
+.vn-title-kind-publisher {
+  background-color: #e1f5fe !important;
 }
 
 .rotate-icon {
@@ -617,8 +880,12 @@ async function removeGameFromDB() {
   padding-left: 0px !important;
 }
 
-.lutris-item {
+.lutris-item.v-list-item {
   min-height: 10px !important;
-  height: 20px !important;
+  height: 24px !important;
+}
+
+.lutris-item.v-list-item .v-list-item-title {
+  font-size: 12px !important;
 }
 </style>

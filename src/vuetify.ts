@@ -54,7 +54,6 @@ import {
   mdiContentSave,
   mdiContentSaveMinus,
   mdiContentSaveOff,
-  mdiIdeogramCjkVariant,
   mdiSearchWeb,
   mdiMenuDown,
   mdiFingerprint,
@@ -93,6 +92,10 @@ import {
   mdiController,
   mdiWeb,
   mdiApplicationOutline,
+  mdiSteam,
+  mdiArrowUpRight,
+  mdiArrowUpRightBold,
+  mdiTranslate,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
@@ -155,7 +158,6 @@ const aliasesCustom = {
   mdiContentSave,
   mdiContentSaveMinus,
   mdiContentSaveOff,
-  mdiIdeogramCjkVariant,
   mdiSearchWeb,
   mdiMenuDown,
   mdiFingerprint,
@@ -191,6 +193,10 @@ const aliasesCustom = {
   mdiController,
   mdiWeb,
   mdiApplicationOutline,
+  mdiSteam,
+  mdiArrowUpRight,
+  mdiArrowUpRightBold,
+  mdiTranslate,
 };
 
 const vuetify = createVuetify({

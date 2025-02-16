@@ -269,7 +269,6 @@ class GameEntry {
     const gameBasePaths = [
       gameStore.config.value.gamesDataPath,
       gameStore.config.value.gamesSDPath,
-      gameStore.config.value.gamesUSBPath,
       gameStore.config.value.gamesNetPath,
       gameStore.config.value.gamesAssetsPath,
     ];

@@ -26,10 +26,17 @@ declare global {
     weight: number;
   }
 
+  interface VNDeveloper {
+    name: string;
+    origName: string;
+    kind: "romanized" | "developer" | "publisher";
+  }
+
   interface GameConfig {
     gameName: string;
     gameBrand: string;
     gameNameEN: string;
+    gameBrandEN: string;
     gameNameSlug: string;
     winePrefix: string;
     wineRunner: string;
