@@ -218,6 +218,7 @@ class GameEntry {
       throw new Error("Game is already in database, remove it first");
       return;
     }
+    this.gameBrandEN = gameConfig.gameBrandEN;
     this.gameNameEN = gameConfig.gameNameEN;
     this.gameNameSlug = gameConfig.gameNameSlug;
     if (!this.inLutrisDB) {
@@ -248,11 +249,8 @@ class GameEntry {
     }
   }
 
-  async rename(gameConfig: GameConfig) {
-    if (
-      this.gameName === gameConfig.gameName &&
-      this.gameBrand === gameConfig.gameBrand
-    ) {
+  async rename(newFolderName: string) {
+    if (this.folderName === newFolderName) {
       return;
     }
 
@@ -279,7 +277,7 @@ class GameEntry {
     ];
     for (const basePath of gameBasePaths) {
       const source = `${basePath}/${this.folderName}`;
-      const target = `${basePath}/${gameConfig.gameBrand}${this.splitter}${gameConfig.gameName}`;
+      const target = `${basePath}/${newFolderName}`;
       const sourceExists = await window.ipcRenderer.invoke(
         "fileExists",
         source
@@ -290,8 +288,13 @@ class GameEntry {
         await window.ipcRenderer.invoke("renameItem", source, target);
       }
     }
-    this.gameBrand = gameConfig.gameBrand;
-    this.gameName = gameConfig.gameName;
+    const newGameBrand = newFolderName.split(this.splitter)[0];
+    const newGameName = newFolderName
+      .split(this.splitter)
+      .slice(1)
+      .join(this.splitter);
+    this.gameBrand = newGameBrand;
+    this.gameName = newGameName;
     this.imageAssets.gameBrand = this.gameBrand;
     this.imageAssets.gameName = this.gameName;
     // if (wasLinked) {

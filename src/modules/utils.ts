@@ -548,7 +548,11 @@ async function getGameNameEN(gameName: string, gameBrnad: string) {
     (a, b) => b.weight - a.weight
   );
 
-  if (!cleanedCandidates.some((title) => title.title === romanizedName)) {
+  if (
+    !cleanedCandidates.some(
+      (title) => slugify(title.title) === slugify(romanizedName)
+    )
+  ) {
     const romanizedTitle: VNTitle = {
       title: romanizedName,
       origTitle: gameName,

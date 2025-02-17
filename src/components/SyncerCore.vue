@@ -246,7 +246,7 @@ window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
       1000;
 
     incrementsPerSec.value.push(incrementPerSec);
-    if (incrementsPerSec.value.length > 5) {
+    if (incrementsPerSec.value.length > 15) {
       incrementsPerSec.value.shift();
     }
 

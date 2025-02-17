@@ -22,14 +22,14 @@ declare global {
   interface VNTitle {
     title: string;
     origTitle: string;
-    kind: "romanized" | "alias" | "title" | "releaseTitle";
+    kind: "romanized" | "alias" | "title" | "releaseTitle" | "stored";
     weight: number;
   }
 
   interface VNDeveloper {
     name: string;
     origName: string;
-    kind: "romanized" | "developer" | "publisher";
+    kind: "romanized" | "developer" | "publisher" | "stored";
   }
 
   interface GameConfig {

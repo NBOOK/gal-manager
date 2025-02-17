@@ -80,7 +80,7 @@ async function getGameENCandidates() {
 function checkFolderNameFormat() {
   if (!folderName.value) return "Folder name is empty.";
   if (!folderName.value.includes(props.game.splitter))
-    return "Folder name must contain a splitter.";
+    return "Folder name must contain original splitter.";
 
   const gameBrand = folderName.value.split(props.game.splitter)[0];
   const gameName = folderName.value
@@ -95,7 +95,14 @@ function checkFolderNameFormat() {
 function checkWindowsForbiddenChars() {
   const forbiddenChars = /[<>:"/\\|?*]/;
   if (forbiddenChars.test(folderName.value))
-    return "Folder name contains forbidden characters.";
+    return `Folder name contains forbidden characters: ${folderName.value.match(
+      forbiddenChars
+    )}`;
+  if (folderName.value.endsWith(" ") || folderName.value.startsWith(" "))
+    return "Folder name cannot start or end with a space.";
+  if (folderName.value.endsWith("."))
+    return "Folder name cannot end with a dot.";
+
   return true;
 }
 
@@ -179,7 +186,12 @@ async function setUpTitles() {
   if (props.game.inDatabase) {
     gameConfig.gameNameEN = props.game.gameNameEN;
     enTitleColor.value = titleKindColor.stored;
-    gameConfig.gameBrandEN = props.game.gameBrandEN;
+    // gameConfig.gameBrandEN = props.game.gameBrandEN;
+    selectedBrands.value.push({
+      name: props.game.gameBrandEN,
+      origName: props.game.gameBrand,
+      kind: "stored",
+    });
     enBrandColor.value = titleKindColor.stored;
     gameConfig.gameNameSlug = props.game.gameNameSlug;
     slugTitleColor.value = titleKindColor.stored;
@@ -198,6 +210,8 @@ async function setUpTitles() {
           (brand) => brand.kind === "publisher"
         )
       );
+    if (selectedBrands.value.length === 0)
+      selectedBrands.value.push(gameBrandENCandidates.value[0]);
     gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
     slugTitleColor.value = enTitleColor.value;
   }
@@ -234,35 +248,44 @@ async function setupEnv() {
       gameConfig.wineRunner = cachedConfig.wine.version;
     else if (
       gameStore.lutrisDB.wineRunners.includes(
-        gameStore.config.lutrisDefaultWineRunner
+        gameStore.config.value.lutrisDefaultWineRunner
       )
     )
-      gameConfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
+      gameConfig.wineRunner = gameStore.config.value.lutrisDefaultWineRunner;
     else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
 
     if (cachedConfig.system && cachedConfig.system.locale)
       gameConfig.locale = cachedConfig.system.locale;
-    else if (gameStore.config.locale)
-      gameConfig.locale = gameStore.config.locale;
+    else if (gameStore.config.value.locale)
+      gameConfig.locale = gameStore.config.value.locale;
     else gameConfig.locale = "ja_JP.utf8";
   } else {
     if (
       gameStore.lutrisDB.winePrefixes.includes(
-        gameStore.config.lutrisDefaultWinePrefix
+        gameStore.config.value.lutrisDefaultWinePrefix
       )
-    )
-      gameConfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
-    else gameConfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
+    ) {
+      console.log(
+        `${gameStore.config.value.lutrisDefaultWinePrefix} in ${gameStore.lutrisDB.winePrefixes}`
+      );
+      gameConfig.winePrefix = gameStore.config.value.lutrisDefaultWinePrefix;
+    } else {
+      console.log(
+        `${gameStore.config.value.lutrisDefaultWinePrefix} not in ${gameStore.lutrisDB.winePrefixes}`
+      );
+      gameConfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
+    }
 
     if (
       gameStore.lutrisDB.wineRunners.includes(
-        gameStore.config.lutrisDefaultWineRunner
+        gameStore.config.value.lutrisDefaultWineRunner
       )
     )
-      gameConfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
+      gameConfig.wineRunner = gameStore.config.value.lutrisDefaultWineRunner;
     else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
 
-    if (gameStore.config.locale) gameConfig.locale = gameStore.config.locale;
+    if (gameStore.config.value.locale)
+      gameConfig.locale = gameStore.config.value.locale;
     else gameConfig.locale = "ja_JP.utf8";
   }
 
@@ -298,9 +321,15 @@ watch(
 
 async function addGameToDB() {
   dbAdding.value = true;
-  const nameChanged =
-    gameConfig.gameName !== props.game.gameName ||
-    gameConfig.gameBrand !== props.game.gameBrand;
+
+  gameConfig.gameBrand = folderName.value.split(props.game.splitter)[0];
+  gameConfig.gameName = folderName.value
+    .split(props.game.splitter)
+    .slice(1)
+    .join(props.game.splitter);
+
+  console.log("Adding...", gameConfig);
+  const nameChanged = folderName.value !== props.game.folderName;
 
   if (props.game.inDatabase > 0) {
     console.log("Game already in database! Removing it...");
@@ -310,7 +339,7 @@ async function addGameToDB() {
   }
   if (nameChanged) {
     console.log("Game name changed! Updating it...");
-    await props.game.rename(gameConfig);
+    await props.game.rename(folderName.value);
   }
   await props.game.addDB(gameConfig);
   dbAdding.value = false;
