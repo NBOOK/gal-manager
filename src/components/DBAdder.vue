@@ -27,6 +27,8 @@ const executablesLoading = ref(true);
 const dbAdding = ref(false);
 const dbRemoving = ref(false);
 
+const folderName = ref("");
+
 function slugify(name: string, slug: string) {
   if (slugSync.value) {
     return utils.slugify(name);
@@ -59,7 +61,6 @@ const gameConfig = reactive<GameConfig>({
   steamCategories: [],
   lutrisCategories: [],
 });
-const folderName = ref("");
 const gameBrandFromFolder = computed(
   () => folderName.value.split(props.game.splitter)[0]
 );
@@ -67,13 +68,34 @@ const gameNameFromFolder = computed(() =>
   folderName.value.split(props.game.splitter).slice(1).join(props.game.splitter)
 );
 
-async function getGameENCandidates() {
-  const gameName = gameConfig.gameName;
-  const gameBrnad = gameConfig.gameBrand;
+async function getSetGameENCandidates() {
   enTitleLoading.value = true;
-  const titlesAndBrands = await utils.getGameNameEN(gameName, gameBrnad);
+  const titlesAndBrands = await utils.getGameNameEN(
+    gameConfig.gameName,
+    gameConfig.gameBrand
+  );
   gameNameENCandidates.value = titlesAndBrands.titles;
   gameBrandENCandidates.value = titlesAndBrands.brands;
+
+  gameConfig.gameName = gameNameENCandidates.value[0].origTitle;
+  gameConfig.gameNameEN = gameNameENCandidates.value[0].title;
+  enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
+  selectedBrands.value = [];
+  selectedBrands.value.push(
+    ...gameBrandENCandidates.value.filter((brand) => brand.kind === "developer")
+  );
+  if (selectedBrands.value.length === 0)
+    selectedBrands.value.push(
+      ...gameBrandENCandidates.value.filter(
+        (brand) => brand.kind === "publisher"
+      )
+    );
+  if (selectedBrands.value.length === 0)
+    selectedBrands.value.push(gameBrandENCandidates.value[0]);
+  gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
+  slugTitleColor.value = enTitleColor.value;
+  console.log("Set game EN candidates", gameNameENCandidates.value);
+
   enTitleLoading.value = false;
 }
 
@@ -156,7 +178,7 @@ watch(
 );
 
 watch(
-  () => selectedBrands.value.length,
+  () => selectedBrands.value,
   () => {
     console.log(selectedBrands.value);
     const sorted = selectedBrands.value.sort((a, b) => {
@@ -170,7 +192,11 @@ watch(
       titleKindColor[
         sorted.some((brand) => brand.kind === "developer")
           ? "developer"
-          : "publisher"
+          : sorted.some((brand) => brand.kind === "developer")
+          ? "publisher"
+          : props.game.inLutrisDB
+          ? "stored"
+          : "romanized"
       ];
   }
 );
@@ -180,8 +206,6 @@ async function setUpTitles() {
   // handled by watching folderName later
   gameConfig.gameName = props.game.gameName;
   gameConfig.gameBrand = props.game.gameBrand;
-
-  await getGameENCandidates();
 
   if (props.game.inDatabase) {
     gameConfig.gameNameEN = props.game.gameNameEN;
@@ -195,26 +219,18 @@ async function setUpTitles() {
     enBrandColor.value = titleKindColor.stored;
     gameConfig.gameNameSlug = props.game.gameNameSlug;
     slugTitleColor.value = titleKindColor.stored;
-  } else {
-    gameConfig.gameName = gameNameENCandidates.value[0].origTitle;
-    gameConfig.gameNameEN = gameNameENCandidates.value[0].title;
-    enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
-    selectedBrands.value.push(
-      ...gameBrandENCandidates.value.filter(
-        (brand) => brand.kind === "developer"
-      )
+
+    const titlesAndBrands = await utils.getGameNameEN(
+      gameConfig.gameName,
+      gameConfig.gameBrand
     );
-    if (selectedBrands.value.length === 0)
-      selectedBrands.value.push(
-        ...gameBrandENCandidates.value.filter(
-          (brand) => brand.kind === "publisher"
-        )
-      );
-    if (selectedBrands.value.length === 0)
-      selectedBrands.value.push(gameBrandENCandidates.value[0]);
-    gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
-    slugTitleColor.value = enTitleColor.value;
+    gameNameENCandidates.value = titlesAndBrands.titles;
+    gameBrandENCandidates.value = titlesAndBrands.brands;
+  } else {
+    await getSetGameENCandidates();
   }
+
+  enTitleLoading.value = false;
 }
 
 async function setUpExcutables() {
@@ -311,9 +327,31 @@ async function setupEnv() {
     gameConfig.steamCategories.push("Gal");
 }
 
+function reset() {
+  enTitleLoading.value = true;
+  gameNameENCandidates.value = [];
+  gameBrandENCandidates.value = [];
+  allSteamCategories.value = [];
+  allLutrisCategories.value = [];
+  isTitleMenuOpen.value = false;
+  isBrandMenuOpen.value = false;
+  slugSync.value = true;
+  executables.value = [];
+  executableIcons.value = {};
+  enTitleColor.value = "";
+  enBrandColor.value = "";
+  slugTitleColor.value = "";
+  executablesLoading.value = true;
+  dbAdding.value = false;
+  dbRemoving.value = false;
+  folderName.value = "";
+  selectedBrands.value = [];
+}
+
 watch(
   () => props.game,
   async () => {
+    reset();
     Promise.all([setUpTitles(), setUpExcutables(), setupEnv()]);
   },
   { immediate: true }
@@ -407,7 +445,7 @@ async function getExecutableIcons() {
                 density="compact"
                 variant="plain"
                 icon="$mdiSearchWeb"
-                @click="async () => getGameENCandidates()"
+                @click="async () => getSetGameENCandidates()"
                 style="margin-right: -4px"
               />
             </template>

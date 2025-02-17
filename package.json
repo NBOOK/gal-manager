@@ -1,11 +1,12 @@
 {
   "name": "gal-manager",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
+    "postbuild": "VERSION=$(node -p \"require('./package.json').version\") && cp release/$VERSION/*.AppImage ~/Applications/GalManager.AppImage",
     "preview": "vite preview"
   },
   "dependencies": {

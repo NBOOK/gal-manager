@@ -113,14 +113,14 @@ class LutrisDB {
     const timestamp: number = Math.floor(Date.now() / 1000);
     const exePath = `${game.basePath}/${game.folderName}/${gameConfig.executable}`;
     const lutrisPerGameConfig: {
-      brand_game: string;
+      game_brand: string;
       name: string;
       game_slug: string;
       game: { exe: string; prefix: string };
       system: { locale: string };
       wine?: { version: string };
     } = {
-      brand_game: gameConfig.gameBrandEN,
+      game_brand: gameConfig.gameBrandEN,
       name: gameConfig.gameNameEN,
       game_slug: gameConfig.gameNameSlug,
       game: {
@@ -309,6 +309,9 @@ class LutrisDB {
         `${this.lutrisGameConfigPath}/${gameProperties.gameConfigName}.yml`
       );
       this.lustrisPerGameConfigs[game.gameName] = pergameConfig;
+      if (pergameConfig.game_brand) {
+        gameProperties.gameBrandEN = pergameConfig.game_brand;
+      }
     }
     return gameProperties;
   }
