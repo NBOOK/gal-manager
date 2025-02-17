@@ -4,8 +4,6 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 import registerIpcMain from "./src/ipc-registration";
 
-import { getFileIcon } from "./src/ico";
-
 // check if we are running in development mode
 const isDev = process.env.NODE_ENV === "development";
 

@@ -21,12 +21,11 @@ onMounted(async () => {
   if (Object.keys(gameStore.config.value).length === 0) {
     gameStore.settingsOpen = true;
   } else {
-    await init();
+    init();
   }
 });
 
 async function init() {
-  console.log(await window.ipcRenderer.invoke("kuroshiroOp", "init"));
   const externalLinkTarget = await window.ipcRenderer.invoke(
     "readlink",
     gameStore.config.value.gamesExternalPath
@@ -34,8 +33,9 @@ async function init() {
   gameStore.netDiskOnline =
     externalLinkTarget === gameStore.config.value.gamesNetPath;
 
-  await gameStore.steamDB.setup(gameStore.config.value);
-  await gameStore.lutrisDB.setup(gameStore.config.value);
+  window.ipcRenderer.invoke("kuroshiroOp", "init");
+  gameStore.steamDB.setup(gameStore.config.value);
+  gameStore.lutrisDB.setup(gameStore.config.value);
 
   ready.value = true;
 }

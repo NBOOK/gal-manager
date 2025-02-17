@@ -20,7 +20,6 @@ export default defineConfig({
             rollupOptions: {
               external: [
                 "sharp",
-                // "@sglkc",
                 // other `C/C++` addons
               ],
             },
@@ -42,6 +41,9 @@ export default defineConfig({
           : {},
     }),
   ],
+  // esbuild: {
+  //   drop: ["console", "debugger"],
+  // },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

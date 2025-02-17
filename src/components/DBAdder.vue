@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch, onMounted } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useGameStore } from "@/store/global-store";
 import GameEntry from "@/modules/GameEntry";
 import utils from "@/modules/utils";
@@ -168,7 +168,7 @@ watch(
   }
 );
 
-onMounted(async () => {
+async function setUpTitles() {
   folderName.value = props.game.folderName;
   // handled by watching folderName later
   gameConfig.gameName = props.game.gameName;
@@ -187,9 +187,6 @@ onMounted(async () => {
     gameConfig.gameName = gameNameENCandidates.value[0].origTitle;
     gameConfig.gameNameEN = gameNameENCandidates.value[0].title;
     enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
-    // gameConfig.gameBrand = gameBrandENCandidates.value[0].origName;
-    // gameConfig.gameBrandEN = gameBrandENCandidates.value[0].name;
-    // enBrandColor.value = titleKindColor[gameBrandENCandidates.value[0].kind];
     selectedBrands.value.push(
       ...gameBrandENCandidates.value.filter(
         (brand) => brand.kind === "developer"
@@ -204,7 +201,9 @@ onMounted(async () => {
     gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
     slugTitleColor.value = enTitleColor.value;
   }
+}
 
+async function setUpExcutables() {
   const gamePath = `${props.game.basePath}/${props.game.folderName}`;
   executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
     .filter(
@@ -212,29 +211,60 @@ onMounted(async () => {
         file.isFile && file.name.toLowerCase().endsWith(".exe")
     )
     .map((file: DirEntry) => file.name);
-  executables.value = await utils.guessLauncher(executables.value);
   await getExecutableIcons();
-  gameConfig.executable = executables.value[0];
+  executables.value = await utils.guessLauncher(executables.value);
+  if (props.game.inLutrisDB) {
+    gameConfig.executable = gameStore.lutrisDB
+      .getCachedGameConfig(props.game)
+      .game.exe.split("/")
+      .pop();
+  } else {
+    gameConfig.executable = executables.value[0];
+  }
   executablesLoading.value = false;
+}
 
-  if (
-    gameStore.lutrisDB.winePrefixes.includes(
-      gameStore.config.lutrisDefaultWinePrefix
+async function setupEnv() {
+  if (props.game.inLutrisDB) {
+    const cachedConfig = gameStore.lutrisDB.getCachedGameConfig(props.game);
+
+    gameConfig.winePrefix = cachedConfig.game.prefix.split("/").pop();
+
+    if (cachedConfig.wine && cachedConfig.wine.version)
+      gameConfig.wineRunner = cachedConfig.wine.version;
+    else if (
+      gameStore.lutrisDB.wineRunners.includes(
+        gameStore.config.lutrisDefaultWineRunner
+      )
     )
-  )
-    gameConfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
-  else gameConfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
+      gameConfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
+    else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
 
-  if (
-    gameStore.lutrisDB.wineRunners.includes(
-      gameStore.config.lutrisDefaultWineRunner
+    if (cachedConfig.system && cachedConfig.system.locale)
+      gameConfig.locale = cachedConfig.system.locale;
+    else if (gameStore.config.locale)
+      gameConfig.locale = gameStore.config.locale;
+    else gameConfig.locale = "ja_JP.utf8";
+  } else {
+    if (
+      gameStore.lutrisDB.winePrefixes.includes(
+        gameStore.config.lutrisDefaultWinePrefix
+      )
     )
-  )
-    gameConfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
-  else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
+      gameConfig.winePrefix = gameStore.config.lutrisDefaultWinePrefix;
+    else gameConfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
 
-  if (gameStore.config.locale) gameConfig.locale = gameStore.config.locale;
-  else gameConfig.locale = "ja_JP.utf8";
+    if (
+      gameStore.lutrisDB.wineRunners.includes(
+        gameStore.config.lutrisDefaultWineRunner
+      )
+    )
+      gameConfig.wineRunner = gameStore.config.lutrisDefaultWineRunner;
+    else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
+
+    if (gameStore.config.locale) gameConfig.locale = gameStore.config.locale;
+    else gameConfig.locale = "ja_JP.utf8";
+  }
 
   allLutrisCategories.value = Object.keys(
     gameStore.lutrisDB.lutrisCategories
@@ -256,7 +286,15 @@ onMounted(async () => {
     allSteamCategories.value.includes("Gal")
   )
     gameConfig.steamCategories.push("Gal");
-});
+}
+
+watch(
+  () => props.game,
+  async () => {
+    Promise.all([setUpTitles(), setUpExcutables(), setupEnv()]);
+  },
+  { immediate: true }
+);
 
 async function addGameToDB() {
   dbAdding.value = true;
@@ -287,20 +325,14 @@ async function removeGameFromDB() {
 }
 
 async function getExecutableIcons() {
-  // const fileIcon = ref([]);
-  // async function getFileIcon() {
-  //   fileIcon.value = await window.ipcRenderer.invoke(
-  //     "getFileIcon",
-  //     "/home/deck/Games/Gal/ALcot - LOVEREC/LOVEREC.exe"
-  //   );
-  // }
-  // getFileIcon();
-  for (const executable of executables.value) {
+  const iconPromises = executables.value.map(async (executable) => {
     const exePath = `${props.game.basePath}/${props.game.folderName}/${executable}`;
     const iconBase64 = await window.ipcRenderer.invoke("getFileIcon", exePath);
-    if (iconBase64.length > 0)
+    if (iconBase64.length > 0) {
       executableIcons.value[executable] = iconBase64[0];
-  }
+    }
+  });
+  await Promise.all(iconPromises);
 }
 </script>
 

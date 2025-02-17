@@ -96,6 +96,8 @@ import {
   mdiArrowUpRight,
   mdiArrowUpRightBold,
   mdiTranslate,
+  mdiFolderImage,
+  mdiFolderMultipleImage,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
@@ -197,6 +199,8 @@ const aliasesCustom = {
   mdiArrowUpRight,
   mdiArrowUpRightBold,
   mdiTranslate,
+  mdiFolderImage,
+  mdiFolderMultipleImage,
 };
 
 const vuetify = createVuetify({

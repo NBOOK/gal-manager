@@ -27,21 +27,32 @@ onUnmounted(() => {
 
 const syncedSize = ref(0);
 const totalSize = computed(() => {
+  console.log("totalSize computing");
   return props.manager.syncList.reduce((accDir, dirSyncer) => {
     return (
       accDir +
       dirSyncer.fileSyncers.reduce(
         (accFile: number, fileSyncer: FileSyncer) => {
-          if (fileSyncer.behavior.startsWith("deleteGame"))
-            // no file copy here
-            return accFile;
-          else if (fileSyncer.behavior.endsWith("R"))
-            // from left to right
-            return accFile + fileSyncer.fileInfoL!.size;
-          else if (fileSyncer.behavior.endsWith("L"))
-            // from right to left
-            return accFile + fileSyncer.fileInfoR!.size;
-          else return accFile; // should not reach here, but just in case
+          try {
+            // console.log(fileSyncer);
+            if (fileSyncer.behavior.startsWith("delete"))
+              // no file copy here
+              return accFile;
+            // if (!fileSyncer.fileInfoL)
+            //   return accFile + fileSyncer.fileInfoR!.size;
+            // else if (!fileSyncer.fileInfoR)
+            //   return accFile + fileSyncer.fileInfoL!.size;
+            else if (fileSyncer.behavior.endsWith("R"))
+              // from left to right
+              return accFile + fileSyncer.fileInfoL!.size;
+            else if (fileSyncer.behavior.endsWith("L"))
+              // from right to left
+              return accFile + fileSyncer.fileInfoR!.size;
+            else return accFile; // should not reach here, but just in case
+          } catch (e) {
+            console.log("Error in totalSize computed", fileSyncer);
+            throw e;
+          }
         },
         0
       )

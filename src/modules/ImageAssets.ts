@@ -1,4 +1,5 @@
 import { useGameStore } from "@/store/global-store";
+import GameEntry from "./GameEntry";
 let gameStore: ReturnType<typeof useGameStore>;
 
 export function imageAssetsSetConfig() {
@@ -20,6 +21,8 @@ class ImageAssets {
   capsuleSDName: string = "";
   headerSDName: string = "";
   heroSDName: string = "";
+
+  game: GameEntry | null = null;
 
   get gameFolderName() {
     return `${this.gameBrand}${this.splitter}${this.gameName}`;
@@ -62,12 +65,14 @@ class ImageAssets {
   }
 
   static async create(
+    game: GameEntry,
     basePath: string,
     gameBrand: string,
     gameName: string,
     splitter: string
   ): Promise<ImageAssets> {
     const imageAssets = new ImageAssets(
+      game,
       basePath,
       gameBrand,
       gameName,
@@ -78,11 +83,13 @@ class ImageAssets {
   }
 
   constructor(
+    game: GameEntry,
     basePath: string,
     gameBrand: string,
     gameName: string,
     splitter: string
   ) {
+    this.game = game;
     this.basePath = basePath;
     this.gameBrand = gameBrand;
     this.gameName = gameName;
@@ -182,19 +189,6 @@ class ImageAssets {
       })(),
     ]);
 
-    // copy to AssetsBackup folder
-    // const exclude = [this.assetsFolderPath];
-    // const include = [
-    //   this.capsulePath,
-    //   this.headerPath,
-    //   this.heroPath,
-    //   this.logoPath,
-    //   this.iconPath,
-    //   this.capsuleSDPath,
-    //   this.headerSDPath,
-    //   this.heroSDPath,
-    // ].filter((path) => path !== "");
-
     await Promise.all(
       this.validAssetsNames.map(async (assetName) => {
         const sourcePath = `${this.assetsFolderPath}/${assetName}`;
@@ -208,20 +202,63 @@ class ImageAssets {
     );
   }
 
-  async openImageOrGameFolder() {
-    //@TODO
-    // open image assets folder in file manager if exists
-    // else open game folder
-    // console.log(
-    //   "openImageOrGameFolder",
-    //   this.basePath,
-    //   this.gameBrand,
-    //   this.gameName
-    // );
-    if (await window.ipcRenderer.invoke("fileExists", this.assetsFolderPath)) {
-      window.ipcRenderer.invoke("openPath", this.assetsFolderPath);
+  async openImageOrGameFolder(kind?: string) {
+    if (kind === "steam" && this.game?.inSteamDB) {
+      const steamAppId = gameStore.steamDB.getAppID(this.game);
+      for (const suffix of ["", "p", "_hero", "_logo"]) {
+        for (const format of ["jpg", "png", "webp"]) {
+          const assetName = `${steamAppId}${suffix}.${format}`;
+          console.log(
+            "Open Steam Grid Image: ",
+            `${gameStore.config.value.steamGridPath}/${assetName}`
+          );
+          if (
+            await window.ipcRenderer.invoke(
+              "fileExists",
+              `${gameStore.config.value.steamGridPath}/${assetName}`
+            )
+          ) {
+            window.ipcRenderer.invoke(
+              "showItemInFolder",
+              `${gameStore.config.value.steamGridPath}/${assetName}`
+            );
+            return;
+          }
+        }
+      }
+    } else if (kind === "lutris" && this.game?.inLutrisDB) {
+      const slug = this.game?.gameNameSlug;
+      for (const targetFolderPath of [
+        gameStore.config.value.lutrisBannerPath,
+        gameStore.config.value.lutrisCoverPath,
+        gameStore.config.value.lutrisIconPath,
+      ]) {
+        for (const format of ["jpg", "png", "webp"]) {
+          const assetName = `${slug}.${format}`;
+          if (
+            await window.ipcRenderer.invoke(
+              "fileExists",
+              `${targetFolderPath}/${assetName}`
+            )
+          ) {
+            window.ipcRenderer.invoke(
+              "showItemInFolder",
+              `${targetFolderPath}/${assetName}`
+            );
+            return;
+          }
+        }
+      }
     } else {
-      window.ipcRenderer.invoke("openPath", this.gameFolderPath);
+      if (
+        await window.ipcRenderer.invoke("fileExists", this.assetsFolderPath)
+      ) {
+        window.ipcRenderer.invoke("openPath", this.assetsFolderPath);
+      } else if (
+        await window.ipcRenderer.invoke("fileExists", this.gameFolderPath)
+      ) {
+        window.ipcRenderer.invoke("openPath", this.gameFolderPath);
+      }
     }
   }
 
@@ -237,10 +274,10 @@ class ImageAssets {
 
   get validAssetsNames(): string[] {
     return [
+      this.headerName,
+      this.capsuleName,
       this.iconName,
       this.logoName,
-      this.capsuleName,
-      this.headerName,
       this.heroName,
       this.capsuleSDName,
       this.headerSDName,

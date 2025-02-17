@@ -570,7 +570,11 @@ async function getGameNameEN(gameName: string, gameBrnad: string) {
     title.weight = ((title.weight - minWeight) / (maxWeight - minWeight)) * 100;
   }
 
-  if (!brandCandidates.some((brand) => brand.name === romanizedBrand)) {
+  if (
+    !brandCandidates.some(
+      (brand) => slugify(brand.name) === slugify(romanizedBrand)
+    )
+  ) {
     const romanizedDeveloper: VNDeveloper = {
       name: romanizedBrand,
       origName: gameBrnad,
@@ -585,63 +589,71 @@ async function getGameNameEN(gameName: string, gameBrnad: string) {
 async function guessLauncher(executables: string[]): Promise<string[]> {
   const exe2score: Record<string, number> = {};
 
-  for (const executable of executables) {
-    const exe = executable.toLowerCase();
-    let score = 0;
+  const scores = await Promise.all(
+    executables.map(async (executable) => {
+      const exe = executable.toLowerCase();
+      let score = 0;
 
-    // prettier-ignore
-    if (["advhd.exe", "bgi.exe", "cs2.exe", "exhibit.exe", 'siglusengine.exe']
-        .includes(exe)
-    ) {
-      score += 10;
-    }
-
-    const hasJapanese = await window.ipcRenderer.invoke(
-      "kuroshiroOp",
-      "hasJapanese",
-      {
-        text: exe,
+      // prettier-ignore
+      if (["advhd.exe", "bgi.exe", "cs2.exe", "exhibit.exe", 'siglusengine.exe']
+          .includes(exe)
+      ) {
+        score += 10;
       }
-    );
-    const pureRomaji = isKana(toKana(exe.toLowerCase().replace(/\.exe$/, "")));
-    if (hasJapanese || pureRomaji) {
-      score += 2;
-    }
 
-    if (
-      ["vol", "game", "fd", "launch", "load", "start"].some((keyword) =>
-        exe.includes(keyword)
-      )
-    ) {
-      score += 1;
-    }
+      const hasJapanese = await window.ipcRenderer.invoke(
+        "kuroshiroOp",
+        "hasJapanese",
+        {
+          text: exe,
+        }
+      );
+      const pureRomaji = isKana(
+        toKana(exe.toLowerCase().replace(/\.exe$/, ""))
+      );
+      if (hasJapanese || pureRomaji) {
+        score += 2;
+      }
 
-    if (/\d/.test(exe)) {
-      score += 1;
-    }
+      if (
+        ["vol", "game", "fd", "launch", "load", "start"].some((keyword) =>
+          exe.includes(keyword)
+        )
+      ) {
+        score += 1;
+      }
 
-    // prettier-ignore
-    if ([
-        "acmp.exe", "bhvc.exe", "autorun.exe", "authtool.exe", "bootmenu.exe",
-        "bootstrap.exe",
-        ].includes(exe)
-    ) {
-      score -= 10;
-    }
+      if (/\d/.test(exe)) {
+        score += 1;
+      }
 
-    // prettier-ignore
-    if ([
-        "gui", "32", "64", "inst", "menu", "update", "setting", "setup",
-        "tool", "cfg", "conf", "crash", "bug", "upload", "patch", "copy",
-        "courier", "train", "check", "file", "chk", "unity", "save",
-        "viewer", "protect", "support", "unins", 
-        "設定", "チェック", "ツール"
-        ].some((keyword) => exe.includes(keyword))
-    ) {
-      score -= 3;
-    }
+      // prettier-ignore
+      if ([
+          "acmp.exe", "bhvc.exe", "autorun.exe", "authtool.exe", "bootmenu.exe",
+          "bootstrap.exe",
+          ].includes(exe)
+      ) {
+        score -= 10;
+      }
+
+      // prettier-ignore
+      if ([
+          "gui", "32", "64", "inst", "menu", "update", "setting", "setup",
+          "tool", "cfg", "conf", "crash", "bug", "upload", "patch", "copy",
+          "courier", "train", "check", "file", "chk", "unity", "save",
+          "viewer", "protect", "support", "unins", 
+          "設定", "チェック", "ツール"
+          ].some((keyword) => exe.includes(keyword))
+      ) {
+        score -= 3;
+      }
+      return { executable, score };
+    })
+  );
+
+  scores.forEach(({ executable, score }) => {
     exe2score[executable] = score;
-  }
+  });
 
   const sortedExe = executables.sort((a, b) => exe2score[b] - exe2score[a]);
 

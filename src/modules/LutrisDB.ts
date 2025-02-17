@@ -219,8 +219,7 @@ class LutrisDB {
   private async _removeGame(game: GameEntry) {
     console.log("Removing: ", game);
     const lutrisGameIndex = this.getGameIndex(game);
-    const perGameConfigName = (await this.getGameProperties(game))
-      .gameConfigName;
+    const perGameConfigName = (await this.getGameConfig(game)).gameConfigName;
 
     // remove per game config
     console.log("Removing per game config");
@@ -288,7 +287,7 @@ class LutrisDB {
     return largestIndex + 1;
   }
 
-  async getGameProperties(game: GameEntry): Promise<Record<string, string>> {
+  async getGameConfig(game: GameEntry): Promise<Record<string, string>> {
     if (!this.inDB(game)) {
       return {};
     }
@@ -314,7 +313,7 @@ class LutrisDB {
     return gameProperties;
   }
 
-  getPerGameConfig(game: GameEntry): Record<string, any> {
+  getCachedGameConfig(game: GameEntry): Record<string, any> {
     return this.lustrisPerGameConfigs[game.gameName];
   }
 

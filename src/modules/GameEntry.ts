@@ -62,7 +62,7 @@ class GameEntry {
 
   get wineRunner(): string {
     if (!this.inLutrisDB) return "";
-    const perGameConfig = gameStore.lutrisDB.getPerGameConfig(this);
+    const perGameConfig = gameStore.lutrisDB.getCachedGameConfig(this);
     // console.log("perGameConfig of ", this.gameName, perGameConfig);
     if (perGameConfig.wine && perGameConfig.wine.version) {
       return perGameConfig.wine.version;
@@ -73,7 +73,7 @@ class GameEntry {
 
   get winePrefix(): string {
     if (!this.inLutrisDB) return "";
-    const perGameConfig = gameStore.lutrisDB.getPerGameConfig(this);
+    const perGameConfig = gameStore.lutrisDB.getCachedGameConfig(this);
     return perGameConfig.game.prefix.replace(/\/$/, "").split("/").pop();
   }
 
@@ -116,6 +116,7 @@ class GameEntry {
         `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}`
       ),
       ImageAssets.create(
+        this,
         this.basePath,
         this.gameBrand,
         this.gameName,
@@ -128,7 +129,7 @@ class GameEntry {
 
     // this.inLutrisDB = gameStore.lutrisDB.inDB(this);
     if (this.inLutrisDB) {
-      const gameProperties = await gameStore.lutrisDB.getGameProperties(this);
+      const gameProperties = await gameStore.lutrisDB.getGameConfig(this);
       this.gameNameEN = gameProperties.gameNameEN;
       if (gameProperties.gameBrandEN) {
         this.gameBrandEN = gameProperties.gameBrandEN;

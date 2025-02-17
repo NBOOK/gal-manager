@@ -357,7 +357,11 @@ function pushToDownloadList(target: string) {
           icon
           size="x-small"
           variant="text"
-          @click="imageBtn.action"
+          @click="
+            {
+              /*imageBtn.action*/
+            }
+          "
           v-bind="props"
         >
           <v-icon
@@ -365,6 +369,41 @@ function pushToDownloadList(target: string) {
             :color="imageBtn.color"
             size="x-large"
           ></v-icon>
+          <v-menu
+            activator="parent"
+            scroll-strategy="close"
+            transition="slide-x-reverse-transition"
+            location="start center"
+            origin="end center"
+          >
+            <v-sheet rounded="lg">
+              <v-btn-group density="compact">
+                <v-btn @click="game.imageAssets.openImageOrGameFolder()">
+                  <v-icon variant="text" icon="$mdiFolderImage" />
+                </v-btn>
+
+                <v-btn
+                  :readonly="!game.inSteamDB"
+                  @click="game.imageAssets.openImageOrGameFolder('steam')"
+                >
+                  <v-icon
+                    :color="game.inSteamDB ? 'grey-darken-4' : 'blue-grey'"
+                    >$mdiSteam</v-icon
+                  >
+                </v-btn>
+
+                <v-btn
+                  :readonly="!game.inSteamDB"
+                  @click="game.imageAssets.openImageOrGameFolder('lutris')"
+                >
+                  <v-icon
+                    :color="game.inSteamDB ? 'grey-darken-4' : 'blue-grey'"
+                    >$mdiFolderMultipleImage</v-icon
+                  >
+                </v-btn>
+              </v-btn-group>
+            </v-sheet>
+          </v-menu>
         </v-btn>
       </template>
     </v-hover>

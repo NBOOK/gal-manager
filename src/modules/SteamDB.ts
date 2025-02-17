@@ -288,7 +288,13 @@ class SteamDB {
     }
   }
 
-  private getAppID(gameNameEN: string): number {
+  getAppID(gameOrGameNameEN: GameEntry | string): number {
+    let gameNameEN: string;
+    if (typeof gameOrGameNameEN === "string") {
+      gameNameEN = gameOrGameNameEN;
+    } else {
+      gameNameEN = gameOrGameNameEN.gameNameEN;
+    }
     const exe = "/usr/bin/flatpak";
     const uniqueID = exe + gameNameEN;
     const encoder = new TextEncoder();

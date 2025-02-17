@@ -454,11 +454,11 @@ async function sqliteDBOp(op: string, params: any): Promise<any> {
         return await sqliteDBGetGameCategories(params.lutrisGameIndex);
 
       case "setGameCategories":
-        console.log("setGameCategories:", params);
-        console.log(
-          "categoryIndices:",
-          JSON.parse(params.lutrisCategoryIndeces)
-        );
+        // console.log("setGameCategories:", params);
+        // console.log(
+        //   "categoryIndices:",
+        //   JSON.parse(params.lutrisCategoryIndeces)
+        // );
         return await sqliteDBSetGameCategories(
           params.lutrisGameIndex,
           JSON.parse(params.lutrisCategoryIndeces)
@@ -689,7 +689,7 @@ async function readVDF(filePath: string): Promise<any> {
 async function writeVDF(filePath: string, json: any): Promise<void> {
   try {
     const vdfString = vdf.dump(json);
-    console.log(vdfString);
+    // console.log(vdfString);
     await fs.promises.writeFile(filePath, vdfString, "utf8");
   } catch (error) {
     throw new Error(`写入 VDF 文件失败: ${error}`);
@@ -700,7 +700,7 @@ async function getSteamCategories(dbPath: string, steamId: string) {
   try {
     steamCat = new SteamCategories(dbPath, steamId);
     let categories;
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
       try {
         categories = await steamCat.read();
         break;
