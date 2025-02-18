@@ -19,32 +19,62 @@ style.innerHTML = `
   }`;
 document.head.appendChild(style);
 
-function setPageGame() {
-  if (processed.value + 1 < gameStore.dbEditList.length) {
-    switch (page.value) {
-      case 0:
-        page1Game.value = gameStore.dbEditList[processed.value + 1];
-        break;
-      case 1:
-        page2Game.value = gameStore.dbEditList[processed.value + 1];
-        break;
-      case 2:
-        page0Game.value = gameStore.dbEditList[processed.value + 1];
-        break;
+function setPageGame(direction: "forward" | "backward" = "forward") {
+  if (direction === "forward") {
+    if (processed.value + 1 < gameStore.dbEditList.length) {
+      switch (page.value) {
+        case 0:
+          page1Game.value = gameStore.dbEditList[processed.value + 1];
+          break;
+        case 1:
+          page2Game.value = gameStore.dbEditList[processed.value + 1];
+          break;
+        case 2:
+          page0Game.value = gameStore.dbEditList[processed.value + 1];
+          break;
+      }
     }
+    // if (processed.value + 2 < gameStore.dbEditList.length) {
+    //   switch (page.value) {
+    //     case 0:
+    //       page2Game.value = gameStore.dbEditList[processed.value + 2];
+    //       break;
+    //     case 1:
+    //       page0Game.value = gameStore.dbEditList[processed.value + 2];
+    //       break;
+    //     case 2:
+    //       page1Game.value = gameStore.dbEditList[processed.value + 2];
+    //       break;
+    //   }
+    // }
   }
-  if (processed.value + 2 < gameStore.dbEditList.length) {
-    switch (page.value) {
-      case 0:
-        page2Game.value = gameStore.dbEditList[processed.value + 2];
-        break;
-      case 1:
-        page0Game.value = gameStore.dbEditList[processed.value + 2];
-        break;
-      case 2:
-        page1Game.value = gameStore.dbEditList[processed.value + 2];
-        break;
+  if (direction === "backward") {
+    if (processed.value - 1 >= 0) {
+      switch (page.value) {
+        case 0:
+          page2Game.value = gameStore.dbEditList[processed.value - 1];
+          break;
+        case 1:
+          page0Game.value = gameStore.dbEditList[processed.value - 1];
+          break;
+        case 2:
+          page1Game.value = gameStore.dbEditList[processed.value - 1];
+          break;
+      }
     }
+    // if (processed.value - 2 >= 0) {
+    //   switch (page.value) {
+    //     case 0:
+    //       page1Game.value = gameStore.dbEditList[processed.value - 2];
+    //       break;
+    //     case 1:
+    //       page2Game.value = gameStore.dbEditList[processed.value - 2];
+    //       break;
+    //     case 2:
+    //       page0Game.value = gameStore.dbEditList[processed.value - 2];
+    //       break;
+    //   }
+    // }
   }
 }
 
@@ -53,7 +83,22 @@ function proceed() {
     abort();
   } else {
     processed.value++;
-    setPageGame();
+    setPageGame("forward");
+    const newWidth =
+      ((processed.value + 1) / gameStore.dbEditList.length) * 100;
+    style.innerHTML = `
+        #dbAdderCarousel>*>.v-progress-linear__determinate {
+          width: ${newWidth}% !important;
+        }`;
+  }
+}
+
+function goBack() {
+  if (processed.value === 0) {
+    abort();
+  } else {
+    processed.value--;
+    setPageGame("backward");
     const newWidth =
       ((processed.value + 1) / gameStore.dbEditList.length) * 100;
     style.innerHTML = `
@@ -78,7 +123,7 @@ watch(
     if (newValue) {
       processed.value = 0;
       page0Game.value = gameStore.dbEditList[0];
-      setPageGame();
+      setPageGame("forward");
       overlay.value = true;
 
       const newWidth =
@@ -113,6 +158,7 @@ watch(
           v-if="page0Game !== null"
           :game="page0Game"
           key="page0"
+          @goBack="goBack"
           @proceed="proceed"
           @abort="abort"
         />
@@ -120,6 +166,7 @@ watch(
           v-if="page1Game !== null"
           :game="page1Game"
           key="page1"
+          @goBack="goBack"
           @proceed="proceed"
           @abort="abort"
         />
@@ -127,6 +174,7 @@ watch(
           v-if="page2Game !== null"
           :game="page2Game"
           key="page2"
+          @goBack="goBack"
           @proceed="proceed"
           @abort="abort"
         />

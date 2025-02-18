@@ -20,6 +20,7 @@ declare global {
   }
 
   interface VNTitle {
+    id: string;
     title: string;
     origTitle: string;
     kind: "romanized" | "alias" | "title" | "releaseTitle" | "stored";
@@ -27,6 +28,7 @@ declare global {
   }
 
   interface VNDeveloper {
+    id: string;
     name: string;
     origName: string;
     kind: "romanized" | "developer" | "publisher" | "stored";

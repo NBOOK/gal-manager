@@ -5,7 +5,7 @@ import GameEntry from "@/modules/GameEntry";
 import utils from "@/modules/utils";
 
 const gameStore = useGameStore();
-const emit = defineEmits(["proceed", "abort"]);
+const emit = defineEmits(["goBack", "proceed", "abort"]);
 const props = defineProps<{ game: GameEntry }>();
 const game = computed(() => props.game);
 const gameNameENCandidates = ref<VNTitle[]>([]);
@@ -212,6 +212,7 @@ async function setUpTitles() {
     enTitleColor.value = titleKindColor.stored;
     // gameConfig.gameBrandEN = props.game.gameBrandEN;
     selectedBrands.value.push({
+      id: "",
       name: props.game.gameBrandEN,
       origName: props.game.gameBrand,
       kind: "stored",
@@ -401,271 +402,309 @@ async function getExecutableIcons() {
   });
   await Promise.all(iconPromises);
 }
+
+async function openVNDBLink(id: string) {
+  window.ipcRenderer.invoke("openExternal", `https://vndb.org/${id}`);
+}
 </script>
 
 <template>
   <v-carousel-item>
     <v-card rounded="lg" height="100%" class="pa-0 d-flex flex-column">
       <v-list class="ma-0 pa-8 flex-grow-1">
-        <!-- ------------------------- Orig Title ------------------------------- -->
-        <v-row class="flex-grow-0 mb-0">
-          <v-text-field
-            density="compact"
-            label="Folder Name"
-            variant="outlined"
-            clearable
-            clear-icon="$mdiBackspaceOutline"
-            placeholder="Game's orginal title."
-            prepend-icon="$mdiFolder"
-            :spellcheck="false"
-            :rules="[checkFolderNameFormat, checkWindowsForbiddenChars]"
-            :hint="
-              gameConfig.gameBrand +
-                props.game.splitter +
-                gameConfig.gameName ===
-              folderName
-                ? ''
-                : gameConfig.gameBrand +
-                  props.game.splitter +
-                  gameConfig.gameName
-            "
-            persistent-hint
-            v-model="folderName"
-            class="vn-title-textinput"
-          >
-            <template #append-inner>
-              <v-btn
-                v-if="folderName !== props.game.folderName"
+        <div class="mb-5 d-flex flex-row align-start justify-space-between">
+          <div class="flex-grow-1">
+            <!-- ------------------------- Orig Title ------------------------------- -->
+            <v-row class="flex-grow-0 mb-0">
+              <v-text-field
                 density="compact"
-                variant="plain"
-                icon="$mdiReload"
-                @click="folderName = props.game.folderName"
-              />
-              <v-btn
-                density="compact"
-                variant="plain"
-                icon="$mdiSearchWeb"
-                @click="async () => getSetGameENCandidates()"
-                style="margin-right: -4px"
-              />
-            </template>
-          </v-text-field>
-        </v-row>
-
-        <!-- ------------------------- Eng Title ------------------------------- -->
-        <v-row class="flex-grow-0 mb-0">
-          <v-text-field
-            density="compact"
-            label="EN Title"
-            variant="outlined"
-            clearable
-            clear-icon="$mdiBackspaceOutline"
-            placeholder="Game's English/romanized title."
-            prepend-icon="$mdiTranslate"
-            :spellcheck="false"
-            :loading="enTitleLoading"
-            v-model="gameConfig.gameNameEN"
-            :bg-color="gameConfig.gameNameEN ? enTitleColor : ''"
-            :hint="gameConfig.gameName"
-            persistent-hint
-            @input="
-              () => {
-                enTitleColor = '';
-                slugTitleColor = '';
-                isTitleMenuOpen = false;
-              }
-            "
-            @click:clear="
-              () => {
-                gameConfig.gameNameEN = '';
-              }
-            "
-            :rules="[
-              () =>
-                gameConfig.gameNameEN.length !== 0 || 'English title is empty.',
-            ]"
-            class="vn-title-textinput"
-          >
-            <template #append-inner>
-              <v-btn
-                v-if="gameNameFromFolder !== gameConfig.gameName"
-                density="compact"
-                variant="plain"
-                icon="$mdiArrowUpRight"
-                @click.stop="updateGameName"
-              />
-              <v-icon
-                style="cursor: pointer"
-                :class="{ 'rotate-icon': isTitleMenuOpen }"
-                icon="$mdiMenuDown"
-              />
-            </template>
-            <v-menu
-              activator="parent"
-              location="bottom center"
-              origin="top center"
-              max-height="300"
-              v-model="isTitleMenuOpen"
-              transition="slide-y-transition"
-            >
-              <v-list color="primary" style="width: 100%">
-                <v-list-item
-                  v-for="item in gameNameENCandidates"
-                  :border="true"
-                  :key="item.title"
-                  :value="item.title"
-                  :title="item.title"
-                  :subtitle="item.origTitle"
-                  :class="'vn-title-kind-' + item.kind"
-                  @click="
-                    () => {
-                      gameConfig.gameNameEN = item.title;
-                      gameConfig.gameName = item.origTitle;
-                      enTitleColor = titleKindColor[item.kind];
-                      slugTitleColor = '';
-                    }
-                  "
-                >
-                  <template #append>
-                    <v-progress-circular
-                      :model-value="item.weight"
-                      :width="3"
-                      size="24"
-                      color="grey-darken-4"
-                    />
-                  </template>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </v-text-field>
-        </v-row>
-
-        <!-- ------------------------- Eng BrandName ------------------------------- -->
-        <v-row class="flex-grow-0 mb-0">
-          <v-text-field
-            density="compact"
-            label="EN Brand Name"
-            variant="outlined"
-            clearable
-            clear-icon="$mdiBackspaceOutline"
-            placeholder="Game's English/romanized title."
-            prepend-icon="$mdiDomain"
-            :spellcheck="false"
-            :loading="enTitleLoading"
-            v-model="gameConfig.gameBrandEN"
-            :bg-color="gameConfig.gameBrandEN ? enBrandColor : ''"
-            :hint="gameConfig.gameBrand"
-            persistent-hint
-            @input="
-              () => {
-                enBrandColor = '';
-                slugTitleColor = '';
-                isBrandMenuOpen = false;
-              }
-            "
-            @click:clear="
-              () => {
-                selectedBrands = [];
-                enBrandColor = '';
-              }
-            "
-            :rules="[
-              () =>
-                gameConfig.gameBrandEN.length !== 0 ||
-                'English brand name is empty.',
-            ]"
-            class="vn-title-textinput"
-          >
-            <template #append-inner>
-              <v-btn
-                v-if="gameBrandFromFolder !== gameConfig.gameBrand"
-                density="compact"
-                variant="plain"
-                icon="$mdiArrowUpRight"
-                @click.stop="updateGameBrand"
-              />
-              <v-icon
-                style="cursor: pointer"
-                :class="{ 'rotate-icon': isBrandMenuOpen }"
-                icon="$mdiMenuDown"
-              />
-            </template>
-            <v-menu
-              activator="parent"
-              location="bottom center"
-              origin="top center"
-              max-height="300"
-              v-model="isBrandMenuOpen"
-              :close-on-content-click="false"
-              transition="slide-y-transition"
-            >
-              <v-list
-                color="primary"
-                select-strategy="leaf"
-                v-model:selected="selectedBrands"
-                mandatory
-                style="width: 100%"
+                label="Folder Name"
+                variant="outlined"
+                clearable
+                clear-icon="$mdiBackspaceOutline"
+                placeholder="Game's orginal title."
+                prepend-icon="$mdiFolder"
+                :spellcheck="false"
+                :rules="[checkFolderNameFormat, checkWindowsForbiddenChars]"
+                :hint="
+                  gameConfig.gameBrand +
+                    props.game.splitter +
+                    gameConfig.gameName ===
+                  folderName
+                    ? ''
+                    : gameConfig.gameBrand +
+                      props.game.splitter +
+                      gameConfig.gameName
+                "
+                persistent-hint
+                v-model="folderName"
+                class="vn-title-textinput"
               >
-                <v-list-item
-                  v-for="item in gameBrandENCandidates"
-                  :border="true"
-                  :key="item.name"
-                  :value="item"
-                  :title="item.name"
-                  :subtitle="item.origName"
-                  :class="'vn-title-kind-' + item.kind"
-                  @click="
-                    () => {
-                      // if (!selectedBrands.includes(item)) {
-                      //   selectedBrands.push(item);
-                      // }
-                      slugTitleColor = '';
-                    }
-                  "
-                >
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </v-text-field>
-        </v-row>
+                <template #append-inner>
+                  <v-btn
+                    v-if="folderName !== props.game.folderName"
+                    density="compact"
+                    variant="plain"
+                    icon="$mdiReload"
+                    @click="folderName = props.game.folderName"
+                  />
+                  <v-btn
+                    density="compact"
+                    variant="plain"
+                    icon="$mdiSearchWeb"
+                    @click="async () => getSetGameENCandidates()"
+                    style="margin-right: -4px"
+                  />
+                </template>
+              </v-text-field>
+            </v-row>
 
-        <!-- ------------------------- Slug Title ------------------------------- -->
-        <v-row class="flex-grow-0 mb-0">
-          <v-text-field
-            density="compact"
-            label="Slug"
-            variant="outlined"
-            clearable
-            clear-icon="$mdiBackspaceOutline"
-            placeholder="Game's title slug (identifier)."
-            prepend-icon="$mdiFingerprint"
-            :spellcheck="false"
-            v-model="gameConfig.gameNameSlug"
-            :bg-color="gameConfig.gameNameSlug ? slugTitleColor : ''"
-            @input="
-              () => {
-                slugTitleColor = '';
-                slugSync = false;
-              }
-            "
-            :rules="[
-              () =>
-                gameConfig.gameNameSlug.length !== 0 || 'Game slug is empty.',
-            ]"
-            @click:clear="gameConfig.gameNameSlug = ''"
-            s
-            class="vn-title-textinput"
-          >
-            <template #append-inner>
-              <v-btn
+            <!-- ------------------------- Eng Title ------------------------------- -->
+            <v-row class="flex-grow-0 mb-0">
+              <v-text-field
                 density="compact"
-                variant="plain"
-                :icon="slugSync ? '$mdiAutorenew' : '$mdiSyncOff'"
-                @click="slugSync = !slugSync"
-              />
-            </template>
-          </v-text-field>
-        </v-row>
+                label="EN Title"
+                variant="outlined"
+                clearable
+                clear-icon="$mdiBackspaceOutline"
+                placeholder="Game's English/romanized title."
+                prepend-icon="$mdiTranslate"
+                :spellcheck="false"
+                :loading="enTitleLoading"
+                v-model="gameConfig.gameNameEN"
+                :bg-color="gameConfig.gameNameEN ? enTitleColor : ''"
+                :hint="gameConfig.gameName"
+                persistent-hint
+                @input="
+                  () => {
+                    enTitleColor = '';
+                    slugTitleColor = '';
+                    isTitleMenuOpen = false;
+                  }
+                "
+                @click:clear="
+                  () => {
+                    gameConfig.gameNameEN = '';
+                  }
+                "
+                :rules="[
+                  () =>
+                    gameConfig.gameNameEN.length !== 0 ||
+                    'English title is empty.',
+                ]"
+                class="vn-title-textinput"
+              >
+                <template #append-inner>
+                  <v-btn
+                    v-if="gameNameFromFolder !== gameConfig.gameName"
+                    density="compact"
+                    variant="plain"
+                    icon="$mdiArrowUpRight"
+                    @click.stop="updateGameName"
+                  />
+                  <v-icon
+                    style="cursor: pointer"
+                    :class="{ 'rotate-icon': isTitleMenuOpen }"
+                    icon="$mdiMenuDown"
+                  />
+                </template>
+                <v-menu
+                  activator="parent"
+                  location="bottom center"
+                  origin="top center"
+                  max-height="300"
+                  v-model="isTitleMenuOpen"
+                  transition="slide-y-transition"
+                >
+                  <v-list color="primary" style="width: 100%">
+                    <v-list-item
+                      v-for="item in gameNameENCandidates"
+                      :border="true"
+                      :key="item.title"
+                      :value="item.title"
+                      :title="item.title"
+                      :subtitle="item.origTitle"
+                      :class="'vn-title-kind-' + item.kind"
+                      @click="
+                        () => {
+                          gameConfig.gameNameEN = item.title;
+                          gameConfig.gameName = item.origTitle;
+                          enTitleColor = titleKindColor[item.kind];
+                          slugTitleColor = '';
+                        }
+                      "
+                    >
+                      <template #prepend>
+                        <v-btn
+                          variant="plain"
+                          density="compact"
+                          :icon="item.id ? '$mdiSearchWeb' : ''"
+                          :readonly="item.id === ''"
+                          @click.stop="openVNDBLink(item.id)"
+                          style="margin: 0 4px 0 -8px"
+                        />
+                      </template>
+                      <template #append>
+                        <v-progress-circular
+                          :model-value="item.weight"
+                          :width="3"
+                          size="24"
+                          color="grey-darken-4"
+                        />
+                      </template>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </v-text-field>
+            </v-row>
+
+            <!-- ------------------------- Eng BrandName ------------------------------- -->
+            <v-row class="flex-grow-0 mb-0">
+              <v-text-field
+                density="compact"
+                label="EN Brand Name"
+                variant="outlined"
+                clearable
+                clear-icon="$mdiBackspaceOutline"
+                placeholder="Game's English/romanized title."
+                prepend-icon="$mdiDomain"
+                :spellcheck="false"
+                :loading="enTitleLoading"
+                v-model="gameConfig.gameBrandEN"
+                :bg-color="gameConfig.gameBrandEN ? enBrandColor : ''"
+                :hint="gameConfig.gameBrand"
+                persistent-hint
+                @input="
+                  () => {
+                    enBrandColor = '';
+                    slugTitleColor = '';
+                    isBrandMenuOpen = false;
+                  }
+                "
+                @click:clear="
+                  () => {
+                    selectedBrands = [];
+                    enBrandColor = '';
+                  }
+                "
+                :rules="[
+                  () =>
+                    gameConfig.gameBrandEN.length !== 0 ||
+                    'English brand name is empty.',
+                ]"
+                class="vn-title-textinput"
+              >
+                <template #append-inner>
+                  <v-btn
+                    v-if="gameBrandFromFolder !== gameConfig.gameBrand"
+                    density="compact"
+                    variant="plain"
+                    icon="$mdiArrowUpRight"
+                    @click.stop="updateGameBrand"
+                  />
+                  <v-icon
+                    style="cursor: pointer"
+                    :class="{ 'rotate-icon': isBrandMenuOpen }"
+                    icon="$mdiMenuDown"
+                  />
+                </template>
+                <v-menu
+                  activator="parent"
+                  location="bottom center"
+                  origin="top center"
+                  max-height="300"
+                  v-model="isBrandMenuOpen"
+                  :close-on-content-click="false"
+                  transition="slide-y-transition"
+                >
+                  <v-list
+                    color="primary"
+                    select-strategy="leaf"
+                    v-model:selected="selectedBrands"
+                    mandatory
+                    style="width: 100%"
+                  >
+                    <v-list-item
+                      v-for="item in gameBrandENCandidates"
+                      :border="true"
+                      :key="item.name"
+                      :value="item"
+                      :title="item.name"
+                      :subtitle="item.origName"
+                      :class="'vn-title-kind-' + item.kind"
+                      @click="
+                        () => {
+                          // if (!selectedBrands.includes(item)) {
+                          //   selectedBrands.push(item);
+                          // }
+                          slugTitleColor = '';
+                        }
+                      "
+                    >
+                      <template #prepend>
+                        <v-btn
+                          variant="plain"
+                          density="compact"
+                          :icon="item.id ? '$mdiSearchWeb' : ''"
+                          :readonly="item.id === ''"
+                          @click.stop="openVNDBLink(item.id)"
+                          style="margin: 0 4px 0 -8px"
+                        />
+                      </template>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </v-text-field>
+            </v-row>
+
+            <!-- ------------------------- Slug Title ------------------------------- -->
+            <v-row class="flex-grow-0 mb-0">
+              <v-text-field
+                density="compact"
+                label="Slug"
+                variant="outlined"
+                clearable
+                clear-icon="$mdiBackspaceOutline"
+                placeholder="Game's title slug (identifier)."
+                prepend-icon="$mdiFingerprint"
+                :spellcheck="false"
+                v-model="gameConfig.gameNameSlug"
+                :bg-color="gameConfig.gameNameSlug ? slugTitleColor : ''"
+                @input="
+                  () => {
+                    slugTitleColor = '';
+                    slugSync = false;
+                  }
+                "
+                :rules="[
+                  () =>
+                    gameConfig.gameNameSlug.length !== 0 ||
+                    'Game slug is empty.',
+                ]"
+                @click:clear="gameConfig.gameNameSlug = ''"
+                s
+                class="vn-title-textinput"
+              >
+                <template #append-inner>
+                  <v-btn
+                    density="compact"
+                    variant="plain"
+                    :icon="slugSync ? '$mdiAutorenew' : '$mdiSyncOff'"
+                    @click="slugSync = !slugSync"
+                  />
+                </template>
+              </v-text-field>
+            </v-row>
+          </div>
+          <v-img
+            :src="`file://${props.game.imageAssets.capsuleSDPath}`"
+            width="165"
+            :aspect-ratio="2 / 3"
+            class="flex-grow-0"
+            rounded
+            style="margin: -12px -12px 0 28px"
+          />
+        </div>
 
         <!-- ------------------------- Steam Categories / Steam Controller Layout ------------------------------- -->
         <v-row class="flex-grow-0 flex-nowrap">
@@ -684,10 +723,10 @@ async function getExecutableIcons() {
             clear-icon="$mdiBackspaceOutline"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
-            style="max-width: calc(100% - 200px)"
+            style="max-width: calc(100% - 180px)"
           />
 
-          <div style="width: 40px"></div>
+          <div style="width: 20px"></div>
 
           <v-select
             label="Layout"
@@ -719,10 +758,10 @@ async function getExecutableIcons() {
             clear-icon="$mdiBackspaceOutline"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
-            style="max-width: calc(100% - 200px)"
+            style="max-width: calc(100% - 180px)"
           />
 
-          <div style="width: 40px"></div>
+          <div style="width: 20px"></div>
 
           <v-select
             label="Locale"
@@ -761,10 +800,10 @@ async function getExecutableIcons() {
             prepend-icon="$mdiPackageVariantClosed"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
-            style="max-width: calc(50% - 20px) !important"
+            style="max-width: calc(50% - 10px) !important"
           />
 
-          <div style="width: 40px"></div>
+          <div style="width: 20px"></div>
 
           <v-select
             label="Wine Runner"
@@ -775,7 +814,7 @@ async function getExecutableIcons() {
             prepend-icon="$customWineEmptyVariant"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
-            style="max-width: calc(50% - 20px)"
+            style="max-width: calc(50% - 10px)"
           />
         </v-row>
 
@@ -847,6 +886,14 @@ async function getExecutableIcons() {
                   >
                     {{ item }}
                   </div>
+                  <v-tooltip
+                    activator="parent"
+                    location="top"
+                    open-delay="2000"
+                    transition="fade-transition"
+                  >
+                    {{ item }}
+                  </v-tooltip>
                 </v-card>
               </v-item>
             </v-item-group>
@@ -1027,13 +1074,23 @@ async function getExecutableIcons() {
         >
 
         <v-btn
+          prepend-icon="$mdiSkipPrevious"
+          variant="outlined"
+          color="grey-darken-4"
+          class="ml-2"
+          :disabled="dbAdding || dbRemoving"
+          @click="$emit('goBack')"
+          >Prev</v-btn
+        >
+
+        <v-btn
           prepend-icon="$mdiSkipNext"
           variant="outlined"
           color="grey-darken-4"
           class="ml-2"
           :disabled="dbAdding || dbRemoving"
           @click="$emit('proceed')"
-          >Skip</v-btn
+          >Next</v-btn
         >
         <v-btn
           prepend-icon="$mdiDatabaseEdit"

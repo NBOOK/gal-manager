@@ -180,6 +180,8 @@ function cleanAndCapitalize(input: string): string {
     .map((word) => {
       if (word === word.toUpperCase()) {
         return word;
+      } else if (word.length <= 2) {
+        return word;
       } else {
         return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
       }
@@ -288,14 +290,21 @@ function releaseTitleCleaner(title: string, origTitle: string) {
     "low price",
     "set",
     "for",
+    "original",
+    "work",
+    "bundle",
+    "bundled",
     "collection",
     "patch",
     "aniversary",
+    "ultimate",
     "dmm",
     "dlsite",
     "steam",
     "support",
     "exclusive",
+    "all age",
+    "all ages",
     "初回",
     "限定",
     "通常",
@@ -307,6 +316,9 @@ function releaseTitleCleaner(title: string, origTitle: string) {
     "一般",
     "廉価",
     "特典",
+    "本編",
+    "同梱",
+    "特装",
     "ロイヤル",
     "プレミアム",
     "スタンダード",
@@ -331,6 +343,7 @@ function releaseTitleCleaner(title: string, origTitle: string) {
     "新装",
     "再販",
     "独占",
+    "全年齢",
     "版",
   ];
 
@@ -455,6 +468,7 @@ async function vndbQueryName(
           continue;
         if (title.main) weight *= 1.1;
         gameResults.push({
+          id: vn.id,
           title: title.latin ? title.latin : title.title,
           origTitle: title.title,
           kind: "title",
@@ -467,6 +481,7 @@ async function vndbQueryName(
         let weight = 0.9 - idx * 0.2;
         if (cjkRegex.test(alias)) continue; // 只保留拉丁化别名
         gameResults.push({
+          id: vn.id,
           title: alias,
           origTitle: "",
           kind: "alias",
@@ -477,6 +492,7 @@ async function vndbQueryName(
         if (brandResults.some((brand) => brand.name === developer.name))
           continue;
         brandResults.push({
+          id: developer.id,
           name: developer.name,
           origName: developer.original ? developer.original : developer.name,
           kind: "developer",
@@ -492,6 +508,7 @@ async function vndbQueryName(
         release.alttitle ? release.alttitle : release.title
       );
       gameResults.push({
+        id: release.id,
         title: title,
         origTitle: origTitle,
         kind: "releaseTitle",
@@ -502,6 +519,7 @@ async function vndbQueryName(
         if (brandResults.some((brand) => brand.name === producer.name))
           continue;
         brandResults.push({
+          id: producer.id,
           name: producer.name,
           origName: producer.original ? producer.original : producer.name,
           kind: "publisher",
@@ -558,6 +576,7 @@ async function getGameNameEN(gameName: string, gameBrnad: string) {
     )
   ) {
     const romanizedTitle: VNTitle = {
+      id: "",
       title: romanizedName,
       origTitle: gameName,
       kind: "romanized",
@@ -584,6 +603,7 @@ async function getGameNameEN(gameName: string, gameBrnad: string) {
     )
   ) {
     const romanizedDeveloper: VNDeveloper = {
+      id: "",
       name: romanizedBrand,
       origName: gameBrnad,
       kind: "romanized",

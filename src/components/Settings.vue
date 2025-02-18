@@ -114,7 +114,7 @@ async function saveAndRestart() {
   if (
     !(await window.ipcRenderer.invoke(
       "fileExists",
-      `<HOME>/.config/GalManager/avg.vdf`
+      `<HOME>/.config/GalManager/controller_layouts/avg.vdf`
     ))
   ) {
     await window.ipcRenderer.invoke(
@@ -131,7 +131,7 @@ async function saveAndRestart() {
   ) {
     await window.ipcRenderer.invoke(
       "createSymbolicLink",
-      `<HOME>/.config/GalManager/avg.vdf`,
+      `<HOME>/.config/GalManager/controller_layouts/avg.vdf`,
       `${config.value.steamControllerTemplatePath}/avg.vdf`
     );
   }
