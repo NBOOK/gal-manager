@@ -70,10 +70,12 @@ const gameNameFromFolder = computed(() =>
 
 async function getSetGameENCandidates() {
   enTitleLoading.value = true;
-  const titlesAndBrands = await utils.getGameNameEN(
-    gameConfig.gameName,
-    gameConfig.gameBrand
-  );
+  const gameName = folderName.value
+    .split(props.game.splitter)
+    .slice(1)
+    .join(props.game.splitter);
+  const gameBrand = folderName.value.split(props.game.splitter)[0];
+  const titlesAndBrands = await utils.getGameNameEN(gameName, gameBrand);
   gameNameENCandidates.value = titlesAndBrands.titles;
   gameBrandENCandidates.value = titlesAndBrands.brands;
 
@@ -889,7 +891,7 @@ async function openVNDBLink(id: string) {
                   <v-tooltip
                     activator="parent"
                     location="top"
-                    open-delay="2000"
+                    open-delay="1000"
                     transition="fade-transition"
                   >
                     {{ item }}

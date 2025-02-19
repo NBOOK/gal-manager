@@ -688,7 +688,7 @@ async function readVDF(filePath: string): Promise<any> {
 
 async function writeVDF(filePath: string, json: any): Promise<void> {
   try {
-    const vdfString = vdf.dump(json);
+    const vdfString = vdf.dump(json).replace(/\n{2,}/g, "\n");
     // console.log(vdfString);
     await fs.promises.writeFile(filePath, vdfString, "utf8");
   } catch (error) {

@@ -182,6 +182,8 @@ function cleanAndCapitalize(input: string): string {
         return word;
       } else if (word.length <= 2) {
         return word;
+      } else if ((word.match(/[A-Z]/g) || []).length > 1) {
+        return word;
       } else {
         return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
       }
@@ -292,13 +294,18 @@ function releaseTitleCleaner(title: string, origTitle: string) {
     "for",
     "original",
     "work",
-    "bundle",
-    "bundled",
+    "bundled?",
     "collection",
     "patch",
     "aniversary",
+    "(?:un)?censored",
+    "free",
     "ultimate",
     "dmm",
+    "demo",
+    "18+",
+    "adult",
+    "r18",
     "dlsite",
     "steam",
     "support",
@@ -315,6 +322,7 @@ function releaseTitleCleaner(title: string, origTitle: string) {
     "販売",
     "一般",
     "廉価",
+    "無料",
     "特典",
     "本編",
     "同梱",
@@ -388,6 +396,7 @@ async function vndbQueryName(
   gameBrand: string,
   romanizedName: string
 ) {
+  console.log("Querying VNDB for:", gameName, gameBrand);
   const gameResults: VNTitle[] = [];
   const brandResults: VNDeveloper[] = [];
 
@@ -455,6 +464,9 @@ async function vndbQueryName(
     const releaseData = releaseResponse.ok
       ? await releaseResponse.json()
       : { results: [] };
+
+    console.log("VN data:", vnData);
+    console.log("Release data:", releaseData);
 
     // 处理 VN 数据
     for (const [idx, vn] of vnData.results.entries()) {

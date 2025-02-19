@@ -135,7 +135,10 @@ class SteamDB {
     delete this.steamGameIndices[game.gameNameEN];
 
     // ---------- Remove game controller config ----------
-    const layoutEntryName = game.gameNameEN.toLowerCase();
+    const layoutEntryName = game.gameNameEN
+      .toLowerCase()
+      .replace(/[\/~:.*?]/g, "")
+      .substring(0, 64);
     // skip deletion if not re-adding
     if (!reAdd && this.controllerVDF["controller_config"][layoutEntryName]) {
       console.log(
@@ -233,7 +236,10 @@ class SteamDB {
     this.steamGameIndices[game.gameNameEN] = parseInt(gameIndex, 10);
 
     // ---------- Add game controller config ----------
-    const layoutEntryName = game.gameNameEN.toLowerCase();
+    const layoutEntryName = game.gameNameEN
+      .toLowerCase()
+      .replace(/[\/~:.*?]/g, "")
+      .substring(0, 64);
     // skip addition if layout is not provided or already set in Steam
     if (
       gameConfig.controllerLayout !== "--" &&
