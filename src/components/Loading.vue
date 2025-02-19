@@ -11,52 +11,43 @@ const processedGames = ref<number>(0);
 const processedBuffer = ref<number>(0);
 const totalGames = ref<number>(0);
 
+async function processGameEntries(
+  name: string,
+  gameEntries: {
+    dirEntry: DirEntry;
+    flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk";
+  }[]
+) {
+  processedBuffer.value++;
+  currentGame.value = name;
+
+  for (const { dirEntry, flag } of gameEntries) {
+    if (!gameStore.games[name]) {
+      gameStore.games[name] = new GameEntry();
+      await gameStore.games[name].setup(dirEntry);
+    }
+    gameStore.games[name][flag] = true;
+    if (flag === "linked") {
+      const lastSlashIndex = dirEntry.symbolicTarget.lastIndexOf("/");
+      const linkedBasePath = dirEntry.symbolicTarget.substring(
+        0,
+        lastSlashIndex
+      );
+      gameStore.games[dirEntry.name].linkedBasePath = linkedBasePath;
+    }
+  }
+
+  if (gameStore.games[name].linked) {
+    gameStore.games[name].refreshLink();
+  }
+
+  processedGames.value++;
+}
+
 async function scanGames() {
   // let updateLock = Promise.resolve();
   const startTimestamp = Date.now();
-  async function processEntries( // for creating game entries and assigning flags
-    entries: DirEntry[],
-    flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk"
-  ) {
-    const batchTasks = entries.map(async (entry) => {
-      await limit(async () => {
-        if (!gameStore.games[entry.name]) {
-          processedBuffer.value++;
-          gameStore.games[entry.name] = new GameEntry();
-          await gameStore.games[entry.name].setup(entry);
-          currentGame.value = entry.name;
-          processedGames.value++;
-        }
-        gameStore.games[entry.name][flag] = true;
-        if (flag === "linked") {
-          const lastSlashIndex = entry.symbolicTarget.lastIndexOf("/");
-          const linkedBasePath = entry.symbolicTarget.substring(
-            0,
-            lastSlashIndex
-          );
-          const linkedFolderName = entry.symbolicTarget.substring(
-            lastSlashIndex + 1
-          );
-          if (entry.name !== linkedFolderName) {
-            throw new Error(
-              `Game name ${entry.name} does not match linked folder name ${linkedFolderName}`
-            );
-          }
-          if (!Object.values(paths).includes(linkedBasePath)) {
-            throw new Error(
-              `Linked folder ${linkedBasePath} is not in any of the game paths: ${paths}`
-            );
-          }
-          // console.log("Linked game", entry.name, "at", linkedBasePath);
-          gameStore.games[entry.name].linkedBasePath = linkedBasePath;
-        }
-      });
-    });
 
-    await Promise.all(batchTasks);
-  }
-
-  // ----------------- Main -----------------
   const paths = {
     gamesMainPath: gameStore.config.value.gamesMainPath,
     gamesDataPath: gameStore.config.value.gamesDataPath,
@@ -66,11 +57,11 @@ async function scanGames() {
   };
 
   // scan all game directories in multiple paths
-  const entries = await Promise.all(
+  const entries = (await Promise.all(
     Object.values(paths).map((path) =>
       window.ipcRenderer.invoke("scanDir", path)
     )
-  );
+  )) as DirEntry[][];
   const [
     mainEntries,
     deckEntries,
@@ -93,25 +84,53 @@ async function scanGames() {
   );
   totalGames.value = uniqueNames.size;
 
-  console.log("Game scan done in", Date.now() - startTimestamp, "ms");
+  const gameEntriesMap: Record<
+    string,
+    {
+      dirEntry: DirEntry;
+      flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk";
+    }[]
+  > = {};
 
-  // process each unique game entry and assign flags
+  uniqueNames.forEach((name) => {
+    gameEntriesMap[name] = [
+      {
+        dirEntry: mainEntries.find((entry) => entry.name === name),
+        flag: "linked",
+      },
+      {
+        dirEntry: deckEntries.find((entry) => entry.name === name),
+        flag: "inDeck",
+      },
+      {
+        dirEntry: sdCardEntries.find((entry) => entry.name === name),
+        flag: "inSDCard",
+      },
+      {
+        dirEntry: netDiskEntries.find((entry) => entry.name === name),
+        flag: "inNetDisk",
+      },
+    ].filter((entry) => entry.dirEntry !== undefined) as {
+      dirEntry: DirEntry;
+      flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk";
+    }[];
+  });
 
-  await processEntries(mainEntries, "linked");
-  await processEntries(deckEntries, "inDeck");
-  await processEntries(sdCardEntries, "inSDCard");
-  await processEntries(netDiskEntries, "inNetDisk");
+  console.log("Unique gameEntriesMap:", gameEntriesMap);
 
-  Object.values(gameStore.games)
-    .filter((game) => game.linked)
-    .forEach((game) => {
-      game.refreshLink();
-    });
+  const scannedTimestamp = Date.now();
+  console.log("Game scan done in", scannedTimestamp - startTimestamp, "ms");
+
+  await Promise.all(
+    Object.entries(gameEntriesMap).map(([name, gameEntries]) =>
+      limit(async () => await processGameEntries(name, gameEntries))
+    )
+  );
 
   // console.log("Game list:", gameStore.games);
-  gameStore.loading = false;
+  console.log("Game process done in", Date.now() - scannedTimestamp, "ms");
 
-  console.log("Game process done in", Date.now() - startTimestamp, "ms");
+  gameStore.loading = false;
 }
 
 watch(

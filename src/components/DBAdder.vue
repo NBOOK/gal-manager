@@ -241,7 +241,9 @@ async function setUpExcutables() {
   executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
     .filter(
       (file: DirEntry) =>
-        file.isFile && file.name.toLowerCase().endsWith(".exe")
+        file.isFile &&
+        (file.name.toLowerCase().endsWith(".exe") ||
+          file.name.toLowerCase().endsWith(".bat"))
     )
     .map((file: DirEntry) => file.name);
   await getExecutableIcons();
@@ -397,6 +399,7 @@ async function removeGameFromDB() {
 async function getExecutableIcons() {
   const iconPromises = executables.value.map(async (executable) => {
     const exePath = `${props.game.basePath}/${props.game.folderName}/${executable}`;
+    if (exePath.endsWith(".bat")) return;
     const iconBase64 = await window.ipcRenderer.invoke("getFileIcon", exePath);
     if (iconBase64.length > 0) {
       executableIcons.value[executable] = iconBase64[0];
@@ -878,7 +881,11 @@ async function openVNDBLink(id: string) {
                   />
                   <v-icon
                     v-else
-                    icon="$mdiApplicationOutline"
+                    :icon="
+                      item.endsWith('.exe')
+                        ? '$mdiApplicationOutline'
+                        : '$mdiConsole'
+                    "
                     color="grey-darken-2"
                     style="height: 30px; width: 30px; flex-grow: 0"
                   />

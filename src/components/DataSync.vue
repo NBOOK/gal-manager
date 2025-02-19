@@ -77,6 +77,10 @@ async function scanBindDirs() {
     scannedDirNames[baseName] = Array.from(
       new Set([...remoteDirs, ...localDirs])
     );
+
+    syncConfig.value[baseName].items = syncConfig.value[baseName].items.filter(
+      (dirName) => scannedDirNames[baseName].includes(dirName)
+    );
   }
 }
 

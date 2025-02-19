@@ -671,7 +671,13 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
       }
     }
   }
-
+  if (await fileExists(root)) {
+    map.set("", {
+      modified: (await fs.promises.stat(root)).mtime,
+      size: (await fs.promises.stat(root)).size,
+      isDirectory: true,
+    });
+  }
   await traverse(root, "");
   return map;
 }
