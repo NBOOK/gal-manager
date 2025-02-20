@@ -2,12 +2,13 @@
 import { computed, reactive, ref, watch } from "vue";
 import { useGameStore } from "@/store/global-store";
 import GameEntry from "@/modules/GameEntry";
+import GameImgThumb from "@/components/GameImgThumb.vue";
 import utils from "@/modules/utils";
 
 const gameStore = useGameStore();
 const emit = defineEmits(["goBack", "proceed", "abort"]);
 const props = defineProps<{ game: GameEntry }>();
-const game = computed(() => props.game);
+// const game = computed(() => props.game);
 const gameNameENCandidates = ref<VNTitle[]>([]);
 const gameBrandENCandidates = ref<VNDeveloper[]>([]);
 const allSteamCategories = ref<string[]>([]);
@@ -432,14 +433,10 @@ async function openVNDBLink(id: string) {
                 :spellcheck="false"
                 :rules="[checkFolderNameFormat, checkWindowsForbiddenChars]"
                 :hint="
-                  gameConfig.gameBrand +
-                    props.game.splitter +
-                    gameConfig.gameName ===
+                  gameConfig.gameBrand + game.splitter + gameConfig.gameName ===
                   folderName
                     ? ''
-                    : gameConfig.gameBrand +
-                      props.game.splitter +
-                      gameConfig.gameName
+                    : gameConfig.gameBrand + game.splitter + gameConfig.gameName
                 "
                 persistent-hint
                 v-model="folderName"
@@ -447,18 +444,21 @@ async function openVNDBLink(id: string) {
               >
                 <template #append-inner>
                   <v-btn
-                    v-if="folderName !== props.game.folderName"
+                    v-if="folderName !== game.folderName"
                     density="compact"
                     variant="plain"
                     icon="$mdiReload"
-                    @click="folderName = props.game.folderName"
+                    @click="folderName = game.folderName"
+                    style="margin-left: -2px"
                   />
                   <v-btn
                     density="compact"
                     variant="plain"
                     icon="$mdiSearchWeb"
                     @click="async () => getSetGameENCandidates()"
-                    style="margin-right: -4px"
+                    :style="`margin-right: -${
+                      folderName !== game.folderName ? 2 : 4
+                    }px`"
                   />
                 </template>
               </v-text-field>
@@ -702,13 +702,15 @@ async function openVNDBLink(id: string) {
             </v-row>
           </div>
           <v-img
-            :src="`file://${props.game.imageAssets.capsuleSDPath}`"
+            :src="`file://${game.imageAssets.capsuleSDPath}`"
             width="165"
             :aspect-ratio="2 / 3"
             class="flex-grow-0"
             rounded
-            style="margin: -12px -12px 0 28px"
-          />
+            style="margin: -12px -12px 0 28px; cursor: pointer"
+          >
+            <GameImgThumb :game="game" />
+          </v-img>
         </div>
 
         <!-- ------------------------- Steam Categories / Steam Controller Layout ------------------------------- -->
@@ -1067,8 +1069,9 @@ async function openVNDBLink(id: string) {
               :disabled="game.inDatabase === 0 || dbAdding"
               :loading="dbRemoving"
               @click="removeGameFromDB"
-              >Remove</v-btn
             >
+              Remove
+            </v-btn>
           </template>
         </v-hover>
 

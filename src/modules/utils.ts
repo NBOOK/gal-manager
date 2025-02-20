@@ -266,6 +266,7 @@ function releaseTitleCleaner(title: string, origTitle: string) {
     "limited",
     "regular",
     "deluxe",
+    "perfect",
     "trial",
     "premium",
     "web",
