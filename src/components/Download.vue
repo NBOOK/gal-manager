@@ -49,7 +49,7 @@ window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
       deltaProgress / (currentTime - lastUpdateTime.value);
 
     deltaProgressOfUpdates.value.push(deltaProgressPerMs);
-    if (deltaProgressOfUpdates.value.length > 5) {
+    if (deltaProgressOfUpdates.value.length > 15) {
       deltaProgressOfUpdates.value.shift();
     }
     const avgDeltaProgressPerMs =
@@ -100,12 +100,17 @@ watch(
   () => gameStore.downloadList.length,
   (newVal, oldVal) => {
     console.log("downloadList changed", oldVal, newVal);
-    if (oldVal === 0 && newVal > 0 && !downloading.value) {
+    if (
+      (oldVal === 0 || oldVal === undefined) &&
+      newVal > 0 &&
+      !downloading.value
+    ) {
       console.log("Call downloadAll()");
       downloadAll();
       gameStore.needDiskUsageRefresh = true;
     }
-  }
+  },
+  { immediate: true }
 );
 </script>
 

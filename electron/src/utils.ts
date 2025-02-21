@@ -564,13 +564,11 @@ async function getTotalSize(dir: string): Promise<number> {
 async function copyDirectory(
   src: string,
   dest: string,
-  dirOnly: boolean,
   include: string[],
   exclude: string[],
   event: Electron.IpcMainInvokeEvent
 ) {
   await fs.promises.mkdir(dest, { recursive: true });
-  if (dirOnly) return;
 
   const files = await fs.promises.readdir(src);
 
@@ -588,7 +586,7 @@ async function copyDirectory(
       });
       if (startWithExclude && !containedInInclude) continue;
 
-      await copyDirectory(srcPath, destPath, dirOnly, include, exclude, event);
+      await copyDirectory(srcPath, destPath, include, exclude, event);
     } else {
       // leaf file
       const startWithExclude = exclude.some((excludePath) => {
@@ -635,6 +633,15 @@ async function copyFileWithProgress(
 
     readStream.pipe(writeStream);
   });
+}
+
+async function createFolder(folderPath: string): Promise<void> {
+  try {
+    await fs.promises.mkdir(folderPath, { recursive: true });
+  } catch (error) {
+    console.error("Error creating folder:", error);
+    throw error;
+  }
 }
 
 async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
@@ -814,4 +821,5 @@ export default {
   writeVDF,
   getSteamCategories,
   getFileIcon,
+  createFolder,
 };

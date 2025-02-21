@@ -19,7 +19,6 @@ async function processGameEntries(
   }[]
 ) {
   processedBuffer.value++;
-  currentGame.value = name;
 
   for (const { dirEntry, flag } of gameEntries) {
     if (!gameStore.games[name]) {
@@ -41,6 +40,7 @@ async function processGameEntries(
     gameStore.games[name].refreshLink();
   }
 
+  currentGame.value = name;
   processedGames.value++;
 }
 

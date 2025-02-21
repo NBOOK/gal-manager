@@ -137,7 +137,7 @@ class SteamDB {
     // ---------- Remove game controller config ----------
     const layoutEntryName = game.gameNameEN
       .toLowerCase()
-      .replace(/[\/~:.*?]/g, "")
+      .replace(/[\/~:.*?"]/g, "")
       .substring(0, 64);
     // skip deletion if not re-adding
     if (!reAdd && this.controllerVDF["controller_config"][layoutEntryName]) {

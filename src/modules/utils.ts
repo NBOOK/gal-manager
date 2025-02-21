@@ -683,7 +683,7 @@ async function guessLauncher(executables: string[]): Promise<string[]> {
           "tool", "cfg", "conf", "crash", "bug", "upload", "patch", "copy",
           "courier", "train", "check", "file", "chk", "unity", "save",
           "viewer", "protect", "support", "unins", 
-          "設定", "チェック", "ツール"
+          "設定", "環境", "情報", "セーブ", "チェック", "ツール"
           ].some((keyword) => exe.includes(keyword))
       ) {
         score -= 3;

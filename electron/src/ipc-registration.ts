@@ -16,7 +16,7 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
         execPath: process.execPath
       };
       // Fix for .AppImage
-      if (app.isPackaged && process.env.APPIMAGE) {
+      if (app.isPackaged && process.env.APPIMAGE) { 
         execFile(process.env.APPIMAGE, options.args);
         app.quit();
         return;
@@ -125,7 +125,7 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
     ipcMain.handle('removeItem', (_event, path: string) => {
       return utils.removeItem(path)
     });
-    ipcMain.handle('start-copy', async (event, source:string, destination:string, dirOnly=false, include:string[]=[], exclude:string[]=[]) => {
+    ipcMain.handle('start-copy', async (event, source:string, destination:string, include:string[]=[], exclude:string[]=[]) => {
       if (source.startsWith("<MAIN_DIST>")) {
         source = path.join(MAIN_DIST, source.slice(11));
       } else if (source.startsWith("<HOME>")) {
@@ -138,7 +138,7 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
       }
       try {
         if ((await fs.promises.stat(source)).isDirectory()) {
-          await utils.copyDirectory(source, destination, dirOnly, include, exclude, event);
+          await utils.copyDirectory(source, destination, include, exclude, event);
         } 
         else {
           const startWithExclude = exclude.some((excludePath) => {
@@ -172,7 +172,15 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
       return utils.getFileIcon(path);
     }
     );
-  
+    ipcMain.handle('createFolder', (_event, folderPath: string) => {
+      if (folderPath.startsWith("<MAIN_DIST>")) {
+        folderPath = path.join(MAIN_DIST, folderPath.slice(11));
+      }
+      if(folderPath.startsWith("<HOME>")) {
+        folderPath = path.join(os.homedir(), folderPath.slice(6));
+      }
+      return fs.promises.mkdir(folderPath);
+    });
   }
 
 export default registerIpcMain;

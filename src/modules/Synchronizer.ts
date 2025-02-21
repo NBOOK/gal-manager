@@ -116,12 +116,11 @@ class FileSyncer {
 
     // 通过 ipcRenderer 调用主进程进行文件复制/删除操作
     if (await window.ipcRenderer.invoke("fileExists", source)) {
-      await window.ipcRenderer.invoke(
-        "start-copy",
-        source,
-        target,
-        this.isDirectory
-      );
+      if (this.isDirectory) {
+        await window.ipcRenderer.invoke("createFolder", target);
+      } else {
+        await window.ipcRenderer.invoke("start-copy", source, target);
+      }
     } else {
       await window.ipcRenderer.invoke("removeItem", target);
     }
