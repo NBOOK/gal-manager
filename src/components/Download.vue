@@ -2,7 +2,6 @@
 import { computed, ref, watch } from "vue";
 import { useGameStore } from "@/store/global-store";
 import utils from "@/modules/utils";
-import { l } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 // import GameEntry from "@/modules/GameEntry";
 const gameStore = useGameStore();
 
