@@ -163,7 +163,7 @@ async function deleteAllSelectedGames() {
             :readonly="
               !(
                 gameStore.netDiskOnline &&
-                gameStore.fileOperatable &&
+                // gameStore.fileOperatable &&
                 gameStore.selectedGames.length > 0 &&
                 gameStore.selectedGames.every(
                   (game) => !game.inDeck && !game.inSDCard
@@ -175,7 +175,7 @@ async function deleteAllSelectedGames() {
               :color="
                 !(
                   gameStore.netDiskOnline &&
-                  gameStore.fileOperatable &&
+                  // gameStore.fileOperatable &&
                   gameStore.selectedGames.length > 0 &&
                   gameStore.selectedGames.every(
                     (game) => !game.inDeck && !game.inSDCard

@@ -2,24 +2,9 @@
 import { computed, ref, watch } from "vue";
 import { useGameStore } from "@/store/global-store";
 import utils from "@/modules/utils";
+import { l } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 // import GameEntry from "@/modules/GameEntry";
 const gameStore = useGameStore();
-
-const downloading = ref(false);
-
-const lastUpdateTime = ref(0);
-const remainingTime = ref(0); // seconds
-const incrementSinceLastUpdate = ref(0);
-const deltaProgressOfUpdates = ref<number[]>([]);
-
-const totalSize = computed(() =>
-  gameStore.downloadList.reduce((acc, item) => acc + item.game.diskUsage, 0)
-);
-const totalDownloadedSize = ref(0);
-const currentIndex = ref(0);
-
-const currentItem = computed(() => gameStore.downloadList[currentIndex.value]);
-const currentGame = computed(() => currentItem.value?.game);
 
 const pathIconMap: { [key: string]: string } = {
   [gameStore.config.value.gamesMainPath]: "$mdiHome",
@@ -29,6 +14,43 @@ const pathIconMap: { [key: string]: string } = {
   [gameStore.config.value.gamesExternalPath]: "$mdiCloud",
 };
 
+const downloading = ref(false);
+
+const lastUpdateTime = ref(0);
+// const remainingTime = ref(0); // seconds
+const incrementSinceLastUpdate = ref(0);
+// const deltaProgressOfUpdates = ref<number[]>([]);
+
+// const avgDeltaProgressPerMs = ref(0);
+
+const totalSize = computed(() =>
+  gameStore.downloadList.reduce((acc, item) => acc + item.game.diskUsage, 0)
+);
+const currentGameDownloadedSize = ref(0);
+const totalDownloadedSize = ref(0);
+const currentIndex = ref(0);
+
+const currentItem = computed(() => gameStore.downloadList[currentIndex.value]);
+const currentGame = computed(() => currentItem.value?.game);
+
+const incrementsPerSec = ref<number[]>([]);
+const avgIncrementPerSec = computed(() => {
+  if (incrementsPerSec.value.length === 0) return 0;
+  return (
+    incrementsPerSec.value.reduce((acc, val) => acc + val, 0) /
+    incrementsPerSec.value.length
+  );
+});
+const remainingTime = computed(() => {
+  return Math.max(
+    Math.round(
+      (currentGame.value.diskUsage - currentGameDownloadedSize.value) /
+        Math.max(avgIncrementPerSec.value, 0.0001)
+    ),
+    0
+  );
+});
+
 window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
   if (!downloading.value) return;
 
@@ -36,36 +58,64 @@ window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
 
   const currentTime = Date.now();
   if (lastUpdateTime.value === 0) lastUpdateTime.value = currentTime;
+  const timeSinceLastUpdate = currentTime - lastUpdateTime.value;
 
   // update
-  if (currentTime - lastUpdateTime.value > 1000) {
+  if (timeSinceLastUpdate > 1000) {
+    lastUpdateTime.value = currentTime;
+
+    currentGameDownloadedSize.value += incrementSinceLastUpdate.value;
     totalDownloadedSize.value += incrementSinceLastUpdate.value;
 
-    const deltaProgress =
-      (incrementSinceLastUpdate.value / currentGame.value.diskUsage) * 100;
-    currentItem.value.progress += deltaProgress;
+    currentItem.value.progress =
+      (currentGameDownloadedSize.value / currentGame.value.diskUsage) * 100;
 
-    const deltaProgressPerMs =
-      deltaProgress / (currentTime - lastUpdateTime.value);
+    const incrementPerSec =
+      (incrementSinceLastUpdate.value / timeSinceLastUpdate) * 1000;
 
-    deltaProgressOfUpdates.value.push(deltaProgressPerMs);
-    if (deltaProgressOfUpdates.value.length > 15) {
-      deltaProgressOfUpdates.value.shift();
+    incrementsPerSec.value.push(incrementPerSec);
+    if (incrementsPerSec.value.length > 15) {
+      incrementsPerSec.value.shift();
     }
-    const avgDeltaProgressPerMs =
-      deltaProgressOfUpdates.value.reduce((acc, val) => acc + val, 0) /
-      deltaProgressOfUpdates.value.length;
 
-    remainingTime.value = Math.round(
-      (100 - currentItem.value.progress) /
-        Math.max(avgDeltaProgressPerMs, 0.0001) /
-        1000
-    );
-    if (remainingTime.value < 0) remainingTime.value = 0;
-    lastUpdateTime.value = currentTime;
     incrementSinceLastUpdate.value = 0;
+
+    // const deltaProgress =
+    //   (incrementSinceLastUpdate.value / currentGame.value.diskUsage) * 100;
+    // currentItem.value.progress += deltaProgress;
+
+    // const deltaProgressPerMs =
+    //   deltaProgress / (currentTime - lastUpdateTime.value);
+
+    // deltaProgressOfUpdates.value.push(deltaProgressPerMs);
+    // if (deltaProgressOfUpdates.value.length > 15) {
+    //   deltaProgressOfUpdates.value.shift();
+    // }
+    // avgDeltaProgressPerMs.value =
+    //   deltaProgressOfUpdates.value.reduce((acc, val) => acc + val, 0) /
+    //   deltaProgressOfUpdates.value.length;
+
+    // remainingTime.value = Math.round(
+    //   (100 - currentItem.value.progress) /
+    //     Math.max(avgDeltaProgressPerMs.value, 0.0001) /
+    //     1000
+    // );
+    // if (remainingTime.value < 0) remainingTime.value = 0;
+    // lastUpdateTime.value = currentTime;
+    // incrementSinceLastUpdate.value = 0;
   }
 });
+
+function scrollIntoCurrentGame(delay: number = 0) {
+  setTimeout(() => {
+    document
+      .getElementById("list-item-" + currentItem.value.game.gameNameSlug)
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+  }, delay);
+}
 
 async function downloadAll() {
   downloading.value = true;
@@ -75,12 +125,15 @@ async function downloadAll() {
       currentIndex.value,
       currentItem.value.game.gameName
     );
+
+    scrollIntoCurrentGame();
+    currentGameDownloadedSize.value = 0;
     await currentItem.value.game.downloadTo(currentItem.value.target);
 
     currentItem.value.progress = 100; // sometimes the progress is not 100%
-    lastUpdateTime.value = 0;
-    remainingTime.value = 0;
-    deltaProgressOfUpdates.value = [];
+    // lastUpdateTime.value = 0;
+    // remainingTime.value = 0;
+    // deltaProgressOfUpdates.value = [];
     console.log(
       "Downloaded",
       currentIndex.value,
@@ -135,12 +188,14 @@ watch(
         transition="slide-y-transition"
         location="bottom center"
         origin="top center"
+        @update:model-value="scrollIntoCurrentGame()"
       >
         <v-list max-width="800" min-width="400" max-height="500">
           <!-- <div>Download List</div> -->
           <v-list-item
             v-for="(item, index) in gameStore.downloadList"
             :key="index"
+            :id="'list-item-' + item.game.gameNameSlug"
             slim
             :prepend-icon="pathIconMap[item.source]"
             :append-icon="pathIconMap[item.target]"
@@ -153,12 +208,11 @@ watch(
             <v-list-item-subtitle
               v-if="currentGame.gameName === item.game.gameName"
             >
-              {{
-                utils.formatSize((item.progress * item.game.diskUsage) / 100)
-              }}
+              {{ utils.formatSize(currentGameDownloadedSize) }}
               /
               {{ utils.formatSize(item.game.diskUsage) }}
-              ・ in
+              ・
+              {{ utils.formatSize(avgIncrementPerSec) }}/s ・ in
               {{ utils.formatTime(remainingTime, "short") }}
             </v-list-item-subtitle>
           </v-list-item>

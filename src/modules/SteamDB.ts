@@ -139,6 +139,7 @@ class SteamDB {
       .toLowerCase()
       .replace(/[\/~:.*?"]/g, "")
       .substring(0, 64);
+    console.log("layoutEntryName", layoutEntryName);
     // skip deletion if not re-adding
     if (!reAdd && this.controllerVDF["controller_config"][layoutEntryName]) {
       console.log(
@@ -238,7 +239,7 @@ class SteamDB {
     // ---------- Add game controller config ----------
     const layoutEntryName = game.gameNameEN
       .toLowerCase()
-      .replace(/[\/~:.*?]/g, "")
+      .replace(/[\/~:.*?"]/g, "")
       .substring(0, 64);
     // skip addition if layout is not provided or already set in Steam
     if (

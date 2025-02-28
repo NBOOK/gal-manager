@@ -165,31 +165,113 @@ function createTermMatcher(term: string): (game: GameEntry) => boolean {
 
 // -------------------------------------------------------------------------------
 
-function cleanAndCapitalize(input: string): string {
+function cleanAndCapitalize(input: string) {
+  // 1. 提取清理标点的正则表达式到变量中
+  const punctuationRegex =
+    /\s?([!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~“”‘’～∼＊、，。：？！ー‐－（）『』「」【】…．．．※＃・＋])\s?/g;
+
+  // 清理字符串：去除标点周围的空格，合并空格，去除变音符号
   const cleaned = input
-    .replace(
-      /\s?([!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~“”‘’～∼＊、，。：？！ー‐－（）『』「」【】…．．．※＃・＋])\s?/g,
-      "$1"
-    )
+    .replace(punctuationRegex, "$1")
     .replace(/\s+/g, " ")
     .trim()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-  const capitalized = cleaned
-    .split(" ")
-    .map((word) => {
-      if (word === word.toUpperCase()) {
-        return word;
-      } else if (word.length <= 2) {
-        return word;
-      } else if ((word.match(/[A-Z]/g) || []).length > 1) {
-        return word;
+
+  // 构造分隔符正则表达式（包含所有指定的标点和空格）
+  const separatorChars =
+    "\\s!\\\"#$%&'()*+,./:;<=>?@[\\]^_`{|}~“”‘’～∼＊、，。：？！ー‐－（）『』「」【】…．．．※＃・＋-";
+  const splitRegex = new RegExp(`([${separatorChars}]+)`, "g");
+  const isSeparator = (s: string) =>
+    new RegExp(`^[${separatorChars}]+$`).test(s);
+
+  // 分割成单词和分隔符的数组
+  const tokens = cleaned.split(splitRegex);
+
+  // 处理每个单词，保留分隔符
+  const processedTokens = tokens.map((token) => {
+    if (isSeparator(token)) {
+      return token; // 分隔符保持不变
+    } else {
+      // 应用原来的单词处理逻辑
+      if (token === token.toUpperCase()) {
+        return token; // 全大写保留
+      } else if (token.length <= 2) {
+        return token; // 短单词保留
+      } else if ((token.match(/[A-Z]/g) || []).length > 1) {
+        return token; // 多个大写字母保留
       } else {
-        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        // 首字母大写，其余小写
+        return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
       }
-    })
-    .join(" ");
-  return capitalized;
+    }
+  });
+
+  let result = processedTokens.join("");
+
+  // 新增步骤：在返回结果前，对成对的括号、引号及横线/波浪线添加空格
+
+  // 辅助函数：转义正则表达式特殊字符
+  function escapeRegExp(str: string) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // 处理成对的不同符号（如括号和中文引号）
+  const distinctPairs = [
+    { left: "(", right: ")" },
+    { left: "（", right: "）" },
+    { left: "【", right: "】" },
+    { left: "『", right: "』" },
+    { left: "「", right: "」" },
+    { left: "‘", right: "’" },
+    { left: "“", right: "”" },
+  ];
+
+  distinctPairs.forEach((pair) => {
+    const leftCount = (
+      result.match(new RegExp(escapeRegExp(pair.left), "g")) || []
+    ).length;
+    const rightCount = (
+      result.match(new RegExp(escapeRegExp(pair.right), "g")) || []
+    ).length;
+    if (leftCount > 0 && leftCount === rightCount) {
+      // 在左符号前面（且前面无空格）添加空格
+      result = result.replace(
+        new RegExp(`(?<!\\s)${escapeRegExp(pair.left)}`, "g"),
+        " " + pair.left
+      );
+      // 在右符号后面（且后面无空格）添加空格
+      result = result.replace(
+        new RegExp(`${escapeRegExp(pair.right)}(?!\\s)`, "g"),
+        pair.right + " "
+      );
+    }
+  });
+
+  // 处理成对的相同符号：横线、波浪线及英文引号
+  const identicalSymbols = ['"', "'", "-", "－", "‐", "ー", "~", "～", "∼"];
+  identicalSymbols.forEach((sym) => {
+    const occurrences = (result.match(new RegExp(escapeRegExp(sym), "g")) || [])
+      .length;
+    if (occurrences > 0) {
+      let count = 0;
+      result = result.replace(new RegExp(escapeRegExp(sym), "g"), () => {
+        count++;
+        // 如果是奇数个中的最后一个（落单），两侧都添加空格
+        if (occurrences % 2 === 1 && count === occurrences) {
+          return " " + sym + " ";
+        } else if (count % 2 === 1) {
+          // 成对中左侧符号：左侧加空格
+          return " " + sym;
+        } else {
+          // 成对中右侧符号：右侧加空格
+          return sym + " ";
+        }
+      });
+    }
+  });
+
+  return result.trim();
 }
 
 async function romanize(text: string): Promise<string> {

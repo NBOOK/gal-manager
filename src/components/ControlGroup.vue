@@ -107,7 +107,7 @@ const imageBtn = computed(() => {
 });
 
 const cloudBtn = computed(() => {
-  if (!gameStore.netDiskOnline || !gameStore.fileOperatable) {
+  if (!gameStore.netDiskOnline) {
     return {
       icon: "$mdiCloudOff",
       iconHover: "$mdiCloudOff",
@@ -118,14 +118,24 @@ const cloudBtn = computed(() => {
     };
   } else if (props.game.inNetDisk) {
     if (props.game.inDeck || props.game.inSDCard) {
-      return {
-        icon: "$mdiCloudCheckVariant",
-        iconHover: "$mdiContentSaveMinus",
-        color: "green",
-        colorHover: "red",
-        readonly: false,
-        action: () => {}, // delete local handled by dialog action
-      };
+      if (gameStore.fileOperatable)
+        return {
+          icon: "$mdiCloudCheckVariant",
+          iconHover: "$mdiContentSaveMinus",
+          color: "green",
+          colorHover: "red",
+          readonly: false,
+          action: () => {}, // delete local handled by dialog action
+        };
+      else
+        return {
+          icon: "$mdiCloudOff",
+          iconHover: "$mdiCloudOff",
+          color: "blue-grey",
+          colorHover: "blue-grey",
+          readonly: true,
+          action: () => {},
+        };
     } else {
       return {
         icon: "$mdiCloudDownload",
