@@ -417,18 +417,35 @@ class GameEntry {
     const localPath = this.gamePath;
 
     const exclude = [gameStore.config.value.assetsFolderName];
-    const include = [
-      this.imageAssets.capsuleName,
-      this.imageAssets.headerName,
-      this.imageAssets.heroName,
-      this.imageAssets.logoName,
-      this.imageAssets.iconName,
-      this.imageAssets.capsuleSDName,
-      this.imageAssets.headerSDName,
-      this.imageAssets.heroSDName,
-    ]
-      .filter((name) => name !== "")
-      .map((name) => `${gameStore.config.value.assetsFolderName}/${name}`);
+    // const include = [
+    //   this.imageAssets.capsuleName,
+    //   this.imageAssets.headerName,
+    //   this.imageAssets.heroName,
+    //   this.imageAssets.logoName,
+    //   this.imageAssets.iconName,
+    //   this.imageAssets.capsuleSDName,
+    //   this.imageAssets.headerSDName,
+    //   this.imageAssets.heroSDName,
+    // ]
+    //   .filter((name) => name !== "")
+    //   .map((name) => `${gameStore.config.value.assetsFolderName}/${name}`);
+    let include: string[] = [];
+    for (const asset of [
+      gameStore.config.value.assetsCapsuleName,
+      gameStore.config.value.assetsHeaderName,
+      gameStore.config.value.assetsHeroName,
+      gameStore.config.value.assetsLogoName,
+      gameStore.config.value.assetsIconName,
+    ]) {
+      for (const suffix of ["", gameStore.config.value.assetsLowResSuffix]) {
+        for (const format of ["png", "webp", "jpg", "ico"]) {
+          include.push(
+            `${gameStore.config.value.assetsFolderName}/${asset}${suffix}.${format}`
+          );
+        }
+      }
+    }
+    console.log("Include: ", include);
 
     const sync = new DirSyncer(remotePath, localPath, include, exclude);
     await sync.scan();
