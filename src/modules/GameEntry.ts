@@ -102,6 +102,11 @@ class GameEntry {
     // handled in Loading.vue
     // }
     if (entry.name.includes(" ‐ ")) this.splitter = " ‐ ";
+    if (!entry.name.includes(this.splitter)) {
+      throw new Error(
+        `The entry name "${entry.name}" does not contain the splitter "${this.splitter}".`
+      );
+    }
     this.gameBrand = entry.name.split(this.splitter)[0];
     this.gameName = entry.name
       .split(this.splitter)

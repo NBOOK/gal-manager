@@ -11,6 +11,8 @@ const processedGames = ref<number>(0);
 const processedBuffer = ref<number>(0);
 const totalGames = ref<number>(0);
 
+const workingDirs = ref(new Set<string>());
+
 async function processGameEntries(
   name: string,
   gameEntries: {
@@ -19,6 +21,7 @@ async function processGameEntries(
   }[]
 ) {
   processedBuffer.value++;
+  workingDirs.value.add(name);
 
   for (const { dirEntry, flag } of gameEntries) {
     if (!gameStore.games[name]) {
@@ -42,6 +45,7 @@ async function processGameEntries(
 
   currentGame.value = name;
   processedGames.value++;
+  workingDirs.value.delete(name);
 }
 
 async function scanGames() {
@@ -135,7 +139,7 @@ async function scanGames() {
 
 watch(
   () => gameStore.loading,
-  (newValue) => {
+  async (newValue) => {
     if (newValue) {
       // clear the games list
       for (const key in gameStore.games) {
@@ -143,7 +147,13 @@ watch(
       }
       processedGames.value = 0;
       processedBuffer.value = 0;
-      scanGames();
+      const intervalId = setInterval(() => {
+        console.log("Working directories:", Array.from(workingDirs.value));
+      }, 10000);
+
+      await scanGames();
+
+      clearInterval(intervalId);
     }
   }
 );
