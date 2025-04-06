@@ -99,9 +99,13 @@ const vOverflowDetector = {
     </div>
 
     <div class="game-meta mt-1">
-      {{ formatTime(game.modifiedTime) }}&nbsp&nbsp&nbsp&nbsp{{
-        utils.formatSize(game.diskUsage)
+      {{
+        game.gameReleaseYear
+          ? "[" + game.gameReleaseYear + "]" + "&nbsp&nbsp&nbsp&nbsp"
+          : ""
       }}
+      {{ utils.formatSize(game.diskUsage) }}&nbsp&nbsp&nbsp&nbsp
+      {{ formatTime(game.modifiedTime) }}&nbsp&nbsp&nbsp&nbsp
     </div>
   </div>
 </template>

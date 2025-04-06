@@ -18,6 +18,7 @@ class GameEntry {
   gameName: string = "";
   gameNameEN: string = "";
   gameNameSlug: string = "";
+  gameReleaseYear: string = "";
   createdTime: number = 0;
   modifiedTime: number = 0;
   diskUsage: number = 0;
@@ -142,6 +143,12 @@ class GameEntry {
         this.gameBrandEN = await utils.romanize(this.gameBrand);
       }
       this.gameNameSlug = gameProperties.gameNameSlug;
+      if (
+        gameProperties.gameReleaseYear &&
+        gameProperties.gameReleaseYear !== "null"
+      ) {
+        this.gameReleaseYear = gameProperties.gameReleaseYear;
+      }
     } else {
       this.gameNameEN = await utils.romanize(this.gameName);
       this.gameBrandEN = await utils.romanize(this.gameBrand);

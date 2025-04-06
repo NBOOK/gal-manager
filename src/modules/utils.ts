@@ -502,7 +502,7 @@ async function vndbQueryName(
             .map((brand) => ["developer", "=", ["search", "=", brand]]),
         ],
         fields:
-          "titles{official, main, lang, latin, title}, developers{name, original}, aliases",
+          "titles{official, main, lang, latin, title}, developers{name, original}, aliases, released",
         sort: "searchrank",
         results: 20,
       }),
@@ -522,7 +522,7 @@ async function vndbQueryName(
             .split("×")
             .map((brand) => ["producer", "=", ["search", "=", brand]]),
         ],
-        fields: "title, alttitle, producers{name, original}",
+        fields: "title, alttitle, producers{name, original}, released",
         sort: "searchrank",
         results: 20,
       }),
@@ -570,6 +570,7 @@ async function vndbQueryName(
           weight:
             weight *
             editRatio(romanizedName, title.latin ? title.latin : title.title),
+          year: vn.released.split("-")[0],
         });
       }
       for (const alias of vn.aliases) {
@@ -581,6 +582,7 @@ async function vndbQueryName(
           origTitle: "",
           kind: "alias",
           weight: weight * editRatio(romanizedName, alias),
+          year: vn.released.split("-")[0],
         });
       }
       for (const developer of vn.developers) {
@@ -608,6 +610,7 @@ async function vndbQueryName(
         origTitle: origTitle,
         kind: "releaseTitle",
         weight: weight * editRatio(romanizedName, title),
+        year: release.released.split("-")[0],
       });
 
       for (const producer of release.producers) {
@@ -676,6 +679,7 @@ async function getGameNameEN(gameName: string, gameBrnad: string) {
       origTitle: gameName,
       kind: "romanized",
       weight: 1,
+      year: "",
     };
     if (cleanedCandidates.length >= 6) {
       cleanedCandidates.splice(5, 0, romanizedTitle);

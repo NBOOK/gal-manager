@@ -116,6 +116,7 @@ class LutrisDB {
       game_brand: string;
       name: string;
       game_slug: string;
+      year?: string;
       game: { exe: string; prefix: string };
       system: { locale: string };
       wine?: { version: string };
@@ -131,6 +132,9 @@ class LutrisDB {
     };
     if (gameConfig.wineRunner !== "default") {
       lutrisPerGameConfig.wine = { version: gameConfig.wineRunner };
+    }
+    if (gameConfig.gameReleaseYear) {
+      lutrisPerGameConfig.year = gameConfig.gameReleaseYear;
     }
 
     // -------------------- save per game config --------------------
@@ -162,6 +166,7 @@ class LutrisDB {
       gameNameSlug: gameConfig.gameNameSlug,
       lutrisGameIndex: lutrisGameIndex,
       timestamp: timestamp,
+      year: gameConfig.gameReleaseYear,
     });
     console.log("lutrisDB updated+");
 

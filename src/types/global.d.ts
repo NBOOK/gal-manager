@@ -25,6 +25,7 @@ declare global {
     origTitle: string;
     kind: "romanized" | "alias" | "title" | "releaseTitle" | "stored";
     weight: number;
+    year: string;
   }
 
   interface VNDeveloper {
@@ -40,6 +41,7 @@ declare global {
     gameNameEN: string;
     gameBrandEN: string;
     gameNameSlug: string;
+    gameReleaseYear: string;
     winePrefix: string;
     wineRunner: string;
     executable: string;

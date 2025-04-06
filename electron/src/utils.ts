@@ -330,22 +330,24 @@ async function sqliteDBInsertGame(
   gameNameEN: string,
   gameNameSlug: string,
   lutrisGameIndex: number,
-  timestamp: number
+  timestamp: number,
+  year: string
 ): Promise<number> {
   const sqlInsert = `
     INSERT INTO games (
       id, name, slug, parent_slug, platform, runner, executable,
-      directory, updated, lastplayed, installed, installed_at,
+      directory, updated, lastplayed, installed, installed_at, year,
       configpath, has_custom_banner, has_custom_icon, has_custom_coverart_big,
       playtime, hidden, service, service_id, discord_id, sortname
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING rowid;
   `;
+  var yearVal = year ? parseInt(year) : null;
   // prettier-ignore
   const data = [
     lutrisGameIndex, gameNameEN, gameNameSlug, null, "Windows", "wine", null,
-    "", null, 0, 1, timestamp,
-    `${gameNameSlug}-${timestamp}`, 1, 1, 1,
+    "", null, 0, 1, timestamp, yearVal,
+    `${gameNameSlug}-${timestamp}`, 1, 1, 1, 
     0.0, 0, null, null, null, "",
   ];
 
@@ -365,13 +367,14 @@ async function sqliteDBQueryGame(lutrisGameIndex: number): Promise<{
   gameNameEN: string;
   gameNameSlug: string;
   gameConfigName: string;
+  gameReleaseYear: string;
 } | null> {
-  const sqlQuery = `SELECT name, slug, configpath FROM games WHERE id = ?;`;
+  const sqlQuery = `SELECT name, slug, configpath, year FROM games WHERE id = ?;`;
 
   // Prepare and execute the SQL statement
   const statement: Statement = sqliteDB.prepare(sqlQuery);
   const result = statement.get(lutrisGameIndex) as
-    | { name: string; slug: string; configpath: string }
+    | { name: string; slug: string; configpath: string; year: number }
     | undefined;
 
   return result
@@ -379,6 +382,7 @@ async function sqliteDBQueryGame(lutrisGameIndex: number): Promise<{
         gameNameEN: result.name,
         gameNameSlug: result.slug,
         gameConfigName: result.configpath,
+        gameReleaseYear: String(result.year),
       }
     : null;
 }
@@ -436,7 +440,8 @@ async function sqliteDBOp(op: string, params: any): Promise<any> {
           params.gameNameEN,
           params.gameNameSlug,
           params.lutrisGameIndex,
-          params.timestamp
+          params.timestamp,
+          params.year
         );
 
       case "deleteGame":

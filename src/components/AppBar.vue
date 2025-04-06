@@ -105,7 +105,7 @@ function quit() {
                 <v-icon size="x-large">$mdiDomain</v-icon>
               </v-btn>
 
-              <v-btn value="modifiedTime">
+              <v-btn value="gameReleaseYear">
                 <v-icon size="x-large">$mdiCalendarMonthOutline</v-icon>
               </v-btn>
 
