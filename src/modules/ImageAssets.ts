@@ -197,6 +197,15 @@ class ImageAssets {
         if (!(await window.ipcRenderer.invoke("fileExists", targetPath))) {
           // console.log("copy assets: ", sourcePath, targetPath);
           await window.ipcRenderer.invoke("start-copy", sourcePath, targetPath);
+        } else if (
+          !(await window.ipcRenderer.invoke(
+            "filesIdentical",
+            sourcePath,
+            targetPath
+          ))
+        ) {
+          // console.log("copy assets: ", sourcePath, targetPath);
+          await window.ipcRenderer.invoke("start-copy", sourcePath, targetPath);
         }
       })
     );

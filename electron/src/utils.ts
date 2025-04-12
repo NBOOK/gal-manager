@@ -660,7 +660,7 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
     try {
       entries = await fs.promises.readdir(currentDir);
     } catch (error) {
-      console.error(`Error reading directory ${currentDir}:`, error);
+      console.error("Error reading directory ${currentDir}:", error);
       return;
     }
     for (const entry of entries) {
@@ -670,7 +670,7 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
       try {
         stats = await fs.promises.stat(fullPath);
       } catch (error) {
-        console.error(`Error stating ${fullPath}:`, error);
+        console.error("Error stating ${fullPath}:", error);
         continue;
       }
       map.set(newRelativePath, {
@@ -692,6 +692,26 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
   }
   await traverse(root, "");
   return map;
+}
+
+async function filesIdentical(sourcePath: string, targetPath: string) {
+  try {
+    // 获取两个文件的状态信息
+    const sourceStats = await fs.promises.stat(sourcePath);
+    const targetStats = await fs.promises.stat(targetPath);
+
+    // 比较文件大小和修改时间
+    const sizeMatches = sourceStats.size === targetStats.size;
+    const mtimeMatches =
+      sourceStats.mtime.getTime() === targetStats.mtime.getTime();
+
+    // 如果大小和修改时间都匹配，则认为文件相同
+    return sizeMatches && mtimeMatches;
+  } catch (error) {
+    // console.error("Error comparing files:", error);
+    // 出错时返回 false，这样会触发文件复制
+    return false;
+  }
 }
 
 async function readVDF(filePath: string): Promise<any> {
@@ -827,4 +847,5 @@ export default {
   getSteamCategories,
   getFileIcon,
   createFolder,
+  filesIdentical,
 };

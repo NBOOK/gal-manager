@@ -388,6 +388,7 @@ async function addGameToDB() {
     console.log("Game name changed! Updating it...");
     await props.game.rename(folderName.value);
   }
+  props.game.gameReleaseYear = gameConfig.gameReleaseYear;
   await props.game.addDB(gameConfig);
   dbAdding.value = false;
   emit("proceed");
