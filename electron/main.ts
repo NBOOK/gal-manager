@@ -1,5 +1,3 @@
-process.noAsar = true; // Disable asar for the entire app
-
 import { app, BrowserWindow, dialog } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";

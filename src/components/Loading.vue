@@ -11,7 +11,7 @@ const processedGames = ref<number>(0);
 const processedBuffer = ref<number>(0);
 const totalGames = ref<number>(0);
 
-const workingDirs = ref(new Set<string>());
+// const workingDirs = ref(new Set<string>());
 
 async function processGameEntries(
   name: string,
@@ -21,7 +21,7 @@ async function processGameEntries(
   }[]
 ) {
   processedBuffer.value++;
-  workingDirs.value.add(name);
+  // workingDirs.value.add(name);
 
   for (const { dirEntry, flag } of gameEntries) {
     if (!gameStore.games[name]) {
@@ -35,17 +35,50 @@ async function processGameEntries(
         0,
         lastSlashIndex
       );
-      gameStore.games[dirEntry.name].linkedBasePath = linkedBasePath;
+      gameStore.games[name].linkedBasePath = linkedBasePath;
     }
   }
 
   if (gameStore.games[name].linked) {
-    gameStore.games[name].refreshLink();
+    await gameStore.games[name].refreshLink();
   }
+
+  var imageAssetsDirs = [];
+  if (
+    gameStore.games[name].inNetDisk &&
+    gameStore.config.value.gamesExternalPath !==
+      gameStore.games[name].linkedBasePath
+  )
+    imageAssetsDirs.push(
+      `${gameStore.config.value.gamesExternalPath}/${name}/${gameStore.config.value.assetsFolderName}`
+    );
+  if (
+    gameStore.games[name].inDeck &&
+    gameStore.config.value.gamesDeckPath !==
+      gameStore.games[name].linkedBasePath
+  )
+    imageAssetsDirs.push(
+      `${gameStore.config.value.gamesDataPath}/${name}/${gameStore.config.value.assetsFolderName}`
+    );
+  if (
+    gameStore.games[name].inSDCard &&
+    gameStore.config.value.gamesSDPath !== gameStore.games[name].linkedBasePath
+  )
+    imageAssetsDirs.push(
+      `${gameStore.config.value.gamesSDPath}/${name}/${gameStore.config.value.assetsFolderName}`
+    );
+  if (gameStore.games[name].linked)
+    imageAssetsDirs.push(
+      `${gameStore.config.value.gamesMainPath}/${name}/${gameStore.config.value.assetsFolderName}`
+    );
+  imageAssetsDirs.push(
+    `${gameStore.config.value.gamesAssetsPath}/${name}/${gameStore.config.value.assetsFolderName}`
+  );
+  await gameStore.games[name].imageAssets.setupAssets(imageAssetsDirs);
 
   currentGame.value = name;
   processedGames.value++;
-  workingDirs.value.delete(name);
+  // workingDirs.value.delete(name);
 }
 
 async function scanGames() {
@@ -147,13 +180,13 @@ watch(
       }
       processedGames.value = 0;
       processedBuffer.value = 0;
-      const intervalId = setInterval(() => {
-        console.log("Working directories:", Array.from(workingDirs.value));
-      }, 10000);
+      // const intervalId = setInterval(() => {
+      //   console.log("Working directories:", Array.from(workingDirs.value));
+      // }, 10000);
 
       await scanGames();
 
-      clearInterval(intervalId);
+      // clearInterval(intervalId);
     }
   }
 );

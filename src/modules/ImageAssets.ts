@@ -78,7 +78,7 @@ class ImageAssets {
       gameName,
       splitter
     );
-    await imageAssets.setGamePath(basePath, gameBrand, gameName);
+    // await imageAssets.setGamePath(basePath, gameBrand, gameName);
     return imageAssets;
   }
 
@@ -96,19 +96,42 @@ class ImageAssets {
     this.splitter = splitter;
   }
 
-  async setGamePath(basePath: string, gameBrand: string, gameName: string) {
-    // if (basePath === this.basePath && gameBrand === this.gameBrand && gameName === this.gameName) {
-    //     return;
-    // }
-    [this.basePath, this.gameBrand, this.gameName] = [
-      basePath,
-      gameBrand,
-      gameName,
-    ];
-    await this.scanImageAssets();
+  async setupAssets(orderedDirs: string[]) {
+    // console.log(orderedDirs);
+    const sourceDir = orderedDirs[0];
+    const localSourceDir = orderedDirs[1];
+    const targetDirs = orderedDirs.slice(2);
+
+    var sourceAssets = await this.scanImageAssets(sourceDir);
+    sourceAssets = await this.generateLowResAssets(sourceDir, sourceAssets);
+
+    const localSourceAssets = await this.scanImageAssets(localSourceDir);
+    await this.syncImageAssets(
+      sourceDir,
+      sourceAssets,
+      localSourceDir,
+      localSourceAssets
+    );
+
+    for (const targetDir of targetDirs) {
+      const targetAssets = await this.scanImageAssets(targetDir);
+      await this.syncImageAssets(
+        localSourceDir,
+        localSourceAssets,
+        targetDir,
+        targetAssets
+      );
+    }
   }
 
-  async scanImageAssets() {
+  /**
+   * Scans a directory for image assets and returns their filenames
+   * @param dirPath Directory path to scan, defaults to this.assetsFolderPath
+   * @returns Object containing found asset filenames
+   */
+  async scanImageAssets(
+    dirPath: string = this.assetsFolderPath
+  ): Promise<{ [key: string]: string }> {
     const assetNames: { [key: string]: string } = {
       iconName: gameStore.config.value.assetsIconName,
       logoName: gameStore.config.value.assetsLogoName,
@@ -137,78 +160,204 @@ class ImageAssets {
       heroSDName: ["webp", "jpg"],
     };
 
+    const foundAssets: { [key: string]: string } = {
+      iconName: "",
+      logoName: "",
+      capsuleName: "",
+      headerName: "",
+      heroName: "",
+      capsuleSDName: "",
+      headerSDName: "",
+      heroSDName: "",
+    };
+
     // get assets extension
     await Promise.all(
       Object.entries(assetNames).map(async ([key, assetName]) => {
         for (const format of formats[key]) {
-          const filePath = `${this.assetsFolderPath}/${assetName}.${format}`;
+          const filePath = `${dirPath}/${assetName}.${format}`;
           const exists = await window.ipcRenderer.invoke(
             "fileExists",
             filePath
           );
           if (exists) {
             const fileName = `${assetName}.${format}`;
-            (this as any)[key] = fileName;
+            foundAssets[key] = fileName;
+
+            // If scanning the default folder, update instance properties
+            // if (dirPath === this.assetsFolderPath) {
+            //   (this as any)[key] = fileName;
+            // }
             break;
           }
         }
       })
     );
 
-    // resize low resolution images
+    // If scanning default folder, generate low-res assets
+    if (dirPath === this.assetsFolderPath) {
+      for (const key of Object.keys(foundAssets)) {
+        (this as any)[key] = foundAssets[key];
+      }
+    }
+
+    return foundAssets;
+  }
+
+  /**
+   * Generates low resolution versions of image assets if they don't exist
+   * @param dirPath Directory containing assets, defaults to this.assetsFolderPath
+   * @param assetsNames Object containing asset filenames, uses instance properties if not provided
+   * @returns Object containing generated low-res asset filenames
+   */
+  async generateLowResAssets(
+    dirPath: string = this.assetsFolderPath,
+    assetsNames?: { [key: string]: string }
+  ): Promise<{ [key: string]: string }> {
+    const assets = assetsNames || {
+      capsuleName: this.capsuleName,
+      headerName: this.headerName,
+      heroName: this.heroName,
+      capsuleSDName: this.capsuleSDName,
+      headerSDName: this.headerSDName,
+      heroSDName: this.heroSDName,
+    };
+
+    // const generatedAssets: {[key: string]: string} = {
+    //   capsuleSDName: assets.capsuleSDName,
+    //   headerSDName: assets.headerSDName,
+    //   heroSDName: assets.heroSDName
+    // };
+
     await Promise.all([
       (async () => {
-        if (this.capsuleName && !this.capsuleSDName) {
-          this.capsuleSDName = await window.ipcRenderer.invoke(
+        if (assets.capsuleName && !assets.capsuleSDName) {
+          const capsulePath = `${dirPath}/${assets.capsuleName}`;
+          const capsuleSDName = await window.ipcRenderer.invoke(
             "resizeImage",
-            this.capsulePath,
+            capsulePath,
             300,
             gameStore.config.value.assetsLowResFormat
           );
+          assets.capsuleSDName = capsuleSDName;
+          // Update instance if working on default folder
+          // if (dirPath === this.assetsFolderPath) {
+          //   this.capsuleSDName = capsuleSDName;
+          // }
         }
       })(),
       (async () => {
-        if (this.headerPath && !this.headerSDPath) {
-          this.headerSDName = await window.ipcRenderer.invoke(
+        if (assets.headerName && !assets.headerSDName) {
+          const headerPath = `${dirPath}/${assets.headerName}`;
+          const headerSDName = await window.ipcRenderer.invoke(
             "resizeImage",
-            this.headerPath,
+            headerPath,
             460,
             gameStore.config.value.assetsLowResFormat
           );
+          assets.headerSDName = headerSDName;
+          // Update instance if working on default folder
+          // if (dirPath === this.assetsFolderPath) {
+          //   this.headerSDName = headerSDName;
+          // }
         }
       })(),
       (async () => {
-        if (this.heroPath && !this.heroSDPath) {
-          this.heroSDName = await window.ipcRenderer.invoke(
+        if (assets.heroName && !assets.heroSDName) {
+          const heroPath = `${dirPath}/${assets.heroName}`;
+          const heroSDName = await window.ipcRenderer.invoke(
             "resizeImage",
-            this.heroPath,
+            heroPath,
             1280,
             gameStore.config.value.assetsLowResFormat
           );
+          assets.heroSDName = heroSDName;
+          // Update instance if working on default folder
+          // if (dirPath === this.assetsFolderPath) {
+          //   this.heroSDName = heroSDName;
+          // }
         }
       })(),
     ]);
 
+    if (dirPath === this.assetsFolderPath) {
+      for (const key of ["capsuleSDName", "headerSDName", "heroSDName"]) {
+        (this as any)[key] = assets[key];
+      }
+    }
+
+    return assets;
+  }
+
+  /**
+   * Synchronizes image assets between source and target directories
+   * @param sourceDirPath Source directory path
+   * @param sourceAssetsNames Object containing source asset filenames
+   * @param targetDirPath Target directory path
+   * @param targetAssetsNames Object containing target asset filenames
+   * @returns Object containing synchronized asset filenames
+   */
+  async syncImageAssets(
+    sourceDirPath: string,
+    sourceAssetsNames: { [key: string]: string },
+    targetDirPath: string,
+    targetAssetsNames: { [key: string]: string }
+  ): Promise<{ [key: string]: string }> {
+    const result: { [key: string]: string } = { ...targetAssetsNames };
+    const assetKeys = [
+      "iconName",
+      "logoName",
+      "capsuleName",
+      "headerName",
+      "heroName",
+      "capsuleSDName",
+      "headerSDName",
+      "heroSDName",
+    ];
+
     await Promise.all(
-      this.validAssetsNames.map(async (assetName) => {
-        const sourcePath = `${this.assetsFolderPath}/${assetName}`;
-        const targetPath = `${gameStore.config.value.gamesAssetsPath}/${this.gameFolderName}/${gameStore.config.value.assetsFolderName}/${assetName}`;
-        if (sourcePath === targetPath) return;
-        if (!(await window.ipcRenderer.invoke("fileExists", targetPath))) {
-          // console.log("copy assets: ", sourcePath, targetPath);
+      assetKeys.map(async (key) => {
+        const sourceAssetName = sourceAssetsNames[key];
+        const targetAssetName = targetAssetsNames[key];
+
+        if (!sourceAssetName) return; // Skip if source asset doesn't exist
+
+        const sourcePath = `${sourceDirPath}/${sourceAssetName}`;
+        const targetPath = `${targetDirPath}/${sourceAssetName}`;
+
+        // Case 3.1: Target asset doesn't exist
+        if (!targetAssetName) {
           await window.ipcRenderer.invoke("start-copy", sourcePath, targetPath);
-        } else if (
+          result[key] = sourceAssetName;
+        }
+        // Case 3.2: Target asset exists but has different filename
+        else if (targetAssetName !== sourceAssetName) {
+          const oldTargetPath = `${targetDirPath}/${targetAssetName}`;
+          await window.ipcRenderer.invoke("removeItem", oldTargetPath);
+          await window.ipcRenderer.invoke("start-copy", sourcePath, targetPath);
+          result[key] = sourceAssetName;
+        }
+        // Case 3.3: Target asset has same filename but different content
+        else if (
           !(await window.ipcRenderer.invoke(
             "filesIdentical",
             sourcePath,
             targetPath
           ))
         ) {
-          // console.log("copy assets: ", sourcePath, targetPath);
+          await window.ipcRenderer.invoke("removeItem", targetPath);
           await window.ipcRenderer.invoke("start-copy", sourcePath, targetPath);
+          result[key] = sourceAssetName;
+        }
+
+        // Update instance if target is default folder
+        if (targetDirPath === this.assetsFolderPath) {
+          (this as any)[key] = result[key];
         }
       })
     );
+
+    return result;
   }
 
   async openImageOrGameFolder(kind?: string) {

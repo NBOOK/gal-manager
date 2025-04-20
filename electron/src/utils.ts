@@ -300,6 +300,7 @@ async function createSymbolicLink(
 }
 
 async function removeSymbolicLink(target: string): Promise<void> {
+  process.noAsar = true;
   try {
     await fs.promises.unlink(target);
   } catch (error) {
@@ -308,6 +309,7 @@ async function removeSymbolicLink(target: string): Promise<void> {
       console.error("Error removing symbolic link:", error);
     }
   }
+  process.noAsar = false;
 }
 
 async function readVdfFile(filePath: string): Promise<VdfMap> {
@@ -530,6 +532,7 @@ async function renameItem(oldPath: string, newPath: string): Promise<void> {
 }
 
 async function removeItem(itemPath: string): Promise<void> {
+  process.noAsar = true;
   try {
     const stats = await fs.promises.stat(itemPath);
     if (stats.isDirectory()) {
@@ -541,6 +544,7 @@ async function removeItem(itemPath: string): Promise<void> {
     console.error("Error removing item:", error);
     // throw error;
   }
+  process.noAsar = false;
 }
 
 async function getTotalSize(dir: string): Promise<number> {
@@ -650,6 +654,8 @@ async function createFolder(folderPath: string): Promise<void> {
 }
 
 async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
+  process.noAsar = true;
+
   const map = new Map<string, FileInfo>();
 
   async function traverse(
@@ -691,6 +697,8 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
     });
   }
   await traverse(root, "");
+
+  process.noAsar = false;
   return map;
 }
 
