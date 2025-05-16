@@ -294,7 +294,8 @@ function slugify(text: string): string {
     .map((e) => (/[a-zA-Z0-9]/.test(e) ? e : "-"))
     .join("")
     .toLowerCase()
-    .replace(/-+/g, "-");
+    .replace(/-+/g, "-")
+    .replace(/\s+/g, " ");
 }
 
 function editRatio(s: string, t: string, trim: boolean = true): number {

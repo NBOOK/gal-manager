@@ -39,7 +39,7 @@ function createWindow() {
       preload: path.join(__dirname, "preload.mjs"),
       // nodeIntegration: true, // Enable Node.js integration
       webSecurity: !isDev, // Disable same-origin policy during development
-      devTools: isDev,
+      // devTools: isDev,
     },
     autoHideMenuBar: true,
   });
