@@ -143,25 +143,127 @@ function compileAST(node: ASTNode): (game: GameEntry) => boolean {
   }
 }
 
-function createTermMatcher(term: string): (game: GameEntry) => boolean {
-  let fields: (keyof GameEntry)[];
-  let searchTerm = term.toLowerCase();
-
-  if (term.startsWith("@n=")) {
-    fields = ["gameName", "gameNameEN"];
-    searchTerm = term.slice(3).toLowerCase();
-  } else if (term.startsWith("@b=")) {
-    fields = ["gameBrand", "gameBrandEN"];
-    searchTerm = term.slice(3).toLowerCase();
-  } else {
-    fields = ["gameName", "gameNameEN", "gameBrand", "gameBrandEN"];
+function createTermMatcher(termRaw: string): (g: GameEntry) => boolean {
+  // ===================== name / brand =====================
+  const lower = termRaw.toLowerCase();
+  if (lower.startsWith("@n:") || lower.startsWith("@name:")) {
+    const q = termRaw.slice(termRaw.indexOf(":") + 1).trim();
+    if (!q) throw new Error("empty @n term");
+    return (g) =>
+      ["gameName", "gameNameEN"].some((k) =>
+        (g[k as keyof GameEntry] as unknown as string).toLowerCase().includes(q.toLowerCase()),
+      );
+  }
+  if (lower.startsWith("@b:") || lower.startsWith("@brand:")) {
+    const q = termRaw.slice(termRaw.indexOf(":") + 1).trim();
+    if (!q) throw new Error("empty @b term");
+    return (g) =>
+      ["gameBrand", "gameBrandEN"].some((k) =>
+        (g[k as keyof GameEntry] as unknown as string).toLowerCase().includes(q.toLowerCase()),
+      );
   }
 
-  return (game: GameEntry) =>
-    fields.some((field) =>
-      (game[field] as string).toLowerCase().includes(searchTerm)
+  // ===================== release year =====================
+  if (lower.startsWith("@y:") || lower.startsWith("@year:")) {
+    const raw = termRaw.slice(termRaw.indexOf(":") + 1).trim();
+    const range = parseYearRange(raw); // throws on failure
+    return (g) => {
+      const yr = toFullYear(g.gameReleaseYear);
+      if (yr === null) return false;
+      const [start, end] = range;
+      return (start === null || yr >= start) && (end === null || yr <= end);
+    };
+  }
+
+  // ===================== disk size ========================
+  if (lower.startsWith("@s:") || lower.startsWith("@size:")) {
+    const raw = termRaw.slice(termRaw.indexOf(":") + 1).trim();
+    const range = parseSizeRange(raw); // throws on failure
+    return (g) => {
+      const [start, end] = range;
+      return (start === null || g.diskUsage >= start) && (end === null || g.diskUsage <= end);
+    };
+  }
+
+  // ---------------- fallback – search all 4 text fields ----
+  const qLower = termRaw.toLowerCase();
+  return (g) =>
+    ["gameName", "gameNameEN", "gameBrand", "gameBrandEN"].some((k) =>
+      (g[k as keyof GameEntry] as unknown as string).toLowerCase().includes(qLower),
     );
 }
+
+/* ------------------------------------------------------------
+ * Helper – Year parsing
+ * ---------------------------------------------------------- */
+function toFullYear(str: string): number | null {
+  const m = str.match(/^\d{2,4}$/);
+  if (!m) return null;
+  let num = +str;
+  if (str.length === 2) {
+    num += str[0] === "7" || str[0] === "8" || str[0] === "9" ? 1900 : 2000;
+  }
+  return num;
+}
+
+function parseYearRange(raw: string): [number | null, number | null] {
+  if (!raw) throw new Error("empty year term");
+  const parts = raw.split("-");
+  if (parts.length === 1) {
+    const y = toFullYear(parts[0]);
+    if (y === null) throw new Error("invalid year");
+    return [y, y];
+  }
+  if (parts.length === 2) {
+    const [a, b] = parts;
+    const start = a ? toFullYear(a) : null;
+    const end = b ? toFullYear(b) : null;
+    if (start === null && end === null) throw new Error("invalid year range");
+    return [start, end];
+  }
+  throw new Error("invalid year range format");
+}
+
+/* ------------------------------------------------------------
+ * Helper – Size parsing
+ * ---------------------------------------------------------- */
+const SIZE_FACTORS: Record<string, number> = {
+  b: 1,
+  kb: 1024,
+  mb: 1024 ** 2,
+  gb: 1024 ** 3,
+  tb: 1024 ** 4,
+};
+
+function strToBytes(str: string): number | null {
+  const m = str.trim().match(/^(\d+(?:\.\d+)?)([tgmk]?b?)?$/i);
+  if (!m) return null;
+  const value = parseFloat(m[1]);
+  let unit = (m[2] || "b").toLowerCase();
+  if (unit.length===1 && unit !== "b") 
+    unit += "b"; // ensure unit is in kb, mb, gb, tb format
+  const factor = SIZE_FACTORS[unit as keyof typeof SIZE_FACTORS];
+  if (!factor) return null;
+  return Math.round(value * factor);
+}
+
+function parseSizeRange(raw: string): [number | null, number | null] {
+  if (!raw) throw new Error("empty size term");
+  const parts = raw.split("-");
+  if (parts.length === 1) {
+    const s = strToBytes(parts[0]);
+    if (s === null) throw new Error("invalid size");
+    return [s, s];
+  }
+  if (parts.length === 2) {
+    const start = parts[0] ? strToBytes(parts[0]) : null;
+    const end = parts[1] ? strToBytes(parts[1]) : null;
+    if (start === null && end === null) throw new Error("invalid size range");
+    return [start, end];
+  }
+  throw new Error("invalid size range format");
+}
+
 
 // -------------------------------------------------------------------------------
 
