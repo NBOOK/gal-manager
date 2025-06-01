@@ -1,0 +1,69 @@
+{
+    "Documents": {
+        "localPath": "/run/media/deck/Data/Documents",
+        "remotePath": "/run/media/deck/NetDisk/Saves/Documents",
+        "items": [
+            "AliceSoft",
+            "CRYSTALiA",
+            "ESCUDE",
+            "GIGA",
+            "Hearts",
+            "Qoobrand",
+            "Ustrack",
+            "オメガスター",
+            "月に寄りそう乙女の作法21ExSxPAR",
+            "月に寄りそう乙女の作法22ALSA"
+        ]
+    },
+    "Roaming": {
+        "localPath": "/run/media/deck/Windows/Users/<USER>/AppData/Roaming",
+        "remotePath": "/run/media/deck/NetDisk/Saves/AppData/Roaming",
+        "items": [
+            "Archive",
+            "FRONTWING",
+            "Goldberg SteamEmu Saves",
+            "GSE Saves",
+            "hulotte",
+            "Marmalade",
+            "qureate",
+            "SilkysPlus",
+            "SmartSteamEmu",
+            "Steam",
+            "WillPlus",
+            "あかべぇそふとすりぃ",
+            "あざらしそふと＆Lump of Sugar",
+            "とるてそふと",
+            "まどそふと",
+            "ま～まれぇど",
+            "ま～まれぇど星ノ音サンクチュアリ1.00",
+            "Cuteuphoria",
+            "GUMISOFT"
+        ]
+    },
+    "LocalLow": {
+        "localPath": "/run/media/deck/Windows/Users/<USER>/AppData/LocalLow",
+        "remotePath": "/run/media/deck/NetDisk/Saves/AppData/LocalLow",
+        "items": [
+            "Ex-Erotia",
+            "GirlGame",
+            "GirlGames",
+            "GIRL'S SOFTWARE",
+            "HikariField",
+            "WillPlus",
+            "windmill",
+            "Cuteuphoria"
+        ]
+    },
+    "Local": {
+        "localPath": "/run/media/deck/Windows/Users/<USER>/AppData/Local",
+        "remotePath": "/run/media/deck/NetDisk/Saves/AppData/Local",
+        "items": []
+    },
+    "Games": {
+        "localPath": "/run/media/deck/Data/Games",
+        "remotePath": "/run/media/deck/NetDisk/Saves/Games",
+        "items": [
+            "WillPlus"
+        ]
+    }
+}
