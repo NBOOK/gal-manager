@@ -20,6 +20,7 @@ export default defineConfig({
             rollupOptions: {
               external: [
                 "sharp",
+                "original-fs",
                 // other `C/C++` addons
               ],
             },

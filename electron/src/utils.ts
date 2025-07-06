@@ -1,4 +1,5 @@
-import fs from "node:fs";
+// import fs from "node:fs";
+import fs from "original-fs";
 import os from "node:os";
 import path from "node:path";
 import { spawn, exec } from "node:child_process";
@@ -300,7 +301,7 @@ async function createSymbolicLink(
 }
 
 async function removeSymbolicLink(target: string): Promise<void> {
-  process.noAsar = true;
+  // process.noAsar = true;
   try {
     await fs.promises.unlink(target);
   } catch (error) {
@@ -309,7 +310,7 @@ async function removeSymbolicLink(target: string): Promise<void> {
       console.error("Error removing symbolic link:", error);
     }
   }
-  process.noAsar = false;
+  // process.noAsar = false;
 }
 
 async function readVdfFile(filePath: string): Promise<VdfMap> {
@@ -532,7 +533,7 @@ async function renameItem(oldPath: string, newPath: string): Promise<void> {
 }
 
 async function removeItem(itemPath: string): Promise<void> {
-  process.noAsar = true;
+  // process.noAsar = true;
   try {
     const stats = await fs.promises.stat(itemPath);
     if (stats.isDirectory()) {
@@ -544,7 +545,7 @@ async function removeItem(itemPath: string): Promise<void> {
     console.error("Error removing item:", error);
     // throw error;
   }
-  process.noAsar = false;
+  // process.noAsar = false;
 }
 
 async function getTotalSize(dir: string): Promise<number> {
@@ -577,6 +578,7 @@ async function copyDirectory(
   exclude: string[],
   event: Electron.IpcMainInvokeEvent
 ) {
+  // process.noAsar = true;
   await fs.promises.mkdir(dest, { recursive: true });
 
   const files = await fs.promises.readdir(src);
@@ -607,6 +609,7 @@ async function copyDirectory(
       await copyFileWithProgress(srcPath, destPath, event);
     }
   }
+  process.noAsar = false;
 }
 
 // 复制文件并发送进度
@@ -615,6 +618,7 @@ async function copyFileWithProgress(
   dest: string,
   event: Electron.IpcMainInvokeEvent
 ) {
+  // process.noAsar = true;
   await fs.promises.mkdir(path.dirname(dest), { recursive: true });
   const stats = await fs.promises.stat(src);
   return new Promise<void>((resolve, reject) => {
@@ -642,6 +646,7 @@ async function copyFileWithProgress(
 
     readStream.pipe(writeStream);
   });
+  // process.noAsar = false;
 }
 
 async function createFolder(folderPath: string): Promise<void> {
@@ -654,7 +659,7 @@ async function createFolder(folderPath: string): Promise<void> {
 }
 
 async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
-  process.noAsar = true;
+  // process.noAsar = true;
 
   const map = new Map<string, FileInfo>();
 
@@ -698,7 +703,7 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
   }
   await traverse(root, "");
 
-  process.noAsar = false;
+  // process.noAsar = false;
   return map;
 }
 
