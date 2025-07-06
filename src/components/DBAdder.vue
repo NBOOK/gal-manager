@@ -97,7 +97,7 @@ async function getSetGameENCandidates() {
     );
   if (selectedBrands.value.length === 0)
     selectedBrands.value.push(gameBrandENCandidates.value[0]);
-  gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
+  // gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
   slugTitleColor.value = enTitleColor.value;
   console.log("Set game EN candidates", gameNameENCandidates.value);
 
