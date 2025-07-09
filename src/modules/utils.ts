@@ -151,7 +151,9 @@ function createTermMatcher(termRaw: string): (g: GameEntry) => boolean {
     if (!q) throw new Error("empty @n term");
     return (g) =>
       ["gameName", "gameNameEN"].some((k) =>
-        (g[k as keyof GameEntry] as unknown as string).toLowerCase().includes(q.toLowerCase()),
+        (g[k as keyof GameEntry] as unknown as string)
+          .toLowerCase()
+          .includes(q.toLowerCase())
       );
   }
   if (lower.startsWith("@b:") || lower.startsWith("@brand:")) {
@@ -159,7 +161,9 @@ function createTermMatcher(termRaw: string): (g: GameEntry) => boolean {
     if (!q) throw new Error("empty @b term");
     return (g) =>
       ["gameBrand", "gameBrandEN"].some((k) =>
-        (g[k as keyof GameEntry] as unknown as string).toLowerCase().includes(q.toLowerCase()),
+        (g[k as keyof GameEntry] as unknown as string)
+          .toLowerCase()
+          .includes(q.toLowerCase())
       );
   }
 
@@ -181,7 +185,10 @@ function createTermMatcher(termRaw: string): (g: GameEntry) => boolean {
     const range = parseSizeRange(raw); // throws on failure
     return (g) => {
       const [start, end] = range;
-      return (start === null || g.diskUsage >= start) && (end === null || g.diskUsage <= end);
+      return (
+        (start === null || g.diskUsage >= start) &&
+        (end === null || g.diskUsage <= end)
+      );
     };
   }
 
@@ -189,7 +196,9 @@ function createTermMatcher(termRaw: string): (g: GameEntry) => boolean {
   const qLower = termRaw.toLowerCase();
   return (g) =>
     ["gameName", "gameNameEN", "gameBrand", "gameBrandEN"].some((k) =>
-      (g[k as keyof GameEntry] as unknown as string).toLowerCase().includes(qLower),
+      (g[k as keyof GameEntry] as unknown as string)
+        .toLowerCase()
+        .includes(qLower)
     );
 }
 
@@ -240,8 +249,7 @@ function strToBytes(str: string): number | null {
   if (!m) return null;
   const value = parseFloat(m[1]);
   let unit = (m[2] || "b").toLowerCase();
-  if (unit.length===1 && unit !== "b") 
-    unit += "b"; // ensure unit is in kb, mb, gb, tb format
+  if (unit.length === 1 && unit !== "b") unit += "b"; // ensure unit is in kb, mb, gb, tb format
   const factor = SIZE_FACTORS[unit as keyof typeof SIZE_FACTORS];
   if (!factor) return null;
   return Math.round(value * factor);
@@ -263,7 +271,6 @@ function parseSizeRange(raw: string): [number | null, number | null] {
   }
   throw new Error("invalid size range format");
 }
-
 
 // -------------------------------------------------------------------------------
 
@@ -372,6 +379,9 @@ function cleanAndCapitalize(input: string) {
       });
     }
   });
+
+  // merge multiple spaces into one
+  result = result.replace(/\s+/g, " ");
 
   return result.trim();
 }

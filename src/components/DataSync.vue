@@ -17,7 +17,7 @@ onMounted(async () => {
   if (Object.keys(syncConfig.value).length === 0) {
     syncConfig.value = await window.ipcRenderer.invoke(
       "fetchJsonConfig",
-      "<MAIN_DIST>/GalManager/sync-config_template.json"
+      "<MAIN_DIST>/template/sync-config_template.json"
     );
   }
 });

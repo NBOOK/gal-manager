@@ -10,7 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-dist-electron
+dist-electron/*
 *.local
 release
 
@@ -26,6 +26,8 @@ release
 *.sw?
 
 # config and dbs
-public/GalManager/*
-!public/GalManager/config_template.json
 design
+
+# dependency and template
+!dist-electron/dict
+!dist-electron/template

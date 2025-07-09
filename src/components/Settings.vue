@@ -12,7 +12,7 @@ onMounted(async () => {
   if (Object.keys(gameStore.config.value).length === 0) {
     config.value = await window.ipcRenderer.invoke(
       "fetchJsonConfig",
-      "<MAIN_DIST>/GalManager/config_template.json"
+      "<MAIN_DIST>/template/config_template.json"
     );
   } else {
     console.log("Config already exists:", gameStore.config.value);
@@ -107,7 +107,7 @@ async function saveAndRestart() {
   ) {
     await window.ipcRenderer.invoke(
       "start-copy",
-      `<MAIN_DIST>/GalManager/sync-config_template.json`,
+      `<MAIN_DIST>/template/sync-config_template.json`,
       `<HOME>/.config/GalManager/sync-config.json`
     );
   }
@@ -119,7 +119,7 @@ async function saveAndRestart() {
   ) {
     await window.ipcRenderer.invoke(
       "start-copy",
-      `<MAIN_DIST>/GalManager/controller_layouts/avg_template.vdf`,
+      `<MAIN_DIST>/template/controller_layouts/avg_template.vdf`,
       `<HOME>/.config/GalManager/controller_layouts/avg.vdf`
     );
   }
