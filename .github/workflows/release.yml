@@ -1,0 +1,99 @@
+name: Build & Release
+
+# 仅在推送 v 开头的 tag 时触发
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  # 第一部分：在不同操作系统上进行编译
+  build:
+    # 定义矩阵，为 win/mac/linux 创建三个并行的任务
+    strategy:
+      matrix:
+        # os: [windows-latest, macos-latest, ubuntu-latest] # 可以全选
+        os: [windows-latest, ubuntu-latest] # 为了演示，先只选 win 和 linux
+
+    # 指定任务运行的虚拟机环境
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # 1. 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. 设置 Node.js 环境，并启用缓存以加速依赖安装
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # 推荐使用一个LTS版本
+          cache: "npm"
+
+      # 3. 安装项目依赖
+      # 对于包含原生模块（如 better-sqlite3, sharp）的项目，推荐使用 npm ci
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. 【仅Linux需要】安装 electron-builder 依赖的库
+      # AppImage 打包需要这些库
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libnss3 libatk-bridge2.0-0 libdrm2 libgbm1 libxss1 libasound2
+
+      # 5. 运行您在 package.json 中定义的构建脚本
+      # 这条命令会执行：vue-tsc && vite build && electron-builder
+      - name: Build application
+        run: npm run build
+        env:
+          # electron-builder 在某些情况下需要这个令牌来避免达到速率限制
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 6. 上传构建产物
+      # 将编译好的安装包作为临时文件上传，供下一个 job 使用
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # 根据操作系统命名产物，方便后续区分
+          name: dist-${{ runner.os }}
+          # 从 electron-builder.json5 可知，输出目录是 release/${version}
+          # 使用通配符匹配该目录下的所有文件
+          path: release/**
+
+  # 第二部分：创建 GitHub Release 并上传所有产物
+  create-release:
+    # 这个任务必须等待 build 任务全部成功后才能开始
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      # 需要写入权限才能创建 Release 和上传附件
+      contents: write
+
+    steps:
+      # 1. 获取当前的版本号，也就是标签名
+      - name: Get version from tag
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      # 2. 下载所有之前上传的构建产物
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # 将所有产物下载到 artifacts 文件夹
+          path: artifacts
+
+      # 3. 创建 Release 并上传文件
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # 从 artifacts 文件夹中查找所有平台的安装包并上传
+          # 根据你的 electron-builder.json5 配置的 artifactName 格式
+          files: |
+            artifacts/dist-windows-latest/*.exe
+            artifacts/dist-macos-latest/*.dmg
+            artifacts/dist-ubuntu-latest/*.AppImage
+          # 使用标签作为 Release 的名称
+          name: Release ${{ github.ref_name }}
+          # 自动生成 Release Notes
+          generate_release_notes: true
