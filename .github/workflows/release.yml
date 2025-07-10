@@ -39,7 +39,7 @@ jobs:
             libdbus-1-3
 
       - name: Build application
-        run: npm run build
+        run: npm run build:ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

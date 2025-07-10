@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
+    "build:ci": "vue-tsc && vite build && electron-builder --publish never",
     "postbuild": "VERSION=$(node -p \"require('./package.json').version\") && cp release/$VERSION/*.AppImage ~/Applications/GalManager.AppImage",
     "preview": "vite preview"
   },
