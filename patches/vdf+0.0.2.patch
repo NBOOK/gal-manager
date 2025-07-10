@@ -1,0 +1,74 @@
+diff --git a/node_modules/vdf/LICENSE b/node_modules/vdf/LICENSE
+old mode 100644
+new mode 100755
+diff --git a/node_modules/vdf/README.md b/node_modules/vdf/README.md
+old mode 100644
+new mode 100755
+diff --git a/node_modules/vdf/index.js b/node_modules/vdf/index.js
+old mode 100644
+new mode 100755
+index beae3ee..e274fb8
+--- a/node_modules/vdf/index.js
++++ b/node_modules/vdf/index.js
+@@ -26,7 +26,7 @@ function _symtostr(line, i, token) {
+     var opening = i + 1,
+         closing = opening;
+ 
+-    ci = line.indexOf(token, opening);
++    let ci = line.indexOf(token, opening);
+     while (ci !== -1) {
+         if (line.substring(ci - 1, ci) !== "\\") {
+             closing = ci;
+@@ -35,7 +35,7 @@ function _symtostr(line, i, token) {
+         ci = line.indexOf(token, ci + 1);
+     }
+ 
+-    finalstr = line.substring(opening, closing);
++    let finalstr = line.substring(opening, closing);
+     return [finalstr, i + finalstr.length + 1];
+ }
+ 
+@@ -94,7 +94,7 @@ function _parse(stream, ptr) {
+         }
+         else if (c !== SPACE && c !== TAB) {
+             var _string = (c === STRING ? _symtostr : _unquotedtostr)(stream, i);
+-            string = _string[0];
++            let string = _string[0];
+             i = _string[1];
+ 
+             if (lasttok === STRING && next_is_value) {
+@@ -122,7 +122,7 @@ function _parse(stream, ptr) {
+ 
+ function _dump(obj, indent, mult) {
+     indent = indent || 0,
+-    mult = mult || 2;
++        mult = mult || 2;
+ 
+     function _i() {
+         return Array(indent * mult + 1).join(" ");
+@@ -142,7 +142,7 @@ function _dump(obj, indent, mult) {
+             nodes.push(util.format(nodefmt, k, _dump(v, indent, mult)));
+         }
+         else if (v instanceof Array) {
+-            lst = v.map(function(more_v){ return util.format(lstfmt, more_v); });
++            lst = v.map(function (more_v) { return util.format(lstfmt, more_v); });
+             nodes.push(util.format(nodefmt, k, lst.join("\n") + '\n'));
+         }
+         else {
+@@ -155,8 +155,8 @@ function _dump(obj, indent, mult) {
+ }
+ exports.parse = function parse(string) {
+     var _parsed = _parse(string);
+-    res = _parsed[0];
+-    ptr = _parsed[1];
++    let res = _parsed[0];
++    let _ptr = _parsed[1];
+     return res;
+ };
+ 
+diff --git a/node_modules/vdf/simple.js b/node_modules/vdf/simple.js
+old mode 100644
+new mode 100755
+diff --git a/node_modules/vdf/test.js b/node_modules/vdf/test.js
+old mode 100644
+new mode 100755
