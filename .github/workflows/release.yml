@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 修正：使用了官方推荐的、更稳定精确的Linux依赖库列表
+      # 最终修正：根据 Ubuntu 24.04 的要求，将 libasound2 替换为 libasound2t64
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
@@ -33,7 +33,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libgtk-3-0 \
             libnss3 \
-            libasound2 \
+            libasound2t64 \
             libxtst6 \
             libxss1 \
             libdbus-1-3
@@ -64,9 +64,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          # 使用更直接的 github.ref_name 获取标签
           name: Release ${{ github.ref_name }}
-          # 修正：使用更健壮的通配符来匹配所有子目录下的产物文件
           files: |
             artifacts/**/*.exe
             artifacts/**/*.dmg
