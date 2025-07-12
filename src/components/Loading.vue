@@ -4,7 +4,7 @@ import { useGameStore } from "@/store/global-store";
 import GameEntry from "@/modules/GameEntry";
 import pLimit from "p-limit";
 
-const limit = pLimit(50);
+const limit = pLimit(10);
 const gameStore = useGameStore();
 const currentGame = ref<string>("");
 const processedGames = ref<number>(0);

@@ -5,7 +5,8 @@ import { execSync } from "node:child_process";
 import registerIpcMain from "./src/ipc-registration";
 
 // check if we are running in development mode
-const isDev = process.env.NODE_ENV === "development";
+export const isDev = process.env.NODE_ENV === "development";
+export const isPackaged = app.isPackaged;
 
 // const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

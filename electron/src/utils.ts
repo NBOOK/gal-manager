@@ -2,21 +2,23 @@
 import fs from "original-fs";
 import os from "node:os";
 import path from "node:path";
-import { spawn, exec } from "node:child_process";
+import { exec } from "node:child_process";
 import sharp from "sharp";
 import * as ResEdit from "resedit";
 import { readVdf, VdfMap, writeVdf, getShortcutHash } from "steam-binary-vdf";
 import vdf from "vdf";
 import YAML from "yaml";
 import { Database as DatabaseType, Statement } from "better-sqlite3";
-import { MAIN_DIST } from "../main";
+import { MAIN_DIST, isDev, isPackaged } from "../main";
 import Kuroshiro from "@sglkc/kuroshiro";
 import KuromojiAnalyzer from "@sglkc/kuroshiro-analyzer-kuromoji";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const SqliteDB = require("better-sqlite3");
 import { SteamCategories } from "./steam-categories";
+import { nodeDust, getDustBinaryPath } from "node-dust";
 
+let dustBinaryPath = getDustBinaryPath();
 let steamCat: SteamCategories;
 let sqliteDB: DatabaseType;
 const kuroshiro = new Kuroshiro();
@@ -81,69 +83,44 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
   }
 }
 
-async function getDirDiskUsage(dirPath: string): Promise<number> {
-  const platform = os.platform();
-
-  // console.log('platform:', platform);
-  // console.log('dirPath:', dirPath);
-
-  if (platform === "win32") {
-    // Windows: 使用 PowerShell 的 Get-ChildItem 命令计算目录大小
-    return new Promise((resolve, reject) => {
-      const powershell = spawn("powershell", [
-        "-NoProfile",
-        "-Command",
-        `Get-ChildItem -Recurse -Force -File "${dirPath}" | Measure-Object -Property Length -Sum | Select-Object -ExpandProperty Sum`,
-      ]);
-      let output = "";
-      powershell.stdout.on("data", (data) => (output += data.toString()));
-      powershell.stderr.on("data", (data) => console.error(data.toString()));
-      powershell.on("close", (code) => {
-        if (code === 0) {
-          const size = parseInt(output.trim(), 10);
-          resolve(size || 0); // 防止返回 NaN，默认返回 0
-        } else {
-          reject(new Error(`PowerShell command failed with code ${code}`));
-        }
-      });
-    });
-  } else {
-    // Unix-like: 使用 du 命令
-    return new Promise((resolve, reject) => {
-      const du = spawn("du", ["-sbL", dirPath]); // 使用 `du` 命令获取目录大小，单位字节，-L 跟踪符号链接
-      let output = "";
-      let errorOutput = "";
-
-      du.stdout.on("data", (data) => (output += data.toString()));
-      du.stderr.on("data", (data) => (errorOutput += data.toString()));
-
-      du.on("close", (code) => {
-        if (output.trim()) {
-          // 如果 `stdout` 有输出，尝试解析大小并忽略错误
-          try {
-            const size = parseInt(output.split("\t")[0], 10); // 解析 <大小>\t<路径>
-            if (!isNaN(size)) {
-              if (errorOutput.trim()) {
-                console.warn(`du stderr: ${errorOutput.trim()}`);
-              }
-              resolve(size);
-            } else {
-              reject(new Error("Failed to parse du output."));
-            }
-          } catch (err) {
-            reject(err);
-          }
-        } else if (errorOutput.trim()) {
-          // 如果完全没有有效输出，则认为是严重错误
-          reject(new Error(`du command failed: ${errorOutput.trim()}`));
-        } else {
-          reject(
-            new Error(`du command exited with code ${code}, but no output.`)
-          );
-        }
-      });
-    });
+async function dustGetDirDiskUsage(dirPath: string): Promise<number> {
+  let binaryPath = dustBinaryPath;
+  if (!isDev && isPackaged) {
+    binaryPath = dustBinaryPath.replace("app.asar", "app.asar.unpacked");
   }
+
+  const jsonResult = await nodeDust(["-j", "-o", "b", dirPath], {
+    binaryPath: binaryPath,
+  });
+  if (jsonResult.error) {
+    console.error("Spawn dust error: ", jsonResult.error);
+    return 0;
+  }
+  if (jsonResult.code !== 0) {
+    console.error(
+      `dust command failed with code ${jsonResult.code}:\n`,
+      jsonResult.stderr
+    );
+    return 0;
+  }
+
+  try {
+    const parsed = JSON.parse(jsonResult.stdout);
+    const size = parseInt(parsed.size.replace(/B$/, ""), 10);
+    if (isNaN(size)) {
+      console.error("Parsed size is NaN from dust stdout.");
+      return 0;
+    }
+    return size;
+  } catch (e) {
+    console.error("Could not parse JSON from dust stdout.", e);
+    console.log("Raw stdout was:", jsonResult.stdout);
+    return 0;
+  }
+}
+
+async function getDirDiskUsage(dirPath: string): Promise<number> {
+  return await dustGetDirDiskUsage(dirPath);
 }
 
 function getDiskUsage(path: string): Promise<number> {
@@ -486,7 +463,14 @@ async function kuroshiroOp(op: string, params: any): Promise<string> {
     case "init":
       try {
         await kuroshiro.init(
-          new KuromojiAnalyzer({ dictPath: path.join(MAIN_DIST, "dict") })
+          isPackaged
+            ? new KuromojiAnalyzer({
+                dictPath: path.join(
+                  process.env.APP_ROOT,
+                  "node_modules/@sglkc/kuromoji/dict"
+                ),
+              })
+            : new KuromojiAnalyzer()
         );
         return "Kuroshiro initialized.";
       } catch (error) {
@@ -609,7 +593,7 @@ async function copyDirectory(
       await copyFileWithProgress(srcPath, destPath, event);
     }
   }
-  process.noAsar = false;
+  // process.noAsar = false;
 }
 
 // 复制文件并发送进度

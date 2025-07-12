@@ -21,6 +21,7 @@ export default defineConfig({
               external: [
                 "sharp",
                 "original-fs",
+                "node-dust",
                 // other `C/C++` addons
               ],
             },

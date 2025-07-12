@@ -17,6 +17,7 @@
     "async-mutex": "^0.5.0",
     "better-sqlite3": "^11.8.1",
     "level": "^9.0.0",
+    "node-dust": "^0.1.2",
     "p-limit": "^6.2.0",
     "pinia": "^2.3.0",
     "resedit": "^2.0.3",

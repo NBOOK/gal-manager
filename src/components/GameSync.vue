@@ -5,7 +5,7 @@ import pLimit from "p-limit";
 import { DirSyncer } from "@/modules/Synchronizer";
 import SyncerCore from "@/components/SyncerCore.vue";
 
-const limit = pLimit(50);
+const limit = pLimit(10);
 const gameStore = useGameStore();
 
 const overlay = toRef(gameStore.syncManager, "managerOpen");
