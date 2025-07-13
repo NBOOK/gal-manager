@@ -17,7 +17,9 @@ const require = createRequire(import.meta.url);
 const SqliteDB = require("better-sqlite3");
 import { SteamCategories } from "./steam-categories";
 import { nodeDust, getDustBinaryPath } from "node-dust";
+import Store from "./electron-store";
 
+const store = new Store("diskUsageCache");
 let dustBinaryPath = getDustBinaryPath();
 let steamCat: SteamCategories;
 let sqliteDB: DatabaseType;
@@ -33,16 +35,18 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
         const isSymbolicLink = entry.isSymbolicLink();
 
         // 初始化返回对象
+        const stats = await fs.promises.stat(path.join(dirPath, entry.name));
         const result: DirEntry = {
           basePath: dirPath,
           name: entry.name,
           isDirectory: entry.isDirectory(),
           isFile: entry.isFile(),
-          isSymbolicLink,
+          isSymbolicLink: isSymbolicLink,
           symbolicTarget: "",
           // diskUsage: 0,
-          createdTime: 0,
-          modifiedTime: 0,
+          size: stats.size,
+          createdTime: stats.birthtimeMs,
+          modifiedTime: stats.mtimeMs,
         };
 
         try {
@@ -53,6 +57,8 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
               const stats = await fs.promises.stat(entryPath);
               result.isDirectory = stats.isDirectory();
               result.isFile = stats.isFile();
+              result.modifiedTime = stats.mtimeMs;
+              result.createdTime = stats.birthtimeMs;
             } catch (err) {
               // 如果符号链接失效/指向的位置不存在，则删除这个符号链接并返回null
               await fs.promises.unlink(entryPath);
@@ -60,13 +66,13 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
             }
           }
 
-          // 如果是目录（或符号链接指向目录），计算磁盘占用和时间戳
-          if (result.isDirectory) {
-            // 获取创建时间和修改时间
-            const stats = await fs.promises.stat(entryPath);
-            result.createdTime = stats.birthtimeMs;
-            result.modifiedTime = stats.mtimeMs;
-          }
+          // // 如果是目录（或符号链接指向目录），返回时间戳
+          // if (result.isDirectory) {
+          //   // 获取创建时间和修改时间
+          //   const stats = await fs.promises.stat(entryPath);
+          //   result.createdTime = stats.birthtimeMs;
+          //   result.modifiedTime = stats.mtimeMs;
+          // }
         } catch (err) {
           console.warn(`Error processing entry ${entry.name}:`, err);
         }
@@ -89,7 +95,7 @@ async function dustGetDirDiskUsage(dirPath: string): Promise<number> {
     binaryPath = dustBinaryPath.replace("app.asar", "app.asar.unpacked");
   }
 
-  const jsonResult = await nodeDust(["-j", "-o", "b", dirPath], {
+  const jsonResult = await nodeDust(["-j", "-s", "-o", "b", dirPath], {
     binaryPath: binaryPath,
   });
   if (jsonResult.error) {
@@ -120,7 +126,74 @@ async function dustGetDirDiskUsage(dirPath: string): Promise<number> {
 }
 
 async function getDirDiskUsage(dirPath: string): Promise<number> {
-  return await dustGetDirDiskUsage(dirPath);
+  const entries = await scanDir(dirPath);
+  // `map` 会返回一个由 Promise 组成的数组
+  const diskUsagePromises = entries.map(async (entry) => {
+    const cacheKey = `entryStats:${entry.basePath}/${entry.name}`;
+    const cachedStats = store.get(cacheKey, {
+      modifiedTime: 0,
+      diskUsage: 0,
+      checked: true,
+    }) as { modifiedTime: number; diskUsage: number; checked: boolean };
+
+    // 如果缓存有效，直接返回缓存中的值
+    if (cachedStats.modifiedTime === entry.modifiedTime) {
+      store.set(cacheKey, {
+        modifiedTime: entry.modifiedTime,
+        diskUsage: cachedStats.diskUsage,
+        checked: true,
+      });
+      return cachedStats.diskUsage;
+    }
+
+    // 否则，重新计算并更新缓存
+    const diskUsage = entry.isFile
+      ? entry.size
+      : await dustGetDirDiskUsage(path.join(entry.basePath, entry.name));
+    store.set(cacheKey, {
+      modifiedTime: entry.modifiedTime,
+      diskUsage: diskUsage,
+      checked: true,
+    });
+
+    // 返回新计算出的值
+    return diskUsage;
+  });
+
+  // 等待所有获取磁盘用量的 Promise 完成
+  const diskUsages = await Promise.all(diskUsagePromises);
+
+  // 在所有并行操作结束后，再进行安全的求和
+  const accumulatedDiskUsage = diskUsages.reduce(
+    (sum: number, usage: number) => sum + usage,
+    0
+  );
+  return accumulatedDiskUsage;
+}
+
+function saveDiskUsageCache(trim: boolean = false): void {
+  // 清理所有缓存中包含 "entryStats:" 的键
+  Object.entries(store.store).forEach(([key, value]) => {
+    if (key.startsWith("entryStats:")) {
+      const stats = value as {
+        modifiedTime: number;
+        diskUsage: number;
+        checked: boolean;
+      };
+
+      if (!stats.checked) {
+        if (trim) store.delete(key);
+      } else {
+        store.set(key, {
+          modifiedTime: stats.modifiedTime,
+          diskUsage: stats.diskUsage,
+          checked: false, // 将 checked 设置为 false，表示下次需要重新检查
+        });
+      }
+    }
+  });
+
+  store.save();
 }
 
 function getDiskUsage(path: string): Promise<number> {
@@ -818,6 +891,7 @@ async function getFileIcon(path: string): Promise<string[]> {
 export default {
   scanDir,
   getDirDiskUsage,
+  saveDiskUsageCache,
   getDiskUsage,
   fileExists,
   resizeImage,

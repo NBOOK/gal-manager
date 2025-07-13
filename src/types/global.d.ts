@@ -7,6 +7,7 @@ declare global {
     isSymbolicLink: boolean;
     symbolicTarget: string;
     // diskUsage: number;
+    size: number;
     createdTime: number;
     modifiedTime: number;
   }

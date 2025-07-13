@@ -116,22 +116,21 @@ class GameEntry {
     this.createdTime = entry.createdTime;
     this.modifiedTime = entry.modifiedTime;
 
-    const [diskUsage, imageAssets]: [number, ImageAssets] = await Promise.all([
-      window.ipcRenderer.invoke(
-        "getDirDiskUsage",
-        `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}`
-      ),
-      ImageAssets.create(
-        this,
-        this.basePath,
-        this.gameBrand,
-        this.gameName,
-        this.splitter
-      ),
-    ]);
+    this.diskUsage = await window.ipcRenderer.invoke(
+      "getDirDiskUsage",
+      `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}`
+    );
+    // .then((usage) => {
+    //   this.diskUsage = usage;
+    // });
 
-    this.diskUsage = diskUsage;
-    this.imageAssets = imageAssets;
+    this.imageAssets = await ImageAssets.create(
+      this,
+      this.basePath,
+      this.gameBrand,
+      this.gameName,
+      this.splitter
+    );
 
     // this.inLutrisDB = gameStore.lutrisDB.inDB(this);
     if (this.inLutrisDB) {

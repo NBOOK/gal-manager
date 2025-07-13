@@ -167,6 +167,8 @@ async function scanGames() {
   // console.log("Game list:", gameStore.games);
   console.log("Game process done in", Date.now() - scannedTimestamp, "ms");
 
+  window.ipcRenderer.invoke("saveDiskUsageCache", gameStore.netDiskOnline);
+
   gameStore.loading = false;
 }
 

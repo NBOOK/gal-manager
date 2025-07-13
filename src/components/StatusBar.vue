@@ -24,11 +24,12 @@ async function getDiskUsage() {
       "getDiskUsage",
       gameStore.config.value.gamesSDPath
     )) | 0;
-  netDiskUsage.value =
-    (await window.ipcRenderer.invoke(
-      "getDiskUsage",
-      gameStore.config.value.gamesNetPath
-    )) | 0;
+  netDiskUsage.value = gameStore.netDiskOnline
+    ? (await window.ipcRenderer.invoke(
+        "getDiskUsage",
+        gameStore.config.value.gamesNetPath
+      )) | 0
+    : 0;
 }
 
 onMounted(async () => {

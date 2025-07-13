@@ -41,6 +41,9 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
     ipcMain.handle('getDirDiskUsage', (_event, dirPath: string) => {
       return utils.getDirDiskUsage(dirPath)
     });
+    ipcMain.handle('saveDiskUsageCache', (_event, trim: boolean) => {
+      return utils.saveDiskUsageCache(trim)
+    });
     ipcMain.handle('getDiskUsage', (_event, dirPath: string) => {
       return utils.getDiskUsage(dirPath)
     });
