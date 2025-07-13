@@ -116,10 +116,11 @@ class GameEntry {
     this.createdTime = entry.createdTime;
     this.modifiedTime = entry.modifiedTime;
 
-    this.diskUsage = await window.ipcRenderer.invoke(
-      "getDirDiskUsage",
-      `${this.basePath}/${this.gameBrand}${this.splitter}${this.gameName}`
-    );
+    await this.refreshDiskUsage();
+    // this.diskUsage = await window.ipcRenderer.invoke(
+    //   "getDirDiskUsage",
+    //   `${this.basePath}/${this.folderName}`
+    // );
     // .then((usage) => {
     //   this.diskUsage = usage;
     // });
@@ -165,7 +166,7 @@ class GameEntry {
 
   async link(refreshDiskUsage = true) {
     console.log(`Linking ${this.gamePath}...`);
-    window.ipcRenderer.invoke(
+    await window.ipcRenderer.invoke(
       "createSymbolicLink",
       this.gamePath,
       `${gameStore.config.value.gamesMainPath}/${this.folderName}`
@@ -182,7 +183,7 @@ class GameEntry {
 
   async unlink(refreshDiskUsage = true) {
     console.log(`Unlinking ${this.gamePath}...`);
-    window.ipcRenderer.invoke("removeSymbolicLink", this.gamePath);
+    await window.ipcRenderer.invoke("removeSymbolicLink", this.gamePath);
     this.linked = false;
 
     if (this.inDeck) {

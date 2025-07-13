@@ -129,7 +129,7 @@ async function getDirDiskUsage(dirPath: string): Promise<number> {
   const entries = await scanDir(dirPath);
   // `map` 会返回一个由 Promise 组成的数组
   const diskUsagePromises = entries.map(async (entry) => {
-    const cacheKey = `entryStats:${entry.basePath}/${entry.name}`;
+    const cacheKey = path.join(path.basename(entry.basePath), entry.name);
     const cachedStats = store.get(cacheKey, {
       modifiedTime: 0,
       diskUsage: 0,
@@ -174,23 +174,23 @@ async function getDirDiskUsage(dirPath: string): Promise<number> {
 function saveDiskUsageCache(trim: boolean = false): void {
   // 清理所有缓存中包含 "entryStats:" 的键
   Object.entries(store.store).forEach(([key, value]) => {
-    if (key.startsWith("entryStats:")) {
-      const stats = value as {
-        modifiedTime: number;
-        diskUsage: number;
-        checked: boolean;
-      };
+    // if (key.startsWith("entryStats:")) {
+    const stats = value as {
+      modifiedTime: number;
+      diskUsage: number;
+      checked: boolean;
+    };
 
-      if (!stats.checked) {
-        if (trim) store.delete(key);
-      } else {
-        store.set(key, {
-          modifiedTime: stats.modifiedTime,
-          diskUsage: stats.diskUsage,
-          checked: false, // 将 checked 设置为 false，表示下次需要重新检查
-        });
-      }
+    if (!stats.checked) {
+      if (trim) store.delete(key);
+    } else {
+      store.set(key, {
+        modifiedTime: stats.modifiedTime,
+        diskUsage: stats.diskUsage,
+        checked: false, // 将 checked 设置为 false，表示下次需要重新检查
+      });
     }
+    // }
   });
 
   store.save();
