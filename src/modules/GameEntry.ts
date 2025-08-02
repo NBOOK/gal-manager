@@ -75,6 +75,8 @@ class GameEntry {
   get winePrefix(): string {
     if (!this.inLutrisDB) return "";
     const perGameConfig = gameStore.lutrisDB.getCachedGameConfig(this);
+    const prefix = perGameConfig.game.prefix;
+    if (!prefix) return "";
     return perGameConfig.game.prefix.replace(/\/$/, "").split("/").pop();
   }
 

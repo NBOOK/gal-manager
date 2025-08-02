@@ -1,194 +1,193 @@
 <script setup lang="ts">
-  import { computed, ref, watch } from "vue";
-  import { useGameStore } from "@/store/global-store";
+import { computed, ref, watch } from "vue";
+import { useGameStore } from "@/store/global-store";
 
-  const gameStore = useGameStore();
-  const filterConfig = gameStore.filter;
+const gameStore = useGameStore();
+const filterConfig = gameStore.filter;
 
-  const filterLinked = computed(() => {
-    const linked = filterConfig.linked;
-    if (linked.toggled) {
-      return {
-        icon: linked.value ? "$mdiLinkVariant" : "$mdiLinkVariantOff",
-        color: linked.value ? "green" : "red",
-        action: () => {
-          linked.value = !linked.value;
-          linked.toggled = !linked.value;
-        },
-      };
-    }
+const filterLinked = computed(() => {
+  const linked = filterConfig.linked;
+  if (linked.toggled) {
     return {
-      icon: "$mdiLinkVariant",
-      color: "geay-darken-4",
-      action: () => (linked.toggled = true),
-    };
-  });
-
-  const filterDatabase = computed(() => {
-    const inDatabase = filterConfig.inDatabase;
-    if (inDatabase.toggled)
-      return {
-        icon: ["$mdiDatabaseRemove", "$mdiDatabaseCheck", "$mdiDatabaseMinus"][
-          inDatabase.value
-        ],
-        color: ["red", "green", "orange"][inDatabase.value],
-        action: () => {
-          inDatabase.value = (inDatabase.value + 1) % 3;
-          inDatabase.toggled = inDatabase.value !== 1;
-        },
-      };
-    return {
-      icon: "$mdiDatabase",
-      color: "geay-darken-4",
+      icon: linked.value ? "$mdiLinkVariant" : "$mdiLinkVariantOff",
+      color: linked.value ? "green" : "red",
       action: () => {
-        inDatabase.toggled = true;
+        linked.value = !linked.value;
+        linked.toggled = !linked.value;
       },
     };
-  });
+  }
+  return {
+    icon: "$mdiLinkVariant",
+    color: "geay-darken-4",
+    action: () => (linked.toggled = true),
+  };
+});
 
-  const filterImage = computed(() => {
-    const inAssets = filterConfig.inAssets;
-    if (inAssets.toggled)
-      return {
-        icon: ["$mdiImageRemove", "$mdiImageCheck", "$mdiImageMinus"][
-          inAssets.value
-        ],
-        color: ["red", "green", "orange"][inAssets.value],
-        action: () => {
-          inAssets.value = (inAssets.value + 1) % 3;
-          inAssets.toggled = inAssets.value !== 1;
-        },
-      };
+const filterDatabase = computed(() => {
+  const inDatabase = filterConfig.inDatabase;
+  if (inDatabase.toggled)
     return {
-      icon: "$mdiImage",
-      color: "geay-darken-4",
+      icon: ["$mdiDatabaseRemove", "$mdiDatabaseCheck", "$mdiDatabaseMinus"][
+        inDatabase.value
+      ],
+      color: ["red", "green", "orange"][inDatabase.value],
       action: () => {
-        inAssets.toggled = true;
+        inDatabase.value = (inDatabase.value + 1) % 3;
+        inDatabase.toggled = inDatabase.value !== 1;
       },
     };
-  });
+  return {
+    icon: "$mdiDatabase",
+    color: "geay-darken-4",
+    action: () => {
+      inDatabase.toggled = true;
+    },
+  };
+});
 
-  const filterSelected = computed(() => {
-    const selected = filterConfig.selected;
-    if (selected.toggled)
-      return {
-        icon: selected.value
-          ? "$mdiCheckboxMarked"
-          : "$mdiCheckboxBlankOutline",
-        color: "geay-darken-4",
-        action: () => {
-          selected.value = !selected.value;
-          selected.toggled = !selected.value;
-        },
-      };
+const filterImage = computed(() => {
+  const inAssets = filterConfig.inAssets;
+  if (inAssets.toggled)
     return {
-      icon: "$mdiCheckboxBlankOffOutline",
-      color: "geay-darken-4",
+      icon: ["$mdiImageRemove", "$mdiImageCheck", "$mdiImageMinus"][
+        inAssets.value
+      ],
+      color: ["red", "green", "orange"][inAssets.value],
       action: () => {
-        selected.toggled = true;
+        inAssets.value = (inAssets.value + 1) % 3;
+        inAssets.toggled = inAssets.value !== 1;
       },
     };
-  });
+  return {
+    icon: "$mdiImage",
+    color: "geay-darken-4",
+    action: () => {
+      inAssets.toggled = true;
+    },
+  };
+});
 
-  const filterCloud = computed(() => {
-    const inNetDisk = filterConfig.inNetDisk;
-    if (inNetDisk.toggled)
-      return {
-        icon: "$mdiCloud",
-        color: inNetDisk.value ? "green" : "red",
-        action: () => {
-          inNetDisk.value = !inNetDisk.value;
-          inNetDisk.toggled = !inNetDisk.value;
-        },
-      };
+const filterSelected = computed(() => {
+  const selected = filterConfig.selected;
+  if (selected.toggled)
+    return {
+      icon: selected.value ? "$mdiCheckboxMarked" : "$mdiCheckboxBlankOutline",
+      color: "geay-darken-4",
+      action: () => {
+        selected.value = !selected.value;
+        selected.toggled = !selected.value;
+      },
+    };
+  return {
+    icon: "$mdiCheckboxBlankOffOutline",
+    color: "geay-darken-4",
+    action: () => {
+      selected.toggled = true;
+    },
+  };
+});
+
+const filterCloud = computed(() => {
+  const inNetDisk = filterConfig.inNetDisk;
+  if (inNetDisk.toggled)
     return {
       icon: "$mdiCloud",
-      color: "geay-darken-4",
+      color: inNetDisk.value ? "green" : "red",
       action: () => {
-        inNetDisk.toggled = true;
+        inNetDisk.value = !inNetDisk.value;
+        inNetDisk.toggled = !inNetDisk.value;
       },
     };
-  });
+  return {
+    icon: "$mdiCloud",
+    color: "geay-darken-4",
+    action: () => {
+      inNetDisk.toggled = true;
+    },
+  };
+});
 
-  const filterDeck = computed(() => {
-    const inDeck = filterConfig.inDeck;
-    if (inDeck.toggled)
-      return {
-        icon: "$mdiGamepadSquare",
-        color: inDeck.value ? "green" : "red",
-        action: () => {
-          inDeck.value = !inDeck.value;
-          inDeck.toggled = !inDeck.value;
-        },
-      };
+const filterDeck = computed(() => {
+  const inDeck = filterConfig.inDeck;
+  if (inDeck.toggled)
     return {
       icon: "$mdiGamepadSquare",
-      color: "geay-darken-4",
+      color: inDeck.value ? "green" : "red",
       action: () => {
-        inDeck.toggled = true;
+        inDeck.value = !inDeck.value;
+        inDeck.toggled = !inDeck.value;
       },
     };
-  });
+  return {
+    icon: "$mdiGamepadSquare",
+    color: "geay-darken-4",
+    action: () => {
+      inDeck.toggled = true;
+    },
+  };
+});
 
-  const filterSD = computed(() => {
-    const inSDCard = filterConfig.inSDCard;
-    if (inSDCard.toggled)
-      return {
-        icon: "$mdiMicroSd",
-        color: inSDCard.value ? "green" : "red",
-        action: () => {
-          inSDCard.value = !inSDCard.value;
-          inSDCard.toggled = !inSDCard.value;
-        },
-      };
+const filterSD = computed(() => {
+  const inSDCard = filterConfig.inSDCard;
+  if (inSDCard.toggled)
     return {
       icon: "$mdiMicroSd",
-      color: "geay-darken-4",
+      color: inSDCard.value ? "green" : "red",
       action: () => {
-        inSDCard.toggled = true;
+        inSDCard.value = !inSDCard.value;
+        inSDCard.toggled = !inSDCard.value;
       },
     };
-  });
+  return {
+    icon: "$mdiMicroSd",
+    color: "geay-darken-4",
+    action: () => {
+      inSDCard.toggled = true;
+    },
+  };
+});
 
-  const wineRunnerFilter = ref<string[]>([]);
-  watch(wineRunnerFilter, (newValue) => {
-    if (newValue.length === 0) {
-      filterConfig.wineRunner.toggled = false;
-      filterConfig.wineRunner.value = "";
-    } else {
-      filterConfig.wineRunner.toggled = true;
-      filterConfig.wineRunner.value = newValue[0];
-    }
-  });
-
-  const winePrefixFilter = ref<string[]>([]);
-  watch(winePrefixFilter, (newValue) => {
-    if (newValue.length === 0) {
-      filterConfig.winePrefix.toggled = false;
-      filterConfig.winePrefix.value = "";
-    } else {
-      filterConfig.winePrefix.toggled = true;
-      filterConfig.winePrefix.value = newValue[0];
-    }
-  });
-
-  function resetFilters() {
-    wineRunnerFilter.value = [];
-    winePrefixFilter.value = [];
-    Object.assign(filterConfig, {
-      linked: { toggled: false, value: true },
-      inDatabase: { toggled: false, value: 1 },
-      inAssets: { toggled: false, value: 1 },
-      selected: { toggled: false, value: true },
-      inNetDisk: { toggled: false, value: true },
-      inSDCard: { toggled: false, value: true },
-      inDeck: { toggled: false, value: true },
-
-      wineRunner: { toggled: false, value: "" },
-      winePrefix: { toggled: false, value: "" },
-    });
-    gameStore.filterOperator = true;
+const wineRunnerFilter = ref<string[]>([]);
+watch(wineRunnerFilter, (newValue) => {
+  if (newValue.length === 0) {
+    filterConfig.wineRunner.toggled = false;
+    filterConfig.wineRunner.value = "";
+  } else {
+    filterConfig.wineRunner.toggled = true;
+    filterConfig.wineRunner.value = newValue[0];
   }
+});
+
+const winePrefixFilter = ref<string[]>([]);
+watch(winePrefixFilter, (newValue) => {
+  if (newValue.length === 0) {
+    filterConfig.winePrefix.toggled = false;
+    filterConfig.winePrefix.value = "";
+  } else {
+    filterConfig.winePrefix.toggled = true;
+    filterConfig.winePrefix.value = newValue[0];
+    console.log("Wine Prefix Filter Updated:", newValue[0]);
+  }
+});
+
+function resetFilters() {
+  wineRunnerFilter.value = [];
+  winePrefixFilter.value = [];
+  Object.assign(filterConfig, {
+    linked: { toggled: false, value: true },
+    inDatabase: { toggled: false, value: 1 },
+    inAssets: { toggled: false, value: 1 },
+    selected: { toggled: false, value: true },
+    inNetDisk: { toggled: false, value: true },
+    inSDCard: { toggled: false, value: true },
+    inDeck: { toggled: false, value: true },
+
+    wineRunner: { toggled: false, value: "" },
+    winePrefix: { toggled: false, value: "" },
+  });
+  gameStore.filterOperator = true;
+}
 </script>
 
 <template>
@@ -358,19 +357,19 @@
 </template>
 
 <style>
-  .grid2x2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    /* 2 列 */
-    height: 96px !important;
-  }
-  .grid3x3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    height: 144px !important;
-  }
-  .grid3x3 svg.icon {
-    width: 24px;
-    height: 24px;
-  }
+.grid2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* 2 列 */
+  height: 96px !important;
+}
+.grid3x3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 144px !important;
+}
+.grid3x3 svg.icon {
+  width: 24px;
+  height: 24px;
+}
 </style>
