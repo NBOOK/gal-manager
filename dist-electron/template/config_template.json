@@ -19,7 +19,7 @@
     "steamShortcutPath": "/home/deck/.steam/steam/userdata/<SteamID>/config/shortcuts.vdf",
     "steamLocalConfigPath": "/home/deck/.steam/steam/userdata/<SteamID>/config/localconfig.vdf",
     "steamGridPath": "/home/deck/.steam/steam/userdata/<SteamID>/config/grid",
-    "steamDBPath": "/home/deck/.steam/steam/config/htmlcache/Local Storage/leveldb",
+    "steamOnlineCategoryPath": "/home/deck/.steam/steam/config/htmlcache/Local Storage/leveldb",
     "steamControllerTemplatePath": "/home/deck/.steam/steam/controller_base/templates",
     "steamControllerConfigPath": "/home/deck/.steam/steam/steamapps/common/Steam Controller Configs/<SteamID>/config",
     "steamLaunchOptionsPrefix": "run net.lutris.Lutris lutris:rungame/",

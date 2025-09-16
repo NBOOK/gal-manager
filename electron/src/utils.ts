@@ -15,13 +15,11 @@ import KuromojiAnalyzer from "@sglkc/kuroshiro-analyzer-kuromoji";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const SqliteDB = require("better-sqlite3");
-import { SteamCategories } from "./steam-categories";
 import { nodeDust, getDustBinaryPath } from "node-dust";
 import Store from "./electron-store";
 
 const store = new Store("diskUsageCache");
 let dustBinaryPath = getDustBinaryPath();
-let steamCat: SteamCategories;
 let sqliteDB: DatabaseType;
 const kuroshiro = new Kuroshiro();
 
@@ -804,39 +802,19 @@ async function writeVDF(filePath: string, json: any): Promise<void> {
   }
 }
 
-async function getSteamCategories(dbPath: string, steamId: string) {
-  try {
-    steamCat = new SteamCategories(dbPath, steamId);
-    let categories;
-    for (let i = 0; i < 30; i++) {
+async function getSteamCategories(onlineCategoryPath: string) {
+  const data = await fetchJsonConfig(onlineCategoryPath);
+  return data
+    .filter(([key]: [string]) => key.startsWith("user-collections"))
+    .map(([_, obj]: [string, { value: string }]) => {
       try {
-        categories = await steamCat.read();
-        break;
-      } catch (error) {
-        console.error(`Attempt ${i + 1} failed`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return JSON.parse(obj.value);
+      } catch (e) {
+        console.error("JSON parse error:", e);
+        return null;
       }
-    }
-    if (!categories) {
-      return [];
-    }
-    await steamCat.close();
-
-    console.log("SteamCategories read.");
-
-    return Object.values(categories["1"])
-      .filter(
-        (category: any) =>
-          category.is_deleted !== true &&
-          category.key.includes("user-collections")
-      )
-      .map((category: any) => category.value);
-    // category.value.added stores the AppID of steam games
-    // we only need category.value.id and category.value.name
-  } catch (error) {
-    console.error("Error setting up SteamCategories:", error);
-    return [];
-  }
+    })
+    .filter((v: unknown) => v !== null);
 }
 
 async function getFileIcon(path: string): Promise<string[]> {

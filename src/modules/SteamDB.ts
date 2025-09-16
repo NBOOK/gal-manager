@@ -10,7 +10,7 @@ class SteamDB {
   private steamControllerConfigPath: string = "";
   private steamControllerTemplatePath: string = "";
   private steamLocalConfigPath: string = "";
-  private steamDBPath: string = "";
+  private steamOnlineCategoryPath: string = "";
   private steamGridPath: string = "";
   private steamLaunchOptionsPrefix: string = "";
   linkLowRes: boolean = true;
@@ -48,7 +48,7 @@ class SteamDB {
     this.steamControllerConfigPath = config.steamControllerConfigPath;
     this.steamControllerTemplatePath = config.steamControllerTemplatePath;
     this.steamLocalConfigPath = config.steamLocalConfigPath;
-    this.steamDBPath = config.steamDBPath;
+    this.steamOnlineCategoryPath = config.steamOnlineCategoryPath;
 
     // ------- Shortcut VDF -------
     this.shortcutVDF = await window.ipcRenderer.invoke(
@@ -85,7 +85,7 @@ class SteamDB {
     // ------- Steam Categories -------
     this.steamCategories = await window.ipcRenderer.invoke(
       "getSteamCategories",
-      this.steamDBPath,
+      this.steamOnlineCategoryPath,
       this.steamID
     );
     this.steamCategories.forEach((category) => {

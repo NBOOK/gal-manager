@@ -337,7 +337,7 @@ async function saveAndRestart() {
               class="mb-1"
             />
             <v-text-field
-              v-model="config.steamDBPath"
+              v-model="config.steamOnlineCategoryPath"
               label="Steam LevelDB Path"
               :rules="[fieldRequired, pathMustExist, endsWithSlash]"
               :spellcheck="false"
