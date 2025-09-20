@@ -16,6 +16,19 @@ const ready = ref(false);
 
 onMounted(async () => {
   gameStore.config.value = await window.ipcRenderer.invoke("fetchJsonConfig");
+  // Replace "<STEAM_ID>" in all properties of gameStore.config.value.steam except 'id'
+  const steamConfig = gameStore.config.value.steam;
+  if (steamConfig && steamConfig.id) {
+    Object.keys(steamConfig).forEach((key) => {
+      if (key !== "id" && typeof steamConfig[key] === "string") {
+        steamConfig[key] = steamConfig[key].replace(
+          /<STEAM_ID>/g,
+          steamConfig.id
+        );
+      }
+    });
+  }
+
   console.log("Config fetched:", gameStore.config.value);
 
   if (Object.keys(gameStore.config.value).length === 0) {
@@ -36,6 +49,7 @@ async function init() {
   window.ipcRenderer.invoke("kuroshiroOp", "init");
   gameStore.steamDB.setup(gameStore.config.value);
   gameStore.lutrisDB.setup(gameStore.config.value);
+  gameStore.heroicDB.setup(gameStore.config.value);
 
   ready.value = true;
 }

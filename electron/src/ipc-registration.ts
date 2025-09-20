@@ -168,8 +168,8 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
     ipcMain.handle('writeVDF', (_event, filePath: string, serializedJSON: string) => {
       return utils.writeVDF(filePath, JSON.parse(serializedJSON));
     });
-    ipcMain.handle('getSteamCategories', (_event, dbPath:string, steamID:string) => {
-      return utils.getSteamCategories(dbPath, steamID);
+    ipcMain.handle('getSteamCategories', (_event, dbPath:string) => {
+      return utils.getSteamCategories(dbPath);
     });
     ipcMain.handle('getFileIcon', (_event, path: string) => {
       return utils.getFileIcon(path);
@@ -186,6 +186,9 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
     });
     ipcMain.handle('filesIdentical', (_event, sourcePath: string, targetPath:string) => {
       return utils.filesIdentical(sourcePath, targetPath);
+    });
+    ipcMain.handle('hasExecutableMagic', (_event, filePath: string) => {
+      return utils.hasExecutableMagic(filePath);
     });
   }
 

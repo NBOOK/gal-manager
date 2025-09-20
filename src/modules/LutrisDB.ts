@@ -31,12 +31,12 @@ class LutrisDB {
   }
 
   async setup(config: any) {
-    this.lutrisGameConfigPath = config.lutrisGameConfigPath;
-    this.lutrisGameListPath = config.lutrisGameListPath;
-    this.lutrisDBPath = config.lutrisDBPath;
-    this.lutrisIconPath = config.lutrisIconPath;
-    this.lutrisBannerPath = config.lutrisBannerPath;
-    this.lutrisCoverPath = config.lutrisCoverPath;
+    this.lutrisGameConfigPath = config.lutris.gameConfigPath;
+    this.lutrisGameListPath = config.lutris.gameListPath;
+    this.lutrisDBPath = config.lutris.dbPath;
+    this.lutrisIconPath = config.lutris.iconPath;
+    this.lutrisBannerPath = config.lutris.bannerPath;
+    this.lutrisCoverPath = config.lutris.coverPath;
     this.wineRunnerPath = config.wineRunnerPath;
     this.winePrefixPath = config.winePrefixPath;
     this.linkLowRes = config.assetsLinkLowRes;
@@ -60,13 +60,7 @@ class LutrisDB {
       await window.ipcRenderer.invoke("scanDir", this.winePrefixPath)
     )
       .filter((item: DirEntry) => item.isDirectory)
-      .map((item: DirEntry) => item.name)
-      .sort((a: string, b: string) => {
-        if (a.includes("ADV") === b.includes("ADV")) {
-          return a.localeCompare(b);
-        }
-        return a.includes("ADV") ? -1 : 1;
-      });
+      .map((item: DirEntry) => item.name);
 
     // connect DB
     await window.ipcRenderer.invoke("sqliteDBOp", "connect", {
@@ -90,6 +84,9 @@ class LutrisDB {
       this.lutrisGameIndices[gameName] = lutrisGameIndex;
     });
 
+    // load game configs during setup
+
+    // get lutris categories
     this.lutrisCategories = await window.ipcRenderer.invoke(
       "sqliteDBOp",
       "getCategories"
@@ -117,7 +114,7 @@ class LutrisDB {
       name: string;
       game_slug: string;
       year?: string;
-      game: { exe: string; prefix: string };
+      game: { exe: string; prefix?: string };
       system: { locale: string };
       wine?: { version: string };
     } = {
@@ -126,12 +123,14 @@ class LutrisDB {
       game_slug: gameConfig.gameNameSlug,
       game: {
         exe: exePath,
-        prefix: `${this.winePrefixPath}/${gameConfig.winePrefix}`,
       },
       system: { locale: gameConfig.locale },
     };
-    if (gameConfig.wineRunner !== "default") {
-      lutrisPerGameConfig.wine = { version: gameConfig.wineRunner };
+    if (gameConfig.platform === "Windows") {
+      if (gameConfig.lutrisRunner !== "default") {
+        lutrisPerGameConfig.wine = { version: gameConfig.lutrisRunner };
+      }
+      lutrisPerGameConfig.game.prefix = `${this.winePrefixPath}/${gameConfig.lutrisPrefix}`;
     }
     if (gameConfig.gameReleaseYear) {
       lutrisPerGameConfig.year = gameConfig.gameReleaseYear;
@@ -167,8 +166,9 @@ class LutrisDB {
       lutrisGameIndex: lutrisGameIndex,
       timestamp: timestamp,
       year: gameConfig.gameReleaseYear,
+      platform: gameConfig.platform,
     });
-    console.log("lutrisDB updated+");
+    console.log("lutrisDB updated");
 
     // -------------------- link images, not awaiting is OK --------------------
     console.log("Linking images");
@@ -247,11 +247,11 @@ class LutrisDB {
     console.log("Game list updated");
 
     // update lutrisDB
-    console.log("Updating lutrisDB-");
+    console.log("Updating lutrisDB");
     await window.ipcRenderer.invoke("sqliteDBOp", "deleteGame", {
       lutrisGameIndex: lutrisGameIndex,
     });
-    console.log("lutrisDB- updated");
+    console.log("lutrisDB updated");
 
     // unlink images, not awaiting is OK
     console.log("Unlinking images");
@@ -293,6 +293,8 @@ class LutrisDB {
   }
 
   async getGameConfig(game: GameEntry): Promise<Record<string, string>> {
+    // Game name EN, slug, config name, year
+    // brand from yaml (per game config) if not already cached
     if (!this.inDB(game)) {
       return {};
     }
@@ -318,11 +320,13 @@ class LutrisDB {
         gameProperties.gameBrandEN = pergameConfig.game_brand;
       }
     }
+    // console.log("Lutris game properties: ", gameProperties);
     return gameProperties;
   }
 
-  getCachedGameConfig(game: GameEntry): Record<string, any> {
-    return this.lustrisPerGameConfigs[game.gameName];
+  getPerGameConfig(game: GameEntry): Record<string, any> {
+    // wine version, prefix, exe, locale, brand
+    return this.lustrisPerGameConfigs[game.gameName] || {};
   }
 
   async categoriesForGame(game: GameEntry): Promise<string[]> {

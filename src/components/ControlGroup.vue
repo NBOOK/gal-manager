@@ -14,7 +14,7 @@ const linkBtn = computed(() => {
       iconHover: "$mdiLinkVariantMinus",
       color: "green",
       colorHover: "red",
-      readonly: props.game.inLutrisDB || props.game.inSteamDB,
+      readonly: props.game.inDatabase > 0,
       action: () => props.game.unlink(),
     };
   } else {
@@ -45,7 +45,7 @@ const databaseBtn = computed(() => {
     //   ", Steam: ",
     //   props.game.inSteamDB
     // );
-    if (props.game.inLutrisDB && props.game.inSteamDB) {
+    if (props.game.inDatabase === 1) {
       return {
         icon: "$mdiDatabase",
         iconHover: "$mdiDatabaseEdit",
@@ -54,9 +54,9 @@ const databaseBtn = computed(() => {
         // action: () => props.game.removeDB(),
         action: () => gameStore.dbEditList.push(props.game),
       };
-    } else if (props.game.inLutrisDB !== props.game.inSteamDB) {
+    } else if (props.game.inDatabase === 2) {
       return {
-        icon: "$mdiDatabaseMinus",
+        icon: "$mdiDatabasePlus",
         iconHover: "$mdiDatabaseEdit",
         color: "orange",
         readonly: false,
@@ -232,6 +232,32 @@ const selectBtn = computed(() => {
   };
 });
 
+const launcherBtn = computed(() => {
+  return {
+    icon:
+      props.game.launcher === "Heroic"
+        ? "$customHeroic"
+        : props.game.launcher === "Lutris"
+        ? "$customLutris"
+        : "$mdiLayersOff",
+    color: props.game.launcher === "Unknown" ? "orange" : "green",
+    action: () => "",
+  };
+});
+
+const platformBtn = computed(() => {
+  return {
+    icon:
+      props.game.platform === "Windows"
+        ? "$mdiMicrosoftWindows"
+        : props.game.platform === "Linux"
+        ? "$mdiPenguin"
+        : "$mdiCubeOff",
+    color: props.game.platform === "Unknown" ? "orange" : "green",
+    action: () => "",
+  };
+});
+
 // const starBtn = computed(() => {
 //   return {
 //     icon: props.game.starred ? "$mdiStar" : "$mdiStarOutline",
@@ -293,8 +319,8 @@ function pushToDownloadList(target: string) {
   <!-- 右侧按钮 -->
   <div class="game-controls">
     <!-- Dummy Placeholder -->
-    <v-btn icon size="x-small" variant="text" class="invisible"></v-btn>
-    <v-btn icon size="x-small" variant="text" class="invisible"></v-btn>
+    <!-- <v-btn icon size="x-small" variant="text" class="invisible"></v-btn>
+    <v-btn icon size="x-small" variant="text" class="invisible"></v-btn> -->
 
     <!-- Star Button -->
     <!-- <v-btn
@@ -334,26 +360,6 @@ function pushToDownloadList(target: string) {
           <v-icon
             :icon="isHovering ? linkBtn.iconHover : linkBtn.icon"
             :color="isHovering ? linkBtn.colorHover : linkBtn.color"
-            size="x-large"
-          ></v-icon>
-        </v-btn>
-      </template>
-    </v-hover>
-
-    <!-- Database Button -->
-    <v-hover>
-      <template v-slot:default="{ isHovering, props }">
-        <v-btn
-          icon
-          size="x-small"
-          variant="text"
-          :readonly="databaseBtn.readonly"
-          @click="databaseBtn.action"
-          v-bind="props"
-        >
-          <v-icon
-            :icon="isHovering ? databaseBtn.iconHover : databaseBtn.icon"
-            :color="databaseBtn.color"
             size="x-large"
           ></v-icon>
         </v-btn>
@@ -417,6 +423,42 @@ function pushToDownloadList(target: string) {
         </v-btn>
       </template>
     </v-hover>
+
+    <!-- Database Button -->
+    <v-hover>
+      <template v-slot:default="{ isHovering, props }">
+        <v-btn
+          icon
+          size="x-small"
+          variant="text"
+          :readonly="databaseBtn.readonly"
+          @click="databaseBtn.action"
+          v-bind="props"
+        >
+          <v-icon
+            :icon="isHovering ? databaseBtn.iconHover : databaseBtn.icon"
+            :color="databaseBtn.color"
+            size="x-large"
+          ></v-icon>
+        </v-btn>
+      </template>
+    </v-hover>
+
+    <v-btn icon size="x-small" variant="text" @click="" readonly>
+      <v-icon
+        :icon="launcherBtn.icon"
+        :color="launcherBtn.color"
+        size="x-large"
+      ></v-icon>
+    </v-btn>
+
+    <v-btn icon size="x-small" variant="text" @click="" readonly>
+      <v-icon
+        :icon="platformBtn.icon"
+        :color="platformBtn.color"
+        size="x-large"
+      ></v-icon>
+    </v-btn>
 
     <!-- Cloud Button -->
     <v-hover>

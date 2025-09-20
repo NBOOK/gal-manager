@@ -1,10 +1,10 @@
 import ImageAssets from "@/modules/ImageAssets";
-import { useGameStore } from "@/store/global-store";
 import utils from "./utils";
 import { DirSyncer } from "./Synchronizer";
+import { useGameStore } from "@/store/global-store";
 let gameStore: ReturnType<typeof useGameStore>;
 
-export function gameEntrySetConfig() {
+export function gameEntrySetStore() {
   if (!gameStore) {
     gameStore = useGameStore();
   }
@@ -19,6 +19,8 @@ class GameEntry {
   gameNameEN: string = "";
   gameNameSlug: string = "";
   gameReleaseYear: string = "";
+  platform: string = "";
+  // launcher: string = ""; // "Lutris" | "Heroic" | ""
   createdTime: number = 0;
   modifiedTime: number = 0;
   diskUsage: number = 0;
@@ -28,8 +30,6 @@ class GameEntry {
   inNetDisk: boolean = false;
   inSDCard: boolean = false;
   inDeck: boolean = false;
-  // inLutrisDB: boolean = false;
-  // inSteamDB: boolean = false;
   imageAssets!: ImageAssets;
   splitter: string = " - ";
 
@@ -49,10 +49,17 @@ class GameEntry {
     return gameStore.steamDB.inDB(this);
   }
 
+  get inHeroicDB(): boolean {
+    return gameStore.heroicDB.inDB(this);
+  }
+
   get inDatabase(): number {
-    if (this.inLutrisDB && this.inSteamDB) return 1;
-    else if (this.inLutrisDB || this.inSteamDB) return 2;
-    else return 0;
+    const total =
+      (this.inLutrisDB ? 1 : 0) +
+      (this.inSteamDB ? 1 : 0) +
+      (this.inHeroicDB ? 1 : 0);
+    // 0: not in db, 2: in some dbs, 1: in all dbs
+    return total === 3 ? 1 : total === 0 ? 0 : 2;
   }
 
   get inAssets(): number {
@@ -61,10 +68,9 @@ class GameEntry {
     else return 0;
   }
 
-  get wineRunner(): string {
+  get lutrisRunner(): string {
     if (!this.inLutrisDB) return "";
-    const perGameConfig = gameStore.lutrisDB.getCachedGameConfig(this);
-    // console.log("perGameConfig of ", this.gameName, perGameConfig);
+    const perGameConfig = gameStore.lutrisDB.getPerGameConfig(this);
     if (perGameConfig.wine && perGameConfig.wine.version) {
       return perGameConfig.wine.version;
     } else {
@@ -72,30 +78,46 @@ class GameEntry {
     }
   }
 
-  get winePrefix(): string {
+  get lutrisPrefix(): string {
     if (!this.inLutrisDB) return "";
-    const perGameConfig = gameStore.lutrisDB.getCachedGameConfig(this);
+    const perGameConfig = gameStore.lutrisDB.getPerGameConfig(this);
     const prefix = perGameConfig.game.prefix;
     if (!prefix) return "";
     return perGameConfig.game.prefix.replace(/\/$/, "").split("/").pop();
   }
 
-  // performance is not good
-  //   get inSteamDB() {
-  //     return gameStore.steamDB.inDB(this.gameNameSlug);
-  //   }
+  get heroicRunner(): string {
+    if (!this.inHeroicDB) return "";
+    const perGameConfig = gameStore.heroicDB.getPerGameConfig(this);
+    if (perGameConfig.wineVersion?.name !== undefined) {
+      return perGameConfig.wineVersion.name.split(" - ")[1];
+    } else {
+      return "default";
+    }
+  }
 
-  // static async create(entry: DirEntry): Promise<GameEntry> {
-  //   const gameEntry = new GameEntry(entry);
+  get heroicPrefix(): string {
+    if (!this.inHeroicDB) return "";
+    const perGameConfig = gameStore.heroicDB.getPerGameConfig(this);
+    console.log(perGameConfig);
+    if (perGameConfig.winePrefix !== undefined) {
+      return perGameConfig.winePrefix.split("/").pop();
+    } else {
+      return "default";
+    }
+  }
 
-  //   await gameEntry.setGamePath(
-  //     gameEntry.basePath,
-  //     gameEntry.gameBrand,
-  //     gameEntry.gameName
-  //   );
+  get launcher(): string {
+    return gameStore.steamDB.gameLauncher(this);
+  }
 
-  //   return gameEntry;
-  // }
+  get wineRunner(): string {
+    return this.launcher === "Heroic" ? this.heroicRunner : this.lutrisRunner;
+  }
+
+  get winePrefix(): string {
+    return this.launcher === "Heroic" ? this.heroicPrefix : this.lutrisPrefix;
+  }
 
   constructor() {}
 
@@ -119,13 +141,6 @@ class GameEntry {
     this.modifiedTime = entry.modifiedTime;
 
     await this.refreshDiskUsage();
-    // this.diskUsage = await window.ipcRenderer.invoke(
-    //   "getDirDiskUsage",
-    //   `${this.basePath}/${this.folderName}`
-    // );
-    // .then((usage) => {
-    //   this.diskUsage = usage;
-    // });
 
     this.imageAssets = await ImageAssets.create(
       this,
@@ -151,10 +166,16 @@ class GameEntry {
       ) {
         this.gameReleaseYear = gameProperties.gameReleaseYear;
       }
+      if (gameProperties.gamePlatform) {
+        this.platform = gameProperties.gamePlatform;
+      } else {
+        this.platform = "Unknown";
+      }
     } else {
       this.gameNameEN = await utils.romanize(this.gameName);
       this.gameBrandEN = await utils.romanize(this.gameBrand);
       this.gameNameSlug = utils.slugify(this.gameNameEN);
+      this.platform = "Unknown";
     }
     // this.inSteamDB = gameStore.steamDB.inDB(this);
   }
@@ -235,21 +256,35 @@ class GameEntry {
     this.gameBrandEN = gameConfig.gameBrandEN;
     this.gameNameEN = gameConfig.gameNameEN;
     this.gameNameSlug = gameConfig.gameNameSlug;
+    // this.launcher = gameConfig.launcher;
+    this.platform = gameConfig.platform;
+    this.gameReleaseYear = gameConfig.gameReleaseYear;
+
     if (!this.inLutrisDB) {
       console.log(`Adding ${this.folderName} to LutrisDB...`);
       await gameStore.lutrisDB.addGame(this, gameConfig);
-      // this.inLutrisDB = true;
       console.log(`${this.folderName} added to LutrisDB`);
     }
+
+    if (!this.inHeroicDB) {
+      console.log(`Adding ${this.folderName} to HeroicDB...`);
+      await gameStore.heroicDB.addGame(this, gameConfig);
+      console.log(`${this.folderName} added to HeroicDB`);
+    }
+
     if (!this.inSteamDB) {
       console.log(`Adding ${this.folderName} to SteamDB...`);
       await gameStore.steamDB.addGame(this, gameConfig);
-      // this.inSteamDB = true;
       console.log(`${this.folderName} added to SteamDB`);
     }
   }
 
   async removeDB(reAdd = false) {
+    if (this.inHeroicDB) {
+      console.log(`Removing ${this.folderName} from HeroicDB...`);
+      await gameStore.heroicDB.removeGame(this);
+      // this.inHeroicDB = false;
+    }
     if (this.inLutrisDB) {
       console.log(`Removing ${this.folderName} from LutrisDB...`);
       await gameStore.lutrisDB.removeGame(this);

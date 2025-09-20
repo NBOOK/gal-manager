@@ -5,6 +5,7 @@ import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import { aliases, mdi } from "vuetify/iconsets/mdi-svg";
+import { h } from "vue";
 import {
   mdiFilter,
   mdiFilterOutline,
@@ -99,17 +100,42 @@ import {
   mdiTranslate,
   mdiFolderImage,
   mdiFolderMultipleImage,
+  mdiAutoFix,
+  mdiMicrosoftWindows,
+  mdiPenguin,
+  mdiOpenInApp,
+  mdiFileOutline,
+  mdiAlertCircle,
+  mdiDatabasePlus,
+  mdiLayers,
+  mdiLayersOff,
+  mdiCube,
+  mdiCubeOff,
 } from "@mdi/js";
 
 import customWineEmpty from "./icons/customWineEmpty.vue";
 import customWineEmptyVariant from "./icons/customWineEmptyVariant.vue";
 import customWineHalf from "./icons/customWineHalf.vue";
+import customHeroic from "./icons/customHeroic.vue";
+import customLutris from "./icons/customLutris.vue";
 
 const aliasesCustom = {
   ...aliases,
+  mdiAlertCircle,
+  mdiAutoFix,
+  mdiMicrosoftWindows,
+  mdiPenguin,
   customWineEmpty,
   customWineEmptyVariant,
   customWineHalf,
+  customHeroic,
+  customLutris: (props: any) => h(customLutris, props),
+  mdiOpenInApp,
+  mdiFileOutline,
+  mdiCube,
+  mdiCubeOff,
+  mdiLayers,
+  mdiLayersOff,
   mdiFilter,
   mdiFilterOutline,
   mdiReload,
@@ -135,6 +161,7 @@ const aliasesCustom = {
   mdiDatabase,
   mdiDatabaseCheck,
   mdiDatabaseMinus,
+  mdiDatabasePlus,
   mdiDatabaseOff,
   mdiDatabaseEdit,
   mdiDatabaseRemove,

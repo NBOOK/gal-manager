@@ -24,6 +24,7 @@ let sqliteDB: DatabaseType;
 const kuroshiro = new Kuroshiro();
 
 async function scanDir(dirPath: string): Promise<DirEntry[]> {
+  // console.log("Scanning directory:", dirPath);
   try {
     const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
 
@@ -235,9 +236,12 @@ async function fetchJsonConfig(jsonPath?: string): Promise<any> {
     jsonPath = path.join(os.homedir(), jsonPath.slice(6));
   }
 
+  // console.log("Fetching JSON config from:", jsonPath);
+
   try {
     const exists = await fileExists(jsonPath);
     if (!exists) {
+      console.warn("JSON config file does not exist:", jsonPath);
       return {};
     }
 
@@ -382,7 +386,8 @@ async function sqliteDBInsertGame(
   gameNameSlug: string,
   lutrisGameIndex: number,
   timestamp: number,
-  year: string
+  year: string,
+  platform: string = "Windows"
 ): Promise<number> {
   const sqlInsert = `
     INSERT INTO games (
@@ -393,10 +398,11 @@ async function sqliteDBInsertGame(
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING rowid;
   `;
-  var yearVal = year ? parseInt(year) : null;
+  const yearVal = year ? parseInt(year) : null;
+  const runner = platform === "Windows" ? "wine" : "linux";
   // prettier-ignore
   const data = [
-    lutrisGameIndex, gameNameEN, gameNameSlug, null, "Windows", "wine", null,
+    lutrisGameIndex, gameNameEN, gameNameSlug, null, platform, runner, null,
     "", null, 0, 1, timestamp, yearVal,
     `${gameNameSlug}-${timestamp}`, 1, 1, 1, 
     0.0, 0, null, null, null, "",
@@ -419,13 +425,20 @@ async function sqliteDBQueryGame(lutrisGameIndex: number): Promise<{
   gameNameSlug: string;
   gameConfigName: string;
   gameReleaseYear: string;
+  gamePlatform: string;
 } | null> {
-  const sqlQuery = `SELECT name, slug, configpath, year FROM games WHERE id = ?;`;
+  const sqlQuery = `SELECT name, slug, configpath, year, platform FROM games WHERE id = ?;`;
 
   // Prepare and execute the SQL statement
   const statement: Statement = sqliteDB.prepare(sqlQuery);
   const result = statement.get(lutrisGameIndex) as
-    | { name: string; slug: string; configpath: string; year: number }
+    | {
+        name: string;
+        slug: string;
+        configpath: string;
+        year: number;
+        platform: string;
+      }
     | undefined;
 
   return result
@@ -434,6 +447,7 @@ async function sqliteDBQueryGame(lutrisGameIndex: number): Promise<{
         gameNameSlug: result.slug,
         gameConfigName: result.configpath,
         gameReleaseYear: String(result.year),
+        gamePlatform: result.platform,
       }
     : null;
 }
@@ -492,7 +506,8 @@ async function sqliteDBOp(op: string, params: any): Promise<any> {
           params.gameNameSlug,
           params.lutrisGameIndex,
           params.timestamp,
-          params.year
+          params.year,
+          params.platform
         );
 
       case "deleteGame":
@@ -866,6 +881,22 @@ async function getFileIcon(path: string): Promise<string[]> {
   return results;
 }
 
+async function hasExecutableMagic(filePath: string): Promise<boolean> {
+  try {
+    const fd = await fs.promises.open(filePath, "r");
+    const buffer = Buffer.alloc(4);
+    await fd.read(buffer, 0, 4, 0);
+    await fd.close();
+
+    return (
+      buffer.toString("utf8", 0, 2) === "#!" || // 脚本
+      buffer.toString("binary", 0, 4) === "\x7fELF"
+    ); // ELF
+  } catch {
+    return false;
+  }
+}
+
 export default {
   scanDir,
   getDirDiskUsage,
@@ -897,4 +928,5 @@ export default {
   getFileIcon,
   createFolder,
   filesIdentical,
+  hasExecutableMagic,
 };

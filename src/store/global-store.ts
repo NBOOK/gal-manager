@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import GameEntry from "@/modules/GameEntry";
 import SteamDB from "@/modules/SteamDB";
 import LutrisDB from "@/modules/LutrisDB";
+import HeroicDB from "@/modules/HeroicDB";
 import utils from "@/modules/utils";
 import { DirSyncer } from "@/modules/Synchronizer";
 
@@ -25,6 +26,9 @@ export const useGameStore = defineStore("globalStore", () => {
 
     wineRunner: { toggled: false, value: "" },
     winePrefix: { toggled: false, value: "" },
+
+    launcher: { toggled: false, value: "" },
+    platform: { toggled: false, value: "" },
   });
 
   // const filterOperator = reactive({ group1: true, group2: true });
@@ -56,6 +60,7 @@ export const useGameStore = defineStore("globalStore", () => {
 
   const steamDB = ref<SteamDB>(new SteamDB());
   const lutrisDB = ref<LutrisDB>(new LutrisDB());
+  const heroicDB = ref<HeroicDB>(new HeroicDB());
 
   const dbEditList = ref([] as GameEntry[]);
 
@@ -112,6 +117,7 @@ export const useGameStore = defineStore("globalStore", () => {
     config,
     steamDB,
     lutrisDB,
+    heroicDB,
     netDiskOnline,
     dbEditList,
     downloadList,

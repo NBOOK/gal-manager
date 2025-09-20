@@ -1,18 +1,25 @@
 import GameEntry from "@/modules/GameEntry";
 import { VdfMap } from "steam-binary-vdf";
 import { Mutex } from "async-mutex";
+import { useGameStore } from "@/store/global-store";
+let gameStore: ReturnType<typeof useGameStore>;
+
+export function steamDBSetStore() {
+  if (!gameStore) {
+    gameStore = useGameStore();
+  }
+}
 
 class SteamDB {
   // paths, ID
   private static instance: SteamDB | null = null;
-  private steamID: string = "";
   private steamShortcutPath: string = "";
   private steamControllerConfigPath: string = "";
   private steamControllerTemplatePath: string = "";
   private steamLocalConfigPath: string = "";
   private steamOnlineCategoryPath: string = "";
   private steamGridPath: string = "";
-  private steamLaunchOptionsPrefix: string = "";
+  // private steamLaunchOptionsPrefix: string = "";
   linkLowRes: boolean = true;
   private mutex = new Mutex();
 
@@ -24,6 +31,7 @@ class SteamDB {
 
   // derived
   private steamGameIndices: Record<string, number> = {};
+  private steamGameLaunchers: Record<string, string> = {}; // map gameNameEN to launcher name (Lutris/Heroic)
   controllerLayouts: string[] = [];
   private steamCategoryIDs: Record<string, string> = {}; // map cat name to ID
   private nonSteamCategories: any = {};
@@ -40,15 +48,14 @@ class SteamDB {
   }
 
   async setup(config: any) {
-    this.steamID = config.steamID;
-    this.steamShortcutPath = config.steamShortcutPath;
-    this.steamGridPath = config.steamGridPath;
+    this.steamShortcutPath = config.steam.shortcutPath;
+    this.steamGridPath = config.steam.gridPath;
     this.linkLowRes = config.assetsLinkLowRes;
-    this.steamLaunchOptionsPrefix = config.steamLaunchOptionsPrefix;
-    this.steamControllerConfigPath = config.steamControllerConfigPath;
-    this.steamControllerTemplatePath = config.steamControllerTemplatePath;
-    this.steamLocalConfigPath = config.steamLocalConfigPath;
-    this.steamOnlineCategoryPath = config.steamOnlineCategoryPath;
+    // this.steamLaunchOptionsPrefix = config.steamLaunchOptionsPrefix;
+    this.steamControllerConfigPath = config.steam.controllerConfigPath;
+    this.steamControllerTemplatePath = config.steam.controllerTemplatePath;
+    this.steamLocalConfigPath = config.steam.localConfigPath;
+    this.steamOnlineCategoryPath = config.steam.onlineCategoryPath;
 
     // ------- Shortcut VDF -------
     this.shortcutVDF = await window.ipcRenderer.invoke(
@@ -62,6 +69,15 @@ class SteamDB {
         const gameNameEN = game.AppName;
         const steamGameIndex = parseInt(key, 10);
         this.steamGameIndices[gameNameEN] = steamGameIndex;
+
+        const launchOptions = game.LaunchOptions.replace('"', "");
+        if (launchOptions.includes(config.lutris.steamLaunchOptions)) {
+          this.steamGameLaunchers[gameNameEN] = "Lutris";
+        } else if (launchOptions.includes(config.heroic.steamLaunchOptions)) {
+          this.steamGameLaunchers[gameNameEN] = "Heroic";
+        } else {
+          this.steamGameLaunchers[gameNameEN] = "Unknown";
+        }
       });
     }
 
@@ -85,8 +101,7 @@ class SteamDB {
     // ------- Steam Categories -------
     this.steamCategories = await window.ipcRenderer.invoke(
       "getSteamCategories",
-      this.steamOnlineCategoryPath,
-      this.steamID
+      this.steamOnlineCategoryPath
     );
     this.steamCategories.forEach((category) => {
       this.steamCategoryIDs[category.name] = category.id;
@@ -119,7 +134,7 @@ class SteamDB {
     const appID = this.getAppID(game.gameNameEN);
     delete (this.shortcutVDF.shortcuts as Record<string, any>)[gameIndex];
 
-    console.log("Writing VDF- file", this.steamShortcutPath, this.shortcutVDF);
+    console.log("Writing VDF file", this.steamShortcutPath, this.shortcutVDF);
     await window.ipcRenderer.invoke(
       "writeVdfFile",
       this.steamShortcutPath,
@@ -197,9 +212,24 @@ class SteamDB {
       return;
     }
     const gameIndex: string = this.getGameIndex(game).toString();
-    const exePath = `"/usr/bin/flatpak"`;
-    const startDir = `"/usr/bin"`;
+    let exePath = "";
+    let startDir = "";
+    let launchOptions = "";
     const appID = this.getAppID(game.gameNameEN);
+
+    if (gameConfig.launcher === "Lutris") {
+      exePath = gameStore.config.value.lutris.steamTargetPath;
+      startDir = gameStore.config.value.lutris.steamStartIn;
+      launchOptions =
+        gameStore.config.value.lutris.steamLaunchOptions + game.gameNameSlug;
+    } else if (gameConfig.launcher === "Heroic") {
+      exePath = gameStore.config.value.heroic.steamTargetPath;
+      startDir = gameStore.config.value.heroic.steamStartIn;
+      launchOptions =
+        gameStore.config.value.heroic.steamLaunchOptions + game.gameNameSlug;
+    } else {
+      throw new Error("Invalid launcher");
+    }
 
     const shortcut = {
       appid: appID, // @TOCHECK possibly not needed anymore, but can be used to identify assets names
@@ -208,7 +238,7 @@ class SteamDB {
       StartDir: startDir,
       icon: game.imageAssets.iconPath,
       ShortcutPath: "",
-      LaunchOptions: `${this.steamLaunchOptionsPrefix}${game.gameNameSlug}`,
+      LaunchOptions: launchOptions,
       IsHidden: 0,
       AllowDesktopConfig: 1,
       AllowOverlay: 1,
@@ -221,13 +251,13 @@ class SteamDB {
 
     (this.shortcutVDF.shortcuts as Record<string, any>)[gameIndex] = shortcut;
 
-    console.log("Writing VDF+ file", this.steamShortcutPath, this.shortcutVDF);
+    console.log("Writing VDF file", this.steamShortcutPath, this.shortcutVDF);
     await window.ipcRenderer.invoke(
       "writeVdfFile",
       this.steamShortcutPath,
       JSON.stringify(this.shortcutVDF)
     );
-    console.log("VDF+ file written");
+    console.log("VDF file written");
 
     // ---------- Link image assets ----------
     console.log("Linking image assets", game, appID);
@@ -295,15 +325,49 @@ class SteamDB {
     }
   }
 
-  getAppID(gameOrGameNameEN: GameEntry | string): number {
-    let gameNameEN: string;
-    if (typeof gameOrGameNameEN === "string") {
-      gameNameEN = gameOrGameNameEN;
+  // getAppID(gameOrGameNameEN: GameEntry | string): number {
+  //   let gameNameEN: string;
+  //   if (typeof gameOrGameNameEN === "string") {
+  //     gameNameEN = gameOrGameNameEN;
+  //   } else {
+  //     gameNameEN = gameOrGameNameEN.gameNameEN;
+  //   }
+  //   const exe = "/usr/bin/flatpak";
+  //   const uniqueID = exe + gameNameEN;
+  //   const encoder = new TextEncoder();
+  //   const data = encoder.encode(uniqueID);
+
+  //   function crc32(buf: Uint8Array): number {
+  //     const table = Array.from({ length: 256 }, (_, k) => {
+  //       let c = k;
+  //       for (let j = 0; j < 8; j++) {
+  //         c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  //       }
+  //       return c >>> 0;
+  //     });
+
+  //     let crc = 0xffffffff;
+  //     for (const byte of buf) {
+  //       crc = table[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  //     }
+
+  //     return (crc ^ 0xffffffff) >>> 0;
+  //   }
+
+  //   const crc32Result = crc32(data);
+  //   const appID = (crc32Result | 0x80000000) >>> 0;
+  //   console.log(`AppID for ${uniqueID}: ${appID}`);
+  //   return appID;
+  // }
+
+  getAppID(gameOrGameNameSlug: GameEntry | string): number {
+    let gameNameSlug: string;
+    if (typeof gameOrGameNameSlug === "string") {
+      gameNameSlug = gameOrGameNameSlug;
     } else {
-      gameNameEN = gameOrGameNameEN.gameNameEN;
+      gameNameSlug = gameOrGameNameSlug.gameNameSlug;
     }
-    const exe = "/usr/bin/flatpak";
-    const uniqueID = exe + gameNameEN;
+    const uniqueID = gameNameSlug;
     const encoder = new TextEncoder();
     const data = encoder.encode(uniqueID);
 
@@ -416,6 +480,10 @@ class SteamDB {
     const indices = Object.values(this.steamGameIndices);
     const largestIndex = indices.length > 0 ? Math.max(...indices) : 0;
     return largestIndex + 1;
+  }
+
+  gameLauncher(game: GameEntry): string {
+    return this.steamGameLaunchers[game.gameNameEN] || "Unknown";
   }
 
   inDB(game: GameEntry): boolean {

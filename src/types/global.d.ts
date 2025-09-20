@@ -43,13 +43,18 @@ declare global {
     gameBrandEN: string;
     gameNameSlug: string;
     gameReleaseYear: string;
-    winePrefix: string;
-    wineRunner: string;
-    executable: string;
+    steamCategories: string[];
+    heroicPrefix: string;
+    heroicRunner: string;
+    heroicCategories: string[];
+    lutrisPrefix: string;
+    lutrisRunner: string;
+    lutrisCategories: string[];
+    launcher: string;
     locale: string;
     controllerLayout: string;
-    steamCategories: string[];
-    lutrisCategories: string[];
+    executable: string;
+    platform: string;
   }
 
   type SyncStrategy = "l2r" | "r2l" | "newest" | "skip";

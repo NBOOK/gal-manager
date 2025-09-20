@@ -13,6 +13,7 @@ const gameNameENCandidates = ref<VNTitle[]>([]);
 const gameBrandENCandidates = ref<VNDeveloper[]>([]);
 const allSteamCategories = ref<string[]>([]);
 const allLutrisCategories = ref<string[]>([]);
+const allHeroicCategories = ref<string[]>([]);
 const isTitleMenuOpen = ref(false);
 const isBrandMenuOpen = ref(false);
 const selectedBrands = ref<VNDeveloper[]>([]);
@@ -55,13 +56,18 @@ const gameConfig = reactive<GameConfig>({
   gameBrandEN: "",
   gameNameSlug: "",
   gameReleaseYear: "",
-  winePrefix: "",
-  wineRunner: "",
-  executable: "",
+  steamCategories: [],
+  heroicPrefix: "",
+  heroicRunner: "",
+  heroicCategories: [],
+  lutrisPrefix: "",
+  lutrisRunner: "",
+  lutrisCategories: [],
+  launcher: "",
   locale: "",
   controllerLayout: "avg.vdf",
-  steamCategories: [],
-  lutrisCategories: [],
+  executable: "",
+  platform: "",
 });
 const gameBrandFromFolder = computed(
   () => folderName.value.split(props.game.splitter)[0]
@@ -241,20 +247,34 @@ async function setUpTitles() {
 }
 
 async function setUpExcutables() {
+  // scan executables
   const gamePath = `${props.game.basePath}/${props.game.folderName}`;
-  executables.value = (await window.ipcRenderer.invoke("scanDir", gamePath))
-    .filter(
-      (file: DirEntry) =>
-        file.isFile &&
-        (file.name.toLowerCase().endsWith(".exe") ||
-          file.name.toLowerCase().endsWith(".bat"))
-    )
-    .map((file: DirEntry) => file.name);
+  const scannedFiles: DirEntry[] = await window.ipcRenderer.invoke(
+    "scanDir",
+    gamePath
+  );
+  const filteredFiles: DirEntry[] = [];
+  for (const file of scannedFiles) {
+    if (
+      file.isFile &&
+      (file.name.toLowerCase().endsWith(".exe") ||
+        file.name.toLowerCase().endsWith(".bat") ||
+        file.name.toLowerCase().endsWith(".sh") ||
+        file.name.toLowerCase().endsWith(".appimage") ||
+        (await window.ipcRenderer.invoke(
+          "hasExecutableMagic",
+          `${gamePath}/${file.name}`
+        )))
+    ) {
+      filteredFiles.push(file);
+    }
+  }
+  executables.value = filteredFiles.map((file: DirEntry) => file.name);
   await getExecutableIcons();
   executables.value = await utils.guessLauncher(executables.value);
   if (props.game.inLutrisDB) {
     gameConfig.executable = gameStore.lutrisDB
-      .getCachedGameConfig(props.game)
+      .getPerGameConfig(props.game)
       .game.exe.split("/")
       .pop();
   } else {
@@ -263,77 +283,271 @@ async function setUpExcutables() {
   executablesLoading.value = false;
 }
 
+// async function setupEnvOld() {
+//   // ------ Lutris Setup ------
+//   if (props.game.inLutrisDB) {
+//     const cachedConfig = gameStore.lutrisDB.getPerGameConfig(props.game);
+
+//     gameConfig.lutrisPrefix = props.game.lutrisPrefix;
+//     if (!gameConfig.lutrisPrefix) {
+//       if (
+//         gameStore.lutrisDB.winePrefixes.includes(
+//           gameStore.config.value.lutrisDefaultWinePrefix
+//         )
+//       ) {
+//         gameConfig.lutrisPrefix =
+//           gameStore.config.value.lutrisDefaultWinePrefix;
+//       } else {
+//         gameConfig.lutrisPrefix = gameStore.lutrisDB.winePrefixes[0];
+//       }
+//     }
+
+//     gameConfig.lutrisRunner = props.game.lutrisRunner;
+//     if (cachedConfig.wine && cachedConfig.wine.version)
+//       gameConfig.lutrisRunner = cachedConfig.wine.version;
+//     else if (
+//       gameStore.lutrisDB.wineRunners.includes(
+//         gameStore.config.value.lutrisDefaultWineRunner
+//       )
+//     )
+//       gameConfig.lutrisRunner = gameStore.config.value.lutrisDefaultWineRunner;
+//     else {
+//       gameConfig.lutrisRunner = gameStore.lutrisDB.wineRunners[0];
+//     }
+
+//     if (cachedConfig.system && cachedConfig.system.locale)
+//       gameConfig.locale = cachedConfig.system.locale;
+//     else if (gameStore.config.value.defaultLocale)
+//       gameConfig.locale = gameStore.config.value.defaultLocale;
+//     else gameConfig.locale = "ja_JP.utf8";
+//   } else {
+//     if (
+//       gameStore.lutrisDB.winePrefixes.includes(
+//         gameStore.config.value.lutrisDefaultWinePrefix
+//       )
+//     ) {
+//       console.log(
+//         `${gameStore.config.value.lutrisDefaultWinePrefix} in ${gameStore.lutrisDB.winePrefixes}`
+//       );
+//       gameConfig.lutrisPrefix = gameStore.config.value.lutrisDefaultWinePrefix;
+//     } else {
+//       console.log(
+//         `${gameStore.config.value.lutrisDefaultWinePrefix} not in ${gameStore.lutrisDB.winePrefixes}`
+//       );
+//       gameConfig.lutrisPrefix = gameStore.lutrisDB.winePrefixes[0];
+//     }
+
+//     if (
+//       gameStore.lutrisDB.wineRunners.includes(
+//         gameStore.config.value.lutrisDefaultWineRunner
+//       )
+//     )
+//       gameConfig.lutrisRunner = gameStore.config.value.lutrisDefaultWineRunner;
+//     else gameConfig.lutrisRunner = gameStore.lutrisDB.wineRunners[0];
+
+//     if (gameStore.config.value.defaultLocale)
+//       gameConfig.locale = gameStore.config.value.defaultLocale;
+//     // else gameConfig.locale = "ja_JP.utf8";
+//   }
+
+//   allLutrisCategories.value = Object.keys(
+//     gameStore.lutrisDB.lutrisCategories
+//   ).sort();
+//   gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
+//     props.game
+//   );
+//   if (
+//     gameConfig.lutrisCategories.length === 0 &&
+//     allLutrisCategories.value.includes("Gal")
+//   )
+//     gameConfig.lutrisCategories.push("Gal");
+
+//   // ------ Heroic Setup ------
+//   if (props.game.inHeroicDB) {
+//     const cachedConfig = gameStore.heroicDB.getPerGameConfig(props.game);
+
+//     gameConfig.heroicPrefix = cachedConfig.game.prefix.split("/").pop();
+
+//     if (cachedConfig.wine && cachedConfig.wine.version)
+//       gameConfig.heroicRunner = cachedConfig.wine.version;
+//     else if (
+//       gameStore.heroicDB.wineRunners.includes(
+//         gameStore.config.value.heroicDefaultWineRunner
+//       )
+//     )
+//       gameConfig.heroicRunner = gameStore.config.value.heroicDefaultWineRunner;
+//     else gameConfig.heroicRunner = gameStore.heroicDB.wineRunners[0];
+
+//     if (cachedConfig.system && cachedConfig.system.locale)
+//       gameConfig.locale = cachedConfig.system.locale;
+//     else if (gameStore.config.value.locale)
+//       gameConfig.locale = gameStore.config.value.locale;
+//     else gameConfig.locale = "ja_JP.utf8";
+//   } else {
+//     if (
+//       gameStore.lutrisDB.winePrefixes.includes(
+//         gameStore.config.value.lutrisDefaultWinePrefix
+//       )
+//     ) {
+//       console.log(
+//         `${gameStore.config.value.lutrisDefaultWinePrefix} in ${gameStore.lutrisDB.winePrefixes}`
+//       );
+//       gameConfig.lutrisPrefix = gameStore.config.value.lutrisDefaultWinePrefix;
+//     } else {
+//       console.log(
+//         `${gameStore.config.value.lutrisDefaultWinePrefix} not in ${gameStore.lutrisDB.winePrefixes}`
+//       );
+//       gameConfig.lutrisPrefix = gameStore.lutrisDB.winePrefixes[0];
+//     }
+
+//     if (
+//       gameStore.lutrisDB.wineRunners.includes(
+//         gameStore.config.value.lutrisDefaultWineRunner
+//       )
+//     )
+//       gameConfig.lutrisRunner = gameStore.config.value.lutrisDefaultWineRunner;
+//     else gameConfig.lutrisRunner = gameStore.lutrisDB.wineRunners[0];
+
+//     if (gameStore.config.value.locale)
+//       gameConfig.locale = gameStore.config.value.locale;
+//     // else gameConfig.locale = "ja_JP.utf8";
+//   }
+
+//   allLutrisCategories.value = Object.keys(
+//     gameStore.lutrisDB.lutrisCategories
+//   ).sort();
+//   gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
+//     props.game
+//   );
+//   if (
+//     gameConfig.lutrisCategories.length === 0 &&
+//     allLutrisCategories.value.includes("Gal")
+//   )
+//     gameConfig.lutrisCategories.push("Gal");
+
+//   // Steam
+//   allSteamCategories.value = gameStore.steamDB.steamCategoriesNames.sort();
+//   gameConfig.steamCategories = gameStore.steamDB.categoriesForGame(props.game);
+//   if (
+//     gameConfig.steamCategories.length === 0 &&
+//     allSteamCategories.value.includes("Gal")
+//   )
+//     gameConfig.steamCategories.push("Gal");
+// }
+
 async function setupEnv() {
-  if (props.game.inLutrisDB) {
-    const cachedConfig = gameStore.lutrisDB.getCachedGameConfig(props.game);
+  // setup categories, prefix, runner, locale, launcher
+  const heroicPergameConfig = gameStore.heroicDB.getPerGameConfig(props.game);
+  const lutrisPergameConfig = gameStore.lutrisDB.getPerGameConfig(props.game);
 
-    gameConfig.winePrefix = cachedConfig.game.prefix.split("/").pop();
-
-    if (cachedConfig.wine && cachedConfig.wine.version)
-      gameConfig.wineRunner = cachedConfig.wine.version;
-    else if (
-      gameStore.lutrisDB.wineRunners.includes(
-        gameStore.config.value.lutrisDefaultWineRunner
-      )
-    )
-      gameConfig.wineRunner = gameStore.config.value.lutrisDefaultWineRunner;
-    else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
-
-    if (cachedConfig.system && cachedConfig.system.locale)
-      gameConfig.locale = cachedConfig.system.locale;
-    else if (gameStore.config.value.locale)
-      gameConfig.locale = gameStore.config.value.locale;
-    else gameConfig.locale = "ja_JP.utf8";
-  } else {
+  // heroic prefix
+  gameConfig.heroicPrefix = props.game.heroicPrefix; // either already set or "", will set below
+  if (!gameConfig.heroicPrefix) {
     if (
-      gameStore.lutrisDB.winePrefixes.includes(
-        gameStore.config.value.lutrisDefaultWinePrefix
+      gameStore.heroicDB.winePrefixes.includes(
+        gameStore.config.value.heroic.defaultWinePrefix
       )
     ) {
-      console.log(
-        `${gameStore.config.value.lutrisDefaultWinePrefix} in ${gameStore.lutrisDB.winePrefixes}`
-      );
-      gameConfig.winePrefix = gameStore.config.value.lutrisDefaultWinePrefix;
+      gameConfig.heroicPrefix = gameStore.config.value.heroic.defaultWinePrefix;
     } else {
-      console.log(
-        `${gameStore.config.value.lutrisDefaultWinePrefix} not in ${gameStore.lutrisDB.winePrefixes}`
-      );
-      gameConfig.winePrefix = gameStore.lutrisDB.winePrefixes[0];
+      gameConfig.heroicPrefix = gameStore.heroicDB.winePrefixes[0];
     }
+  }
 
+  // heroic runner
+  gameConfig.heroicRunner = props.game.heroicRunner; // either already set or "", will set below
+  if (!gameConfig.heroicRunner) {
+    if (
+      gameStore.heroicDB.wineRunners.includes(
+        gameStore.config.value.heroic.defaultWineRunner
+      )
+    )
+      gameConfig.heroicRunner = gameStore.config.value.heroic.defaultWineRunner;
+    else {
+      gameConfig.heroicRunner = gameStore.heroicDB.wineRunners[0];
+    }
+  }
+
+  // heroic categories
+  allHeroicCategories.value = Object.keys(
+    gameStore.heroicDB.heroicCategories
+  ).sort();
+  if (props.game.inHeroicDB) {
+    gameConfig.heroicCategories = await gameStore.heroicDB.categoriesForGame(
+      props.game
+    );
+  } else {
+    gameConfig.heroicCategories.push("Gal");
+  }
+
+  // lutris prefix
+  gameConfig.lutrisPrefix = props.game.lutrisPrefix; // either already set or "", will set below
+  if (!gameConfig.lutrisPrefix) {
+    if (
+      gameStore.lutrisDB.winePrefixes.includes(
+        gameStore.config.value.lutris.defaultWinePrefix
+      )
+    ) {
+      gameConfig.lutrisPrefix = gameStore.config.value.lutris.defaultWinePrefix;
+    } else {
+      gameConfig.lutrisPrefix = gameStore.lutrisDB.winePrefixes[0];
+    }
+  }
+
+  // lutris runner
+  gameConfig.lutrisRunner = props.game.lutrisRunner; // either already set or "", will set below
+  if (!gameConfig.lutrisRunner) {
     if (
       gameStore.lutrisDB.wineRunners.includes(
         gameStore.config.value.lutrisDefaultWineRunner
       )
     )
-      gameConfig.wineRunner = gameStore.config.value.lutrisDefaultWineRunner;
-    else gameConfig.wineRunner = gameStore.lutrisDB.wineRunners[0];
-
-    if (gameStore.config.value.locale)
-      gameConfig.locale = gameStore.config.value.locale;
-    else gameConfig.locale = "ja_JP.utf8";
+      gameConfig.lutrisRunner = gameStore.config.value.lutrisDefaultWineRunner;
+    else {
+      gameConfig.lutrisRunner = gameStore.lutrisDB.wineRunners[0];
+    }
   }
 
+  // lutris categories
   allLutrisCategories.value = Object.keys(
     gameStore.lutrisDB.lutrisCategories
   ).sort();
-  gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
-    props.game
-  );
-  if (
-    gameConfig.lutrisCategories.length === 0 &&
-    allLutrisCategories.value.includes("Gal")
-  )
+  if (props.game.inLutrisDB) {
+    gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
+      props.game
+    );
+  } else {
     gameConfig.lutrisCategories.push("Gal");
+  }
 
-  // Steam
+  // Steam categories
   allSteamCategories.value = gameStore.steamDB.steamCategoriesNames.sort();
-  gameConfig.steamCategories = gameStore.steamDB.categoriesForGame(props.game);
-  if (
-    gameConfig.steamCategories.length === 0 &&
-    allSteamCategories.value.includes("Gal")
-  )
+  if (props.game.inSteamDB) {
+    gameConfig.steamCategories = gameStore.steamDB.categoriesForGame(
+      props.game
+    );
+  } else {
     gameConfig.steamCategories.push("Gal");
+  }
+
+  // locale, use lutris first
+  gameConfig.locale = lutrisPergameConfig.system?.locale;
+  if (!gameConfig.locale) {
+    // then heroic
+    heroicPergameConfig.environmentOptions?.forEach((option: any) => {
+      if (option.key === "LANG") gameConfig.locale = option.value;
+    });
+  }
+  if (!gameConfig.locale) {
+    // then global config
+    gameConfig.locale = gameStore.config.value.defaultLocale;
+  }
+
+  // launcher
+  gameConfig.launcher = props.game.launcher; // either already set or "", will set below
+  if (!gameConfig.launcher || gameConfig.launcher === "Unknown") {
+    gameConfig.launcher = "Heroic";
+  }
 }
 
 function reset() {
@@ -374,6 +588,15 @@ async function addGameToDB() {
     .split(props.game.splitter)
     .slice(1)
     .join(props.game.splitter);
+
+  if (
+    gameConfig.executable.endsWith(".exe") ||
+    gameConfig.executable.endsWith(".bat")
+  ) {
+    gameConfig.platform = "Windows";
+  } else {
+    gameConfig.platform = "Linux";
+  }
 
   console.log("Adding...", gameConfig);
   const nameChanged = folderName.value !== props.game.folderName;
@@ -425,7 +648,7 @@ async function openVNDBLink(id: string) {
         <div class="mb-5 d-flex flex-row align-start justify-space-between">
           <div class="flex-grow-1">
             <!-- ------------------------- Orig Title ------------------------------- -->
-            <v-row class="flex-grow-0 mb-0">
+            <v-row class="flex-grow-0 mb-5">
               <v-text-field
                 density="compact"
                 label="Folder Name"
@@ -469,7 +692,7 @@ async function openVNDBLink(id: string) {
             </v-row>
 
             <!-- ------------------------- Eng Title ------------------------------- -->
-            <v-row class="flex-grow-0 mb-0">
+            <v-row class="flex-grow-0 mb-5">
               <v-text-field
                 density="compact"
                 label="EN Title"
@@ -569,7 +792,7 @@ async function openVNDBLink(id: string) {
             </v-row>
 
             <!-- ------------------------- Eng BrandName ------------------------------- -->
-            <v-row class="flex-grow-0 mb-0">
+            <v-row class="flex-grow-0 mb-4">
               <v-text-field
                 density="compact"
                 label="EN Brand Name"
@@ -725,18 +948,209 @@ async function openVNDBLink(id: string) {
           </div>
           <v-img
             :src="`file://${game.imageAssets.capsuleSDPath}`"
-            width="165"
+            width="178"
             :aspect-ratio="2 / 3"
             class="flex-grow-0"
             rounded
-            style="margin: -12px -12px 0 28px; cursor: pointer"
+            style="margin: -12px -12px 0 32px; cursor: pointer"
           >
             <GameImgThumb :game="game" />
           </v-img>
         </div>
 
-        <!-- ------------------------- Steam Categories / Steam Controller Layout ------------------------------- -->
+        <!-- Heroic & Layout -->
         <v-row class="flex-grow-0 flex-nowrap">
+          <v-select
+            label="Heroic Prefix"
+            density="compact"
+            :items="gameStore.heroicDB.winePrefixes"
+            v-model="gameConfig.heroicPrefix"
+            variant="outlined"
+            prepend-icon="$mdiPackageVariantClosed"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc(50% - 108px) !important"
+          />
+
+          <div style="width: 20px"></div>
+
+          <v-select
+            label="Heroic Runner"
+            density="compact"
+            :items="gameStore.heroicDB.wineRunners"
+            v-model="gameConfig.heroicRunner"
+            variant="outlined"
+            prepend-icon="$customWineEmptyVariant"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc(50% - 108px)"
+          />
+
+          <div style="width: 20px"></div>
+
+          <v-select
+            label="Layout"
+            density="compact"
+            :items="gameStore.steamDB.controllerLayouts"
+            v-model="gameConfig.controllerLayout"
+            variant="outlined"
+            prepend-icon="$mdiController"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: 178px"
+          />
+        </v-row>
+
+        <!-- Lutris & Locale -->
+        <v-row class="flex-grow-0 flex-nowrap">
+          <v-select
+            label="Lutris Prefix"
+            density="compact"
+            :items="gameStore.lutrisDB.winePrefixes"
+            v-model="gameConfig.lutrisPrefix"
+            variant="outlined"
+            prepend-icon="$mdiPackageVariantClosed"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc(50% - 108px) !important"
+          />
+
+          <div style="width: 20px"></div>
+
+          <v-select
+            label="Lutris Runner"
+            density="compact"
+            :items="gameStore.lutrisDB.wineRunners"
+            v-model="gameConfig.lutrisRunner"
+            variant="outlined"
+            prepend-icon="$customWineEmptyVariant"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc(50% - 108px)"
+          />
+
+          <div style="width: 20px"></div>
+
+          <v-select
+            label="Locale"
+            density="compact"
+            :items="['ja_JP.utf8', 'zh_CN.utf8', 'zh_HK.utf8', 'en_US.utf8']"
+            v-model="gameConfig.locale"
+            :item-title="(item) => item.slice(3, -5)"
+            :item-value="(item) => item"
+            variant="outlined"
+            prepend-icon="$mdiWeb"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: 178px"
+          >
+            <template #prepend-inner>
+              <img :src="`icons/${gameConfig.locale}.svg`" />
+            </template>
+            <template #item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.raw.slice(3, -5)">
+                <template #prepend>
+                  <img :src="`icons/${item.raw}.svg`" class="mr-3" />
+                </template>
+              </v-list-item>
+            </template>
+          </v-select>
+        </v-row>
+
+        <!-- Categories & Launcher -->
+        <v-row class="flex-grow-0 flex-nowrap">
+          <v-select
+            label="Steam Categories"
+            density="compact"
+            clearable
+            chips
+            closable-chips
+            hide-selected
+            multiple
+            :items="allSteamCategories"
+            v-model="gameConfig.steamCategories"
+            variant="outlined"
+            prepend-icon="$mdiSteam"
+            clear-icon="$mdiBackspaceOutline"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc((100% - 238px) / 3)"
+          />
+
+          <div style="width: 20px"></div>
+
+          <v-select
+            label="Heroic Categories"
+            density="compact"
+            clearable
+            chips
+            closable-chips
+            hide-selected
+            multiple
+            :items="allHeroicCategories"
+            v-model="gameConfig.heroicCategories"
+            variant="outlined"
+            prepend-icon="$mdiTagMultiple"
+            clear-icon="$mdiBackspaceOutline"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc((100% - 238px) / 3)"
+          />
+
+          <div style="width: 20px"></div>
+
+          <v-select
+            label="Lutris Categories"
+            density="compact"
+            clearable
+            chips
+            closable-chips
+            hide-selected
+            multiple
+            :items="allLutrisCategories"
+            v-model="gameConfig.lutrisCategories"
+            variant="outlined"
+            prepend-icon="$mdiTagMultiple"
+            clear-icon="$mdiBackspaceOutline"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: calc((100% - 238px) / 3)"
+          />
+
+          <div style="width: 20px"></div>
+
+          <v-select
+            label="Launcher"
+            density="compact"
+            :items="['Heroic', 'Lutris']"
+            v-model="gameConfig.launcher"
+            variant="outlined"
+            prepend-icon="$mdiLayers"
+            :menu-props="{ transition: 'slide-y-transition' }"
+            class="vn-title-textinput"
+            style="max-width: 178px"
+          >
+            <template #prepend-inner>
+              <img
+                :src="`icons/${gameConfig.launcher}.svg`"
+                style="width: 24px; height: 24px"
+              />
+            </template>
+            <template #item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.raw">
+                <template #prepend>
+                  <img
+                    :src="`icons/${item.raw}.svg`"
+                    style="width: 24px; height: 24px"
+                  />
+                </template>
+              </v-list-item>
+            </template>
+          </v-select>
+        </v-row>
+
+        <!-- ------------------------- Steam Categories / Steam Controller Layout ------------------------------- -->
+        <!-- <v-row class="flex-grow-0 flex-nowrap">
           <v-select
             label="Steam Categories"
             density="compact"
@@ -754,24 +1168,10 @@ async function openVNDBLink(id: string) {
             class="vn-title-textinput"
             style="max-width: calc(100% - 180px)"
           />
-
-          <div style="width: 20px"></div>
-
-          <v-select
-            label="Layout"
-            density="compact"
-            :items="gameStore.steamDB.controllerLayouts"
-            v-model="gameConfig.controllerLayout"
-            variant="outlined"
-            prepend-icon="$mdiController"
-            :menu-props="{ transition: 'slide-y-transition' }"
-            class="vn-title-textinput"
-            style="max-width: 160px"
-          />
-        </v-row>
+        </v-row> -->
 
         <!-- ------------------------- Lutris Categories / Locale ------------------------------- -->
-        <v-row class="flex-grow-0 flex-nowrap">
+        <!-- <v-row class="flex-grow-0 flex-nowrap">
           <v-select
             label="Lutris Categories"
             density="compact"
@@ -788,9 +1188,9 @@ async function openVNDBLink(id: string) {
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
             style="max-width: calc(100% - 180px)"
-          />
+          /> -->
 
-          <div style="width: 20px"></div>
+        <!-- <div style="width: 20px"></div>
 
           <v-select
             label="Locale"
@@ -803,7 +1203,7 @@ async function openVNDBLink(id: string) {
             prepend-icon="$mdiWeb"
             :menu-props="{ transition: 'slide-y-transition' }"
             class="vn-title-textinput"
-            style="max-width: 160px"
+            style="max-width: 178px"
           >
             <template #prepend-inner>
               <img :src="`icons/${gameConfig.locale}.svg`" />
@@ -815,11 +1215,11 @@ async function openVNDBLink(id: string) {
                 </template>
               </v-list-item>
             </template>
-          </v-select>
-        </v-row>
+          </v-select> -->
+        <!-- </v-row> -->
 
         <!-- ------------------------- Wine Prefix / Runners ------------------------------- -->
-        <v-row class="flex-grow-0 flex-nowrap">
+        <!-- <v-row class="flex-grow-0 flex-nowrap">
           <v-select
             label="Wine Prefix"
             density="compact"
@@ -845,12 +1245,12 @@ async function openVNDBLink(id: string) {
             class="vn-title-textinput"
             style="max-width: calc(50% - 10px)"
           />
-        </v-row>
+        </v-row> -->
 
-        <!-- ------------------------- Lutris Env Setup ------------------------------- -->
+        <!-- ------------------------- Executable Selection ------------------------------- -->
         <v-row>
           <v-icon
-            icon="$mdiApplicationOutline"
+            icon="$mdiOpenInApp"
             size="20"
             style="height: 20px; margin: 12px 18px 0 2px; color: #676767"
           />
@@ -908,7 +1308,9 @@ async function openVNDBLink(id: string) {
                     :icon="
                       item.endsWith('.exe')
                         ? '$mdiApplicationOutline'
-                        : '$mdiConsole'
+                        : item.endsWith('.bat') || item.endsWith('.sh')
+                        ? '$mdiConsole'
+                        : '$mdiFileOutline'
                     "
                     color="grey-darken-2"
                     style="height: 30px; width: 30px; flex-grow: 0"

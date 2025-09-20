@@ -35,6 +35,9 @@ let win: BrowserWindow | null;
 
 function createWindow() {
   win = new BrowserWindow({
+    width: 950,
+    height: 695,
+    center: true,
     icon: path.join(process.env.VITE_PUBLIC, "favicon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
@@ -138,5 +141,3 @@ function killSteam() {
     app.quit();
   }
 }
-
-// getFileIcon("/home/deck/Games/Gal/ALcot - LOVEREC/LOVEREC.exe", 0);

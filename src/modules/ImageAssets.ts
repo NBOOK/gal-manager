@@ -1,8 +1,8 @@
-import { useGameStore } from "@/store/global-store";
 import GameEntry from "./GameEntry";
+import { useGameStore } from "@/store/global-store";
 let gameStore: ReturnType<typeof useGameStore>;
 
-export function imageAssetsSetConfig() {
+export function imageAssetsSetStore() {
   if (!gameStore) {
     gameStore = useGameStore();
   }
@@ -368,17 +368,17 @@ class ImageAssets {
           const assetName = `${steamAppId}${suffix}.${format}`;
           console.log(
             "Open Steam Grid Image: ",
-            `${gameStore.config.value.steamGridPath}/${assetName}`
+            `${gameStore.config.value.steam.gridPath}/${assetName}`
           );
           if (
             await window.ipcRenderer.invoke(
               "fileExists",
-              `${gameStore.config.value.steamGridPath}/${assetName}`
+              `${gameStore.config.value.steam.gridPath}/${assetName}`
             )
           ) {
             window.ipcRenderer.invoke(
               "showItemInFolder",
-              `${gameStore.config.value.steamGridPath}/${assetName}`
+              `${gameStore.config.value.steam.gridPath}/${assetName}`
             );
             return;
           }
@@ -387,9 +387,9 @@ class ImageAssets {
     } else if (kind === "lutris" && this.game?.inLutrisDB) {
       const slug = this.game?.gameNameSlug;
       for (const targetFolderPath of [
-        gameStore.config.value.lutrisBannerPath,
-        gameStore.config.value.lutrisCoverPath,
-        gameStore.config.value.lutrisIconPath,
+        gameStore.config.value.lutris.bannerPath,
+        gameStore.config.value.lutris.coverPath,
+        gameStore.config.value.lutris.iconPath,
       ]) {
         for (const format of ["jpg", "png", "webp"]) {
           const assetName = `${slug}.${format}`;

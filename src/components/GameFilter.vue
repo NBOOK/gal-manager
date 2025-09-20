@@ -5,6 +5,8 @@ import { useGameStore } from "@/store/global-store";
 const gameStore = useGameStore();
 const filterConfig = gameStore.filter;
 
+const presetToggle = ref(false);
+
 const filterLinked = computed(() => {
   const linked = filterConfig.linked;
   if (linked.toggled) {
@@ -19,7 +21,7 @@ const filterLinked = computed(() => {
   }
   return {
     icon: "$mdiLinkVariant",
-    color: "geay-darken-4",
+    color: "grey-darken-4",
     action: () => (linked.toggled = true),
   };
 });
@@ -28,7 +30,7 @@ const filterDatabase = computed(() => {
   const inDatabase = filterConfig.inDatabase;
   if (inDatabase.toggled)
     return {
-      icon: ["$mdiDatabaseRemove", "$mdiDatabaseCheck", "$mdiDatabaseMinus"][
+      icon: ["$mdiDatabaseRemove", "$mdiDatabaseCheck", "$mdiDatabasePlus"][
         inDatabase.value
       ],
       color: ["red", "green", "orange"][inDatabase.value],
@@ -39,7 +41,7 @@ const filterDatabase = computed(() => {
     };
   return {
     icon: "$mdiDatabase",
-    color: "geay-darken-4",
+    color: "grey-darken-4",
     action: () => {
       inDatabase.toggled = true;
     },
@@ -61,7 +63,7 @@ const filterImage = computed(() => {
     };
   return {
     icon: "$mdiImage",
-    color: "geay-darken-4",
+    color: "grey-darken-4",
     action: () => {
       inAssets.toggled = true;
     },
@@ -73,7 +75,7 @@ const filterSelected = computed(() => {
   if (selected.toggled)
     return {
       icon: selected.value ? "$mdiCheckboxMarked" : "$mdiCheckboxBlankOutline",
-      color: "geay-darken-4",
+      color: "grey-darken-4",
       action: () => {
         selected.value = !selected.value;
         selected.toggled = !selected.value;
@@ -81,7 +83,7 @@ const filterSelected = computed(() => {
     };
   return {
     icon: "$mdiCheckboxBlankOffOutline",
-    color: "geay-darken-4",
+    color: "grey-darken-4",
     action: () => {
       selected.toggled = true;
     },
@@ -101,7 +103,7 @@ const filterCloud = computed(() => {
     };
   return {
     icon: "$mdiCloud",
-    color: "geay-darken-4",
+    color: "grey-darken-4",
     action: () => {
       inNetDisk.toggled = true;
     },
@@ -121,7 +123,7 @@ const filterDeck = computed(() => {
     };
   return {
     icon: "$mdiGamepadSquare",
-    color: "geay-darken-4",
+    color: "grey-darken-4",
     action: () => {
       inDeck.toggled = true;
     },
@@ -141,7 +143,7 @@ const filterSD = computed(() => {
     };
   return {
     icon: "$mdiMicroSd",
-    color: "geay-darken-4",
+    color: "grey-darken-4",
     action: () => {
       inSDCard.toggled = true;
     },
@@ -171,6 +173,96 @@ watch(winePrefixFilter, (newValue) => {
   }
 });
 
+const filterLauncher = computed(() => {
+  const launcher = filterConfig.launcher;
+  if (launcher.toggled)
+    return {
+      icon:
+        launcher.value === "Heroic"
+          ? "$customHeroic"
+          : launcher.value === "Lutris"
+          ? "$customLutris"
+          : "$mdiLayersOff",
+      color: launcher.value === "Unknown" ? "orange" : "green",
+      action: () => {
+        if (launcher.value === "Heroic") {
+          launcher.value = "Lutris";
+        } else if (launcher.value === "Lutris") {
+          launcher.value = "Unknown";
+        } else if (launcher.value === "Unknown") {
+          launcher.value = "";
+          launcher.toggled = false;
+        } else {
+          throw new Error("Invalid launcher value");
+        }
+      },
+    };
+  return {
+    icon: "$mdiLayers",
+    color: "grey-darken-4",
+    action: () => {
+      launcher.toggled = true;
+      launcher.value = "Heroic";
+    },
+  };
+});
+
+const filterPlatform = computed(() => {
+  const platform = filterConfig.platform;
+  if (platform.toggled)
+    return {
+      icon:
+        platform.value === "Windows"
+          ? "$mdiMicrosoftWindows"
+          : platform.value === "Linux"
+          ? "$mdiPenguin"
+          : "$mdiCubeOff",
+      color: platform.value === "Unknown" ? "orange" : "green",
+      action: () => {
+        if (platform.value === "Windows") {
+          platform.value = "Linux";
+        } else if (platform.value === "Linux") {
+          platform.value = "Unknown";
+        } else if (platform.value === "Unknown") {
+          platform.value = "";
+          platform.toggled = false;
+        } else {
+          throw new Error("Invalid platform value");
+        }
+      },
+    };
+  return {
+    icon: "$mdiCube",
+    color: "grey-darken-4",
+    action: () => {
+      platform.toggled = true;
+      platform.value = "Windows";
+    },
+  };
+});
+
+const filterPreset = computed(() => {
+  if (presetToggle.value) {
+    return {
+      icon: "$mdiAutoFix",
+      color: "green",
+      action: () => {
+        resetFilters();
+      },
+    };
+  } else {
+    return {
+      icon: "$mdiAutoFix",
+      color: "grey-darken-4",
+      action: () => {
+        Object.assign(filterConfig.inAssets, { toggled: true, value: 1 });
+        Object.assign(filterConfig.inDatabase, { toggled: true, value: 0 });
+        presetToggle.value = true;
+      },
+    };
+  }
+});
+
 function resetFilters() {
   wineRunnerFilter.value = [];
   winePrefixFilter.value = [];
@@ -185,7 +277,11 @@ function resetFilters() {
 
     wineRunner: { toggled: false, value: "" },
     winePrefix: { toggled: false, value: "" },
+
+    launcher: { toggled: false, value: "" },
+    platform: { toggled: false, value: "" },
   });
+  presetToggle.value = false;
   gameStore.filterOperator = true;
 }
 </script>
@@ -221,11 +317,11 @@ function resetFilters() {
         </v-btn>
         <v-divider></v-divider>
 
-        <v-btn-group class="grid3x3">
-          <v-btn @click="filterLinked.action">
+        <v-btn-group class="grid4x3">
+          <v-btn @click="filterPreset.action">
             <v-icon
-              :icon="filterLinked.icon"
-              :color="filterLinked.color"
+              :icon="filterPreset.icon"
+              :color="filterPreset.color"
               size="x-large"
             ></v-icon>
           </v-btn>
@@ -234,6 +330,14 @@ function resetFilters() {
             <v-icon
               :icon="filterSelected.icon"
               :color="filterSelected.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
+
+          <v-btn @click="filterLinked.action">
+            <v-icon
+              :icon="filterLinked.icon"
+              :color="filterLinked.color"
               size="x-large"
             ></v-icon>
           </v-btn>
@@ -320,9 +424,7 @@ function resetFilters() {
                   ? '$mdiPackageVariantClosed'
                   : '$mdiPackageVariant'
               "
-              :color="
-                winePrefixFilter.length === 0 ? 'grey-darken-4' : '#A57046'
-              "
+              :color="winePrefixFilter.length === 0 ? 'grey-darken-4' : 'green'"
               size="x-large"
             ></v-icon>
             <v-menu
@@ -350,6 +452,22 @@ function resetFilters() {
               </v-sheet>
             </v-menu>
           </v-btn>
+
+          <v-btn @click="filterLauncher.action">
+            <v-icon
+              :icon="filterLauncher.icon"
+              :color="filterLauncher.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
+
+          <v-btn @click="filterPlatform.action">
+            <v-icon
+              :icon="filterPlatform.icon"
+              :color="filterPlatform.color"
+              size="x-large"
+            ></v-icon>
+          </v-btn>
         </v-btn-group>
       </v-sheet>
     </v-menu>
@@ -368,8 +486,17 @@ function resetFilters() {
   grid-template-columns: repeat(3, 1fr);
   height: 144px !important;
 }
+.grid4x3 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: 144px !important;
+}
 .grid3x3 svg.icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
+}
+.grid4x3 svg.icon {
+  width: 20px;
+  height: 20px;
 }
 </style>
