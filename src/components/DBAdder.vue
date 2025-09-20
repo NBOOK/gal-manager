@@ -947,7 +947,7 @@ async function openVNDBLink(id: string) {
             </v-row>
           </div>
           <v-img
-            :src="`file://${game.imageAssets.capsuleSDPath}`"
+            :src="`file://${game.imageAssets.paths.capsuleSD}`"
             width="178"
             :aspect-ratio="2 / 3"
             class="flex-grow-0"

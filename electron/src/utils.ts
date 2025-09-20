@@ -23,7 +23,10 @@ let dustBinaryPath = getDustBinaryPath();
 let sqliteDB: DatabaseType;
 const kuroshiro = new Kuroshiro();
 
-async function scanDir(dirPath: string): Promise<DirEntry[]> {
+async function scanDir(
+  dirPath: string,
+  netDiskOnline: boolean = false
+): Promise<DirEntry[]> {
   // console.log("Scanning directory:", dirPath);
   try {
     const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
@@ -60,7 +63,9 @@ async function scanDir(dirPath: string): Promise<DirEntry[]> {
               result.createdTime = stats.birthtimeMs;
             } catch (err) {
               // 如果符号链接失效/指向的位置不存在，则删除这个符号链接并返回null
-              await fs.promises.unlink(entryPath);
+              if (netDiskOnline) {
+                await fs.promises.unlink(entryPath);
+              }
               result.basePath = "";
             }
           }
@@ -777,23 +782,46 @@ async function getFileInfos(root: string): Promise<Map<string, FileInfo>> {
   return map;
 }
 
-async function filesIdentical(sourcePath: string, targetPath: string) {
+async function filesIdentical(
+  sourcePath: string,
+  targetPath: string,
+  loose: boolean = true
+): Promise<boolean> {
+  let sourceStats: fs.Stats;
+  let targetStats: fs.Stats;
+  let sizeMatches: boolean;
   try {
     // 获取两个文件的状态信息
-    const sourceStats = await fs.promises.stat(sourcePath);
-    const targetStats = await fs.promises.stat(targetPath);
+    sourceStats = await fs.promises.stat(sourcePath);
+    targetStats = await fs.promises.stat(targetPath);
 
-    // 比较文件大小和修改时间
-    const sizeMatches = sourceStats.size === targetStats.size;
-    const mtimeMatches =
-      sourceStats.mtime.getTime() === targetStats.mtime.getTime();
-
-    // 如果大小和修改时间都匹配，则认为文件相同
-    return sizeMatches && mtimeMatches;
+    // 比较文件大小
+    sizeMatches = sourceStats.size === targetStats.size;
+    if (!sizeMatches) {
+      return false; // 如果大小不匹配，直接返回 false
+    }
   } catch (error) {
-    // console.error("Error comparing files:", error);
+    // console.error("Error stating files:", error);
     // 出错时返回 false，这样会触发文件复制
     return false;
+  }
+  if (loose) {
+    // 宽松模式，文件大小相同只比较修改时间
+    const mtimeMatches =
+      sourceStats.mtime.getTime() === targetStats.mtime.getTime();
+    // 如果大小和修改时间都匹配，则认为文件相同
+    return mtimeMatches;
+  } else {
+    // 严格模式，逐字节比较文件内容
+    try {
+      const [source, target] = await Promise.all([
+        fs.promises.readFile(sourcePath),
+        fs.promises.readFile(targetPath),
+      ]);
+      return source.equals(target);
+    } catch (error) {
+      return false;
+    }
   }
 }
 

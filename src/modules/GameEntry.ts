@@ -122,7 +122,7 @@ class GameEntry {
   constructor() {}
 
   async setup(entry: DirEntry) {
-    this.basePath = entry.basePath;
+    this.basePath = entry.basePath; // Home | Data | SD | Net
     // if (entry.symbolicTarget) {
     // handled in Loading.vue
     // }
@@ -228,6 +228,7 @@ class GameEntry {
   }
 
   async refreshLink() {
+    // redirect link to local disk if possible
     if (!this.linked) return;
 
     const mapping = [
@@ -355,16 +356,16 @@ class GameEntry {
   }
 
   async downloadTo(target: string) {
-    const exclude = [this.imageAssets.assetsFolderPath];
+    const exclude = [this.imageAssets.assetsOriginalFolderPath];
     const include = [
-      this.imageAssets.capsulePath,
-      this.imageAssets.headerPath,
-      this.imageAssets.heroPath,
-      this.imageAssets.logoPath,
-      this.imageAssets.iconPath,
-      this.imageAssets.capsuleSDPath,
-      this.imageAssets.headerSDPath,
-      this.imageAssets.heroSDPath,
+      this.imageAssets.originalPaths.capsule,
+      this.imageAssets.originalPaths.header,
+      this.imageAssets.originalPaths.hero,
+      this.imageAssets.originalPaths.logo,
+      this.imageAssets.originalPaths.icon,
+      this.imageAssets.originalPaths.capsuleSD,
+      this.imageAssets.originalPaths.headerSD,
+      this.imageAssets.originalPaths.heroSD,
     ].filter((path) => path !== "");
 
     const destination = `${target}/${this.folderName}`;
@@ -380,21 +381,22 @@ class GameEntry {
     );
     console.log(`Downloaded ${this.gamePath} to ${destination}`);
 
-    const assetsSource = this.imageAssets.assetsFolderPath;
-    const assetsDestination = `${gameStore.config.value.gamesAssetsPath}/${this.folderName}/${gameStore.config.value.assetsFolderName}`;
-    console.log(`Downloading ${assetsSource} to ${assetsDestination}...`);
-    console.log(`Include: ${include}`);
-    console.log(`Exclude: ${exclude}`);
-    await window.ipcRenderer.invoke(
-      "start-copy",
-      assetsSource,
-      assetsDestination,
-      include,
-      exclude
-    );
-    console.log(`Downloaded ${assetsSource} to ${assetsDestination}`);
+    // // below is not needed anymore, as images are copied in syncImageAssets
+    // const assetsSource = this.imageAssets.assetsFolderPath;
+    // const assetsDestination = `${gameStore.config.value.gamesAssetsPath}/${this.folderName}/${gameStore.config.value.assetsFolderName}`;
+    // console.log(`Downloading ${assetsSource} to ${assetsDestination}...`);
+    // console.log(`Include: ${include}`);
+    // console.log(`Exclude: ${exclude}`);
+    // await window.ipcRenderer.invoke(
+    //   "start-copy",
+    //   assetsSource,
+    //   assetsDestination,
+    //   include,
+    //   exclude
+    // );
+    // console.log(`Downloaded ${assetsSource} to ${assetsDestination}`);
 
-    await this.deleteLocal(); // delete using old status
+    await this.deleteLocal(); // when moving Data <==> SD, the old one should be deleted
 
     if (target === gameStore.config.value.gamesDataPath) {
       this.inDeck = true;

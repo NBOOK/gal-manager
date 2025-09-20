@@ -17,27 +17,27 @@ const page = ref(0);
       <v-carousel v-model="page" :show-arrows="false" hide-delimiters>
         <v-carousel-item
           :draggable="false"
-          :src="`file://${game.imageAssets.capsulePath}`"
+          :src="`file://${game.imageAssets.paths.capsule}`"
         ></v-carousel-item>
 
         <v-carousel-item
           :draggable="false"
-          :src="`file://${game.imageAssets.headerPath}`"
+          :src="`file://${game.imageAssets.paths.header}`"
         ></v-carousel-item>
 
         <v-carousel-item
           :draggable="false"
-          :src="`file://${game.imageAssets.heroPath}`"
+          :src="`file://${game.imageAssets.paths.hero}`"
         ></v-carousel-item>
 
         <v-carousel-item
           :draggable="false"
-          :src="`file://${game.imageAssets.logoPath}`"
+          :src="`file://${game.imageAssets.paths.logo}`"
         ></v-carousel-item>
 
         <v-carousel-item
           :draggable="false"
-          :src="`file://${game.imageAssets.iconPath}`"
+          :src="`file://${game.imageAssets.paths.icon}`"
         ></v-carousel-item>
       </v-carousel>
 
@@ -52,35 +52,35 @@ const page = ref(0);
       >
         <v-slide-group-item v-slot="{ selectedClass, toggle }">
           <img
-            :src="`file://${game.imageAssets.capsuleSDPath}`"
+            :src="`file://${game.imageAssets.paths.capsuleSD}`"
             @click.stop="toggle"
             :class="['nav-item', selectedClass]"
           />
         </v-slide-group-item>
         <v-slide-group-item v-slot="{ selectedClass, toggle }">
           <img
-            :src="`file://${game.imageAssets.headerSDPath}`"
+            :src="`file://${game.imageAssets.paths.headerSD}`"
             @click.stop="toggle"
             :class="['nav-item', selectedClass]"
           />
         </v-slide-group-item>
         <v-slide-group-item v-slot="{ selectedClass, toggle }">
           <img
-            :src="`file://${game.imageAssets.heroSDPath}`"
+            :src="`file://${game.imageAssets.paths.heroSD}`"
             @click.stop="toggle"
             :class="['nav-item', selectedClass]"
           />
         </v-slide-group-item>
         <v-slide-group-item v-slot="{ selectedClass, toggle }">
           <img
-            :src="`file://${game.imageAssets.logoPath}`"
+            :src="`file://${game.imageAssets.paths.logo}`"
             @click.stop="toggle"
             :class="['nav-item', selectedClass]"
           />
         </v-slide-group-item>
         <v-slide-group-item v-slot="{ selectedClass, toggle }">
           <img
-            :src="`file://${game.imageAssets.iconPath}`"
+            :src="`file://${game.imageAssets.paths.icon}`"
             @click.stop="toggle"
             :class="['nav-item', selectedClass]"
           />

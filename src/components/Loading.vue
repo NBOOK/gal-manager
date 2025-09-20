@@ -17,13 +17,23 @@ async function processGameEntries(
   name: string,
   gameEntries: {
     dirEntry: DirEntry;
-    flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk";
+    flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk" | "inAssets";
   }[]
 ) {
   processedBuffer.value++;
   workingDirs.value.add(name);
 
   for (const { dirEntry, flag } of gameEntries) {
+    if (flag === "inAssets") {
+      if (!gameStore.games[name] && gameStore.netDiskOnline) {
+        // this assets-only entry is deprecated, remove it
+        const assetsDir = `${gameStore.config.value.gamesAssetsPath}/${name}`;
+        window.ipcRenderer.invoke("removeItem", assetsDir);
+        console.log("Removed assets-only entry:", assetsDir);
+      }
+      continue;
+    }
+
     if (!gameStore.games[name]) {
       gameStore.games[name] = new GameEntry();
       await gameStore.games[name].setup(dirEntry);
@@ -35,8 +45,15 @@ async function processGameEntries(
         0,
         lastSlashIndex
       );
-      gameStore.games[name].linkedBasePath = linkedBasePath;
+      gameStore.games[name].linkedBasePath = linkedBasePath; // Data | SD | Net
     }
+  }
+
+  if (!gameStore.games[name]) {
+    // assets-only entry, skip
+    workingDirs.value.delete(name);
+    processedGames.value++;
+    return;
   }
 
   if (gameStore.games[name].linked) {
@@ -44,36 +61,43 @@ async function processGameEntries(
   }
 
   var imageAssetsDirs = [];
+  // sync imageAssetsDirs[0] to imageAssetsDirs[1] and [2]
+  // [0] is NetDisk or local (either Data or SD), [1] is local, [2] is assets
   if (
     gameStore.games[name].inNetDisk &&
-    gameStore.config.value.gamesExternalPath !==
-      gameStore.games[name].linkedBasePath
+    gameStore.games[name].linkedBasePath !==
+      gameStore.config.value.gamesExternalPath
   )
     imageAssetsDirs.push(
       `${gameStore.config.value.gamesExternalPath}/${name}/${gameStore.config.value.assetsFolderName}`
     );
+
   if (
     gameStore.games[name].inDeck &&
-    gameStore.config.value.gamesDeckPath !==
-      gameStore.games[name].linkedBasePath
+    gameStore.games[name].linkedBasePath !==
+      gameStore.config.value.gamesDeckPath
   )
     imageAssetsDirs.push(
       `${gameStore.config.value.gamesDataPath}/${name}/${gameStore.config.value.assetsFolderName}`
     );
+
   if (
     gameStore.games[name].inSDCard &&
-    gameStore.config.value.gamesSDPath !== gameStore.games[name].linkedBasePath
+    gameStore.games[name].linkedBasePath !== gameStore.config.value.gamesSDPath
   )
     imageAssetsDirs.push(
       `${gameStore.config.value.gamesSDPath}/${name}/${gameStore.config.value.assetsFolderName}`
     );
+
   if (gameStore.games[name].linked)
     imageAssetsDirs.push(
       `${gameStore.config.value.gamesMainPath}/${name}/${gameStore.config.value.assetsFolderName}`
     );
+
   imageAssetsDirs.push(
     `${gameStore.config.value.gamesAssetsPath}/${name}/${gameStore.config.value.assetsFolderName}`
   );
+
   await gameStore.games[name].imageAssets.setupAssets(imageAssetsDirs);
 
   currentGame.value = name;
@@ -90,7 +114,7 @@ async function scanGames() {
     gamesDataPath: gameStore.config.value.gamesDataPath,
     gamesSDPath: gameStore.config.value.gamesSDPath,
     gamesExternalPath: gameStore.config.value.gamesExternalPath,
-    // gamesAssetsPath: gameStore.config.value.gamesAssetsPath,
+    gamesAssetsPath: gameStore.config.value.gamesAssetsPath,
   };
 
   // scan all game directories in multiple paths
@@ -104,7 +128,7 @@ async function scanGames() {
     deckEntries,
     sdCardEntries,
     netDiskEntries,
-    // assetsEntries,
+    assetsEntries,
   ] = entries.map((dirEntries) =>
     dirEntries.filter((entry: DirEntry) => entry.isDirectory)
   );
@@ -116,7 +140,7 @@ async function scanGames() {
       ...deckEntries,
       ...sdCardEntries,
       ...netDiskEntries,
-      // ...assetsEntries,
+      ...assetsEntries,
     ].map((entry) => entry.name)
   );
   totalGames.value = uniqueNames.size;
@@ -125,7 +149,7 @@ async function scanGames() {
     string,
     {
       dirEntry: DirEntry;
-      flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk";
+      flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk" | "inAssets";
     }[]
   > = {};
 
@@ -147,9 +171,13 @@ async function scanGames() {
         dirEntry: netDiskEntries.find((entry) => entry.name === name),
         flag: "inNetDisk",
       },
+      {
+        dirEntry: assetsEntries.find((entry) => entry.name === name),
+        flag: "inAssets",
+      },
     ].filter((entry) => entry.dirEntry !== undefined) as {
       dirEntry: DirEntry;
-      flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk";
+      flag: "linked" | "inDeck" | "inSDCard" | "inNetDisk" | "inAssets";
     }[];
   });
 

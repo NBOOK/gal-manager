@@ -193,29 +193,29 @@ class LutrisDB {
   private async linkImageAssets(game: GameEntry, gameConfig: GameConfig) {
     await window.ipcRenderer.invoke(
       "createSymbolicLink",
-      game.imageAssets.iconPath,
+      game.imageAssets.paths.icon,
       `${this.lutrisIconPath}/lutris_${gameConfig.gameNameSlug}.png` // icon has lutris_ prefix and is always png
     );
     if (this.linkLowRes) {
       await window.ipcRenderer.invoke(
         "createSymbolicLink",
-        game.imageAssets.capsuleSDPath,
+        game.imageAssets.paths.capsuleSD,
         `${this.lutrisCoverPath}/${gameConfig.gameNameSlug}.jpg` // extention doesn't matter here
       );
       await window.ipcRenderer.invoke(
         "createSymbolicLink",
-        game.imageAssets.headerSDPath,
+        game.imageAssets.paths.headerSD,
         `${this.lutrisBannerPath}/${gameConfig.gameNameSlug}.jpg`
       );
     } else {
       await window.ipcRenderer.invoke(
         "createSymbolicLink",
-        game.imageAssets.capsulePath,
+        game.imageAssets.paths.capsule,
         `${this.lutrisCoverPath}/${gameConfig.gameNameSlug}.jpg` // extention doesn't matter here
       );
       await window.ipcRenderer.invoke(
         "createSymbolicLink",
-        game.imageAssets.headerPath,
+        game.imageAssets.paths.header,
         `${this.lutrisBannerPath}/${gameConfig.gameNameSlug}.jpg`
       );
     }

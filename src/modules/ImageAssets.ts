@@ -8,6 +8,19 @@ export function imageAssetsSetStore() {
   }
 }
 
+const ASSET_TYPES = [
+  "icon",
+  "logo",
+  "capsule",
+  "header",
+  "hero",
+  "capsuleSD",
+  "headerSD",
+  "heroSD",
+] as const;
+
+type AssetPaths = { [K in (typeof ASSET_TYPES)[number]]: string };
+
 class ImageAssets {
   basePath: string = "";
   gameBrand: string = "";
@@ -24,45 +37,120 @@ class ImageAssets {
 
   game: GameEntry | null = null;
 
+  private _createAssetPath(basePath: string, fileName?: string): string {
+    return fileName ? `${basePath}/${fileName}` : "";
+  }
+
   get gameFolderName() {
     return `${this.gameBrand}${this.splitter}${this.gameName}`;
   }
   get gameFolderPath() {
     return `${this.basePath}/${this.gameFolderName}`;
   }
-  get assetsFolderPath() {
+  get assetsOriginalFolderPath() {
     return `${this.gameFolderPath}/${gameStore.config.value.assetsFolderName}`;
   }
-  get iconPath() {
-    return this.iconName ? `${this.assetsFolderPath}/${this.iconName}` : "";
+  get assetsFolderPath() {
+    return `${gameStore.config.value.gamesAssetsPath}/${this.gameFolderName}/${gameStore.config.value.assetsFolderName}`;
   }
-  get logoPath() {
-    return this.logoName ? `${this.assetsFolderPath}/${this.logoName}` : "";
+
+  /**
+   * 获取所有原始资源路径的对象集合。
+   * 使用示例: myInstance.originalPaths.icon
+   */
+  get originalPaths(): AssetPaths {
+    return ASSET_TYPES.reduce((acc, type) => {
+      const fileName = this[`${type}Name` as keyof this] as string | undefined;
+      acc[type] = this._createAssetPath(
+        this.assetsOriginalFolderPath,
+        fileName
+      );
+      return acc;
+    }, {} as AssetPaths);
   }
-  get capsulePath() {
-    return this.capsuleName
-      ? `${this.assetsFolderPath}/${this.capsuleName}`
-      : "";
+
+  /**
+   * 获取所有最终资源路径的对象集合。
+   * 使用示例: myInstance.paths.icon
+   */
+  get paths(): AssetPaths {
+    return ASSET_TYPES.reduce((acc, type) => {
+      const fileName = this[`${type}Name` as keyof this] as string | undefined;
+      acc[type] = this._createAssetPath(this.assetsFolderPath, fileName);
+      return acc;
+    }, {} as AssetPaths);
   }
-  get headerPath() {
-    return this.headerName ? `${this.assetsFolderPath}/${this.headerName}` : "";
-  }
-  get heroPath() {
-    return this.heroName ? `${this.assetsFolderPath}/${this.heroName}` : "";
-  }
-  get capsuleSDPath() {
-    return this.capsuleSDName
-      ? `${this.assetsFolderPath}/${this.capsuleSDName}`
-      : "";
-  }
-  get headerSDPath() {
-    return this.headerSDName
-      ? `${this.assetsFolderPath}/${this.headerSDName}`
-      : "";
-  }
-  get heroSDPath() {
-    return this.heroSDName ? `${this.assetsFolderPath}/${this.heroSDName}` : "";
-  }
+
+  // get iconOriginalPath() {
+  //   return this.iconName
+  //     ? `${this.assetsOriginalFolderPath}/${this.iconName}`
+  //     : "";
+  // }
+  // get logoOriginalPath() {
+  //   return this.logoName
+  //     ? `${this.assetsOriginalFolderPath}/${this.logoName}`
+  //     : "";
+  // }
+  // get capsuleOriginalPath() {
+  //   return this.capsuleName
+  //     ? `${this.assetsOriginalFolderPath}/${this.capsuleName}`
+  //     : "";
+  // }
+  // get headerOriginalPath() {
+  //   return this.headerName
+  //     ? `${this.assetsOriginalFolderPath}/${this.headerName}`
+  //     : "";
+  // }
+  // get heroOriginalPath() {
+  //   return this.heroName
+  //     ? `${this.assetsOriginalFolderPath}/${this.heroName}`
+  //     : "";
+  // }
+  // get capsuleSDOriginalPath() {
+  //   return this.capsuleSDName
+  //     ? `${this.assetsOriginalFolderPath}/${this.capsuleSDName}`
+  //     : "";
+  // }
+  // get headerSDOriginalPath() {
+  //   return this.headerSDName
+  //     ? `${this.assetsOriginalFolderPath}/${this.headerSDName}`
+  //     : "";
+  // }
+  // get heroSDOriginalPath() {
+  //   return this.heroSDName
+  //     ? `${this.assetsOriginalFolderPath}/${this.heroSDName}`
+  //     : "";
+  // }
+  // get iconPath() {
+  //   return this.iconName ? `${this.assetsFolderPath}/${this.iconName}` : "";
+  // }
+  // get logoPath() {
+  //   return this.logoName ? `${this.assetsFolderPath}/${this.logoName}` : "";
+  // }
+  // get capsulePath() {
+  //   return this.capsuleName
+  //     ? `${this.assetsFolderPath}/${this.capsuleName}`
+  //     : "";
+  // }
+  // get headerPath() {
+  //   return this.headerName ? `${this.assetsFolderPath}/${this.headerName}` : "";
+  // }
+  // get heroPath() {
+  //   return this.heroName ? `${this.assetsFolderPath}/${this.heroName}` : "";
+  // }
+  // get capsuleSDPath() {
+  //   return this.capsuleSDName
+  //     ? `${this.assetsFolderPath}/${this.capsuleSDName}`
+  //     : "";
+  // }
+  // get headerSDPath() {
+  //   return this.headerSDName
+  //     ? `${this.assetsFolderPath}/${this.headerSDName}`
+  //     : "";
+  // }
+  // get heroSDPath() {
+  //   return this.heroSDName ? `${this.assetsFolderPath}/${this.heroSDName}` : "";
+  // }
 
   static async create(
     game: GameEntry,
@@ -194,7 +282,7 @@ class ImageAssets {
       })
     );
 
-    // If scanning default folder, generate low-res assets
+    // If scanning default folder, update instance properties
     if (dirPath === this.assetsFolderPath) {
       for (const key of Object.keys(foundAssets)) {
         (this as any)[key] = foundAssets[key];
@@ -325,19 +413,19 @@ class ImageAssets {
         const sourcePath = `${sourceDirPath}/${sourceAssetName}`;
         const targetPath = `${targetDirPath}/${sourceAssetName}`;
 
-        // Case 3.1: Target asset doesn't exist
+        // Case 1: Target asset doesn't exist
         if (!targetAssetName) {
           await window.ipcRenderer.invoke("start-copy", sourcePath, targetPath);
           result[key] = sourceAssetName;
         }
-        // Case 3.2: Target asset exists but has different filename
+        // Case 2: Target asset exists but has different filename
         else if (targetAssetName !== sourceAssetName) {
           const oldTargetPath = `${targetDirPath}/${targetAssetName}`;
           await window.ipcRenderer.invoke("removeItem", oldTargetPath);
           await window.ipcRenderer.invoke("start-copy", sourcePath, targetPath);
           result[key] = sourceAssetName;
         }
-        // Case 3.3: Target asset has same filename but different content
+        // Case 3: Target asset has same filename but different content
         else if (
           !(await window.ipcRenderer.invoke(
             "filesIdentical",
@@ -422,11 +510,11 @@ class ImageAssets {
 
   get assetsCount(): number {
     let count = 0;
-    if (this.iconPath) count++;
-    if (this.logoPath) count++;
-    if (this.headerPath) count++;
-    if (this.capsulePath) count++;
-    if (this.heroPath) count++;
+    if (this.paths.icon) count++;
+    if (this.paths.logo) count++;
+    if (this.paths.header) count++;
+    if (this.paths.capsule) count++;
+    if (this.paths.hero) count++;
     return count;
   }
 

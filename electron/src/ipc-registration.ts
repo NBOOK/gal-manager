@@ -184,8 +184,8 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
       }
       return fs.promises.mkdir(folderPath);
     });
-    ipcMain.handle('filesIdentical', (_event, sourcePath: string, targetPath:string) => {
-      return utils.filesIdentical(sourcePath, targetPath);
+    ipcMain.handle('filesIdentical', (_event, sourcePath: string, targetPath:string, loose: boolean=true) => {
+      return utils.filesIdentical(sourcePath, targetPath, loose);
     });
     ipcMain.handle('hasExecutableMagic', (_event, filePath: string) => {
       return utils.hasExecutableMagic(filePath);

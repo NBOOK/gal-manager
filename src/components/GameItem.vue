@@ -23,9 +23,9 @@ defineProps<{ game: GameEntry }>(); // use props.game to access the game object
       <v-col class="flex-grow-0 pa-0">
         <div class="game-image">
           <v-img
-            v-if="game.imageAssets.headerSDPath"
+            v-if="game.imageAssets.paths.headerSD"
             rounded
-            :src="`file://${game.imageAssets.headerSDPath}`"
+            :src="`file://${game.imageAssets.paths.headerSD}`"
           >
             <GameImgThumb :game="game" />
           </v-img>

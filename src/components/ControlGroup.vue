@@ -82,14 +82,14 @@ const databaseBtn = computed(() => {
 });
 
 const imageBtn = computed(() => {
-  if (props.game.imageAssets.assetsCount == 5) {
+  if (props.game.inAssets == 1) {
     return {
       icon: "$mdiImageCheck",
       iconHover: "$mdiFolderOpen",
       color: "green",
       action: () => props.game.imageAssets.openImageOrGameFolder(),
     };
-  } else if (props.game.imageAssets.assetsCount > 0) {
+  } else if (props.game.inAssets == 2) {
     return {
       icon: "$mdiImageMinus",
       iconHover: "$mdiFolderOpen",

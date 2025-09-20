@@ -121,11 +121,11 @@ class HeroicDB {
       folder_name: folderPath,
       is_installed: true,
       art_cover: this.linkLowRes
-        ? game.imageAssets.headerSDPath
-        : game.imageAssets.headerPath,
+        ? game.imageAssets.paths.headerSD
+        : game.imageAssets.paths.header,
       art_square: this.linkLowRes
-        ? game.imageAssets.capsuleSDPath
-        : game.imageAssets.capsulePath,
+        ? game.imageAssets.paths.capsuleSD
+        : game.imageAssets.paths.capsule,
     };
     if (gameConfig.gameReleaseYear) {
       heroicGameInfo.year = parseInt(gameConfig.gameReleaseYear);

@@ -196,6 +196,8 @@ class SteamDB {
         );
       }
     }
+
+    delete this.steamGameLaunchers[game.gameNameEN];
   }
 
   async addGame(game: GameEntry, gameConfig: GameConfig) {
@@ -230,13 +232,14 @@ class SteamDB {
     } else {
       throw new Error("Invalid launcher");
     }
+    this.steamGameLaunchers[game.gameNameEN] = gameConfig.launcher;
 
     const shortcut = {
       appid: appID, // @TOCHECK possibly not needed anymore, but can be used to identify assets names
       AppName: game.gameNameEN,
       Exe: exePath,
       StartDir: startDir,
-      icon: game.imageAssets.iconPath,
+      icon: game.imageAssets.paths.icon,
       ShortcutPath: "",
       LaunchOptions: launchOptions,
       IsHidden: 0,
@@ -404,15 +407,15 @@ class SteamDB {
         .appid as number;
     }
 
-    await this.linkImage(game.imageAssets.logoPath, appID, "_logo");
+    await this.linkImage(game.imageAssets.paths.logo, appID, "_logo");
     if (this.linkLowRes) {
-      await this.linkImage(game.imageAssets.headerSDPath, appID, "");
-      await this.linkImage(game.imageAssets.capsuleSDPath, appID, "p");
-      await this.linkImage(game.imageAssets.heroSDPath, appID, "_hero");
+      await this.linkImage(game.imageAssets.paths.headerSD, appID, "");
+      await this.linkImage(game.imageAssets.paths.capsuleSD, appID, "p");
+      await this.linkImage(game.imageAssets.paths.heroSD, appID, "_hero");
     } else {
-      await this.linkImage(game.imageAssets.headerPath, appID, "");
-      await this.linkImage(game.imageAssets.capsulePath, appID, "p");
-      await this.linkImage(game.imageAssets.heroPath, appID, "_hero");
+      await this.linkImage(game.imageAssets.paths.header, appID, "");
+      await this.linkImage(game.imageAssets.paths.capsule, appID, "p");
+      await this.linkImage(game.imageAssets.paths.hero, appID, "_hero");
     }
   }
 
@@ -426,16 +429,16 @@ class SteamDB {
         .appid as number;
     }
 
-    await this.unlinkImage(game.imageAssets.logoPath, appID, "_logo");
+    await this.unlinkImage(game.imageAssets.paths.logo, appID, "_logo");
     await this.unlinkImage("dummy.json", appID, "");
     if (this.linkLowRes) {
-      await this.unlinkImage(game.imageAssets.headerSDPath, appID, "");
-      await this.unlinkImage(game.imageAssets.capsuleSDPath, appID, "p");
-      await this.unlinkImage(game.imageAssets.heroSDPath, appID, "_hero");
+      await this.unlinkImage(game.imageAssets.paths.headerSD, appID, "");
+      await this.unlinkImage(game.imageAssets.paths.capsuleSD, appID, "p");
+      await this.unlinkImage(game.imageAssets.paths.heroSD, appID, "_hero");
     } else {
-      await this.unlinkImage(game.imageAssets.headerPath, appID, "");
-      await this.unlinkImage(game.imageAssets.capsulePath, appID, "p");
-      await this.unlinkImage(game.imageAssets.heroPath, appID, "_hero");
+      await this.unlinkImage(game.imageAssets.paths.header, appID, "");
+      await this.unlinkImage(game.imageAssets.paths.capsule, appID, "p");
+      await this.unlinkImage(game.imageAssets.paths.hero, appID, "_hero");
     }
   }
 
