@@ -225,15 +225,6 @@ async function saveAndRestart() {
               class="mb-1"
             />
             <v-text-field
-              v-model="config.gamesExternalPath"
-              label="External Games Mount Path"
-              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
-              :spellcheck="false"
-              variant="outlined"
-              density="compact"
-              class="mb-1"
-            />
-            <v-text-field
               v-model="config.gamesNetPath"
               label="Net Disk Games Path"
               :rules="[fieldRequired, pathMustExist, endsWithSlash]"

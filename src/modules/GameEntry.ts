@@ -214,7 +214,7 @@ class GameEntry {
     } else if (this.inSDCard) {
       this.basePath = gameStore.config.value.gamesSDPath;
     } else if (this.inNetDisk) {
-      this.basePath = gameStore.config.value.gamesExternalPath;
+      this.basePath = gameStore.config.value.gamesNetPath;
     } else {
       // throw new Error("Game not found in any disk");
       console.log("Game not found in any disk");
@@ -234,7 +234,7 @@ class GameEntry {
     const mapping = [
       { flag: "inDeck", path: gameStore.config.value.gamesDataPath },
       { flag: "inSDCard", path: gameStore.config.value.gamesSDPath },
-      { flag: "inNetDisk", path: gameStore.config.value.gamesExternalPath },
+      { flag: "inNetDisk", path: gameStore.config.value.gamesNetPath },
     ];
 
     for (const { flag, path } of mapping) {
@@ -414,7 +414,7 @@ class GameEntry {
 
   async deleteLocal() {
     const basePath = this.linked ? this.linkedBasePath : this.basePath;
-    if (basePath === gameStore.config.value.gamesExternalPath) {
+    if (basePath === gameStore.config.value.gamesNetPath) {
       console.log("Cannot delete game from external mount point");
       return;
     }
@@ -464,7 +464,7 @@ class GameEntry {
       console.log("Game not found in both local and remote disks");
       return;
     }
-    const remotePath = `${gameStore.config.value.gamesExternalPath}/${this.folderName}`;
+    const remotePath = `${gameStore.config.value.gamesNetPath}/${this.folderName}`;
     const localPath = this.gamePath;
 
     const exclude = [gameStore.config.value.assetsFolderName];

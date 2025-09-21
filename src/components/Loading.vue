@@ -66,10 +66,10 @@ async function processGameEntries(
   if (
     gameStore.games[name].inNetDisk &&
     gameStore.games[name].linkedBasePath !==
-      gameStore.config.value.gamesExternalPath
+      gameStore.config.value.gamesNetPath
   )
     imageAssetsDirs.push(
-      `${gameStore.config.value.gamesExternalPath}/${name}/${gameStore.config.value.assetsFolderName}`
+      `${gameStore.config.value.gamesNetPath}/${name}/${gameStore.config.value.assetsFolderName}`
     );
 
   if (
@@ -113,7 +113,7 @@ async function scanGames() {
     gamesMainPath: gameStore.config.value.gamesMainPath,
     gamesDataPath: gameStore.config.value.gamesDataPath,
     gamesSDPath: gameStore.config.value.gamesSDPath,
-    gamesExternalPath: gameStore.config.value.gamesExternalPath,
+    gamesNetPath: gameStore.config.value.gamesNetPath,
     gamesAssetsPath: gameStore.config.value.gamesAssetsPath,
   };
 

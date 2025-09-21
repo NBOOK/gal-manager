@@ -39,12 +39,10 @@ onMounted(async () => {
 });
 
 async function init() {
-  const externalLinkTarget = await window.ipcRenderer.invoke(
-    "readlink",
-    gameStore.config.value.gamesExternalPath
+  gameStore.netDiskOnline = await window.ipcRenderer.invoke(
+    "fileExists",
+    `${gameStore.config.value.gamesNetPath}/remote.txt`
   );
-  gameStore.netDiskOnline =
-    externalLinkTarget === gameStore.config.value.gamesNetPath;
 
   window.ipcRenderer.invoke("kuroshiroOp", "init");
   gameStore.steamDB.setup(gameStore.config.value);

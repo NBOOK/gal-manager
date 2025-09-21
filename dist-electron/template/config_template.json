@@ -5,7 +5,6 @@
     "gamesUSBPath": "/run/media/deck/USB/Games/Gal",
     "gamesNetPath": "/run/media/deck/NetDisk/Games/Gal",
     "gamesAssetsPath": "/home/deck/Pictures/GalArtAssets",
-    "gamesExternalPath": "/home/deck/Games/External/Gal",
     "assetsFolderName": "_CustomLibraryAssets",
     "assetsCapsuleName": "_capsule",
     "assetsHeaderName": "_header",

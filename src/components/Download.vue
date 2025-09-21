@@ -10,7 +10,6 @@ const pathIconMap: { [key: string]: string } = {
   [gameStore.config.value.gamesDataPath]: "$mdiGamepadSquare",
   [gameStore.config.value.gamesSDPath]: "$mdiMicroSd",
   [gameStore.config.value.gamesNetPath]: "$mdiCloud",
-  [gameStore.config.value.gamesExternalPath]: "$mdiCloud",
 };
 
 const downloading = ref(false);

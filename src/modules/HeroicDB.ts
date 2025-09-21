@@ -87,8 +87,6 @@ class HeroicDB {
       this.heroicConfigPath
     );
     this.heroicCategories = heroicConfig.games.customCategories;
-
-    this.linkLowRes = heroicConfig.link_low_res_assets;
   }
 
   async addGame(game: GameEntry, gameConfig: GameConfig) {
