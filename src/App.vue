@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// import HelloWorld from '@components/HelloWorld.vue'
 import { onMounted, ref } from "vue";
 import { useGameStore } from "@/store/global-store";
 import LoadingOverlay from "@/components/Loading.vue";

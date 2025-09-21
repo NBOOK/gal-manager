@@ -9,8 +9,6 @@ const limit = pLimit(10);
 const gameStore = useGameStore();
 
 const overlay = toRef(gameStore.syncManager, "managerOpen");
-// const syncing = ref(false);
-// const abort = ref(false);
 
 const currentScanningGame = ref<string>("");
 const scannedGames = ref<number>(0);

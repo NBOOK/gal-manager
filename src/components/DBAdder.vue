@@ -8,7 +8,6 @@ import utils from "@/modules/utils";
 const gameStore = useGameStore();
 const emit = defineEmits(["goBack", "proceed", "abort"]);
 const props = defineProps<{ game: GameEntry }>();
-// const game = computed(() => props.game);
 const gameNameENCandidates = ref<VNTitle[]>([]);
 const gameBrandENCandidates = ref<VNDeveloper[]>([]);
 const allSteamCategories = ref<string[]>([]);
@@ -103,7 +102,6 @@ async function getSetGameENCandidates() {
     );
   if (selectedBrands.value.length === 0)
     selectedBrands.value.push(gameBrandENCandidates.value[0]);
-  // gameConfig.gameNameSlug = slugify(gameConfig.gameNameEN, "");
   slugTitleColor.value = enTitleColor.value;
   console.log("Set game EN candidates", gameNameENCandidates.value);
 
@@ -222,7 +220,6 @@ async function setUpTitles() {
   if (props.game.inDatabase) {
     gameConfig.gameNameEN = props.game.gameNameEN;
     enTitleColor.value = titleKindColor.stored;
-    // gameConfig.gameBrandEN = props.game.gameBrandEN;
     selectedBrands.value.push({
       id: "",
       name: props.game.gameBrandEN,
@@ -283,157 +280,6 @@ async function setUpExcutables() {
   executablesLoading.value = false;
 }
 
-// async function setupEnvOld() {
-//   // ------ Lutris Setup ------
-//   if (props.game.inLutrisDB) {
-//     const cachedConfig = gameStore.lutrisDB.getPerGameConfig(props.game);
-
-//     gameConfig.lutrisPrefix = props.game.lutrisPrefix;
-//     if (!gameConfig.lutrisPrefix) {
-//       if (
-//         gameStore.lutrisDB.winePrefixes.includes(
-//           gameStore.config.value.lutrisDefaultWinePrefix
-//         )
-//       ) {
-//         gameConfig.lutrisPrefix =
-//           gameStore.config.value.lutrisDefaultWinePrefix;
-//       } else {
-//         gameConfig.lutrisPrefix = gameStore.lutrisDB.winePrefixes[0];
-//       }
-//     }
-
-//     gameConfig.lutrisRunner = props.game.lutrisRunner;
-//     if (cachedConfig.wine && cachedConfig.wine.version)
-//       gameConfig.lutrisRunner = cachedConfig.wine.version;
-//     else if (
-//       gameStore.lutrisDB.wineRunners.includes(
-//         gameStore.config.value.lutrisDefaultWineRunner
-//       )
-//     )
-//       gameConfig.lutrisRunner = gameStore.config.value.lutrisDefaultWineRunner;
-//     else {
-//       gameConfig.lutrisRunner = gameStore.lutrisDB.wineRunners[0];
-//     }
-
-//     if (cachedConfig.system && cachedConfig.system.locale)
-//       gameConfig.locale = cachedConfig.system.locale;
-//     else if (gameStore.config.value.defaultLocale)
-//       gameConfig.locale = gameStore.config.value.defaultLocale;
-//     else gameConfig.locale = "ja_JP.utf8";
-//   } else {
-//     if (
-//       gameStore.lutrisDB.winePrefixes.includes(
-//         gameStore.config.value.lutrisDefaultWinePrefix
-//       )
-//     ) {
-//       console.log(
-//         `${gameStore.config.value.lutrisDefaultWinePrefix} in ${gameStore.lutrisDB.winePrefixes}`
-//       );
-//       gameConfig.lutrisPrefix = gameStore.config.value.lutrisDefaultWinePrefix;
-//     } else {
-//       console.log(
-//         `${gameStore.config.value.lutrisDefaultWinePrefix} not in ${gameStore.lutrisDB.winePrefixes}`
-//       );
-//       gameConfig.lutrisPrefix = gameStore.lutrisDB.winePrefixes[0];
-//     }
-
-//     if (
-//       gameStore.lutrisDB.wineRunners.includes(
-//         gameStore.config.value.lutrisDefaultWineRunner
-//       )
-//     )
-//       gameConfig.lutrisRunner = gameStore.config.value.lutrisDefaultWineRunner;
-//     else gameConfig.lutrisRunner = gameStore.lutrisDB.wineRunners[0];
-
-//     if (gameStore.config.value.defaultLocale)
-//       gameConfig.locale = gameStore.config.value.defaultLocale;
-//     // else gameConfig.locale = "ja_JP.utf8";
-//   }
-
-//   allLutrisCategories.value = Object.keys(
-//     gameStore.lutrisDB.lutrisCategories
-//   ).sort();
-//   gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
-//     props.game
-//   );
-//   if (
-//     gameConfig.lutrisCategories.length === 0 &&
-//     allLutrisCategories.value.includes("Gal")
-//   )
-//     gameConfig.lutrisCategories.push("Gal");
-
-//   // ------ Heroic Setup ------
-//   if (props.game.inHeroicDB) {
-//     const cachedConfig = gameStore.heroicDB.getPerGameConfig(props.game);
-
-//     gameConfig.heroicPrefix = cachedConfig.game.prefix.split("/").pop();
-
-//     if (cachedConfig.wine && cachedConfig.wine.version)
-//       gameConfig.heroicRunner = cachedConfig.wine.version;
-//     else if (
-//       gameStore.heroicDB.wineRunners.includes(
-//         gameStore.config.value.heroicDefaultWineRunner
-//       )
-//     )
-//       gameConfig.heroicRunner = gameStore.config.value.heroicDefaultWineRunner;
-//     else gameConfig.heroicRunner = gameStore.heroicDB.wineRunners[0];
-
-//     if (cachedConfig.system && cachedConfig.system.locale)
-//       gameConfig.locale = cachedConfig.system.locale;
-//     else if (gameStore.config.value.locale)
-//       gameConfig.locale = gameStore.config.value.locale;
-//     else gameConfig.locale = "ja_JP.utf8";
-//   } else {
-//     if (
-//       gameStore.lutrisDB.winePrefixes.includes(
-//         gameStore.config.value.lutrisDefaultWinePrefix
-//       )
-//     ) {
-//       console.log(
-//         `${gameStore.config.value.lutrisDefaultWinePrefix} in ${gameStore.lutrisDB.winePrefixes}`
-//       );
-//       gameConfig.lutrisPrefix = gameStore.config.value.lutrisDefaultWinePrefix;
-//     } else {
-//       console.log(
-//         `${gameStore.config.value.lutrisDefaultWinePrefix} not in ${gameStore.lutrisDB.winePrefixes}`
-//       );
-//       gameConfig.lutrisPrefix = gameStore.lutrisDB.winePrefixes[0];
-//     }
-
-//     if (
-//       gameStore.lutrisDB.wineRunners.includes(
-//         gameStore.config.value.lutrisDefaultWineRunner
-//       )
-//     )
-//       gameConfig.lutrisRunner = gameStore.config.value.lutrisDefaultWineRunner;
-//     else gameConfig.lutrisRunner = gameStore.lutrisDB.wineRunners[0];
-
-//     if (gameStore.config.value.locale)
-//       gameConfig.locale = gameStore.config.value.locale;
-//     // else gameConfig.locale = "ja_JP.utf8";
-//   }
-
-//   allLutrisCategories.value = Object.keys(
-//     gameStore.lutrisDB.lutrisCategories
-//   ).sort();
-//   gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
-//     props.game
-//   );
-//   if (
-//     gameConfig.lutrisCategories.length === 0 &&
-//     allLutrisCategories.value.includes("Gal")
-//   )
-//     gameConfig.lutrisCategories.push("Gal");
-
-//   // Steam
-//   allSteamCategories.value = gameStore.steamDB.steamCategoriesNames.sort();
-//   gameConfig.steamCategories = gameStore.steamDB.categoriesForGame(props.game);
-//   if (
-//     gameConfig.steamCategories.length === 0 &&
-//     allSteamCategories.value.includes("Gal")
-//   )
-//     gameConfig.steamCategories.push("Gal");
-// }
 
 async function setupEnv() {
   // setup categories, prefix, runner, locale, launcher
@@ -1149,103 +995,6 @@ async function openVNDBLink(id: string) {
           </v-select>
         </v-row>
 
-        <!-- ------------------------- Steam Categories / Steam Controller Layout ------------------------------- -->
-        <!-- <v-row class="flex-grow-0 flex-nowrap">
-          <v-select
-            label="Steam Categories"
-            density="compact"
-            clearable
-            chips
-            closable-chips
-            hide-selected
-            multiple
-            :items="allSteamCategories"
-            v-model="gameConfig.steamCategories"
-            variant="outlined"
-            prepend-icon="$mdiSteam"
-            clear-icon="$mdiBackspaceOutline"
-            :menu-props="{ transition: 'slide-y-transition' }"
-            class="vn-title-textinput"
-            style="max-width: calc(100% - 180px)"
-          />
-        </v-row> -->
-
-        <!-- ------------------------- Lutris Categories / Locale ------------------------------- -->
-        <!-- <v-row class="flex-grow-0 flex-nowrap">
-          <v-select
-            label="Lutris Categories"
-            density="compact"
-            clearable
-            chips
-            closable-chips
-            hide-selected
-            multiple
-            :items="allLutrisCategories"
-            v-model="gameConfig.lutrisCategories"
-            variant="outlined"
-            prepend-icon="$mdiTagMultiple"
-            clear-icon="$mdiBackspaceOutline"
-            :menu-props="{ transition: 'slide-y-transition' }"
-            class="vn-title-textinput"
-            style="max-width: calc(100% - 180px)"
-          /> -->
-
-        <!-- <div style="width: 20px"></div>
-
-          <v-select
-            label="Locale"
-            density="compact"
-            :items="['ja_JP.utf8', 'zh_CN.utf8', 'zh_HK.utf8', 'en_US.utf8']"
-            v-model="gameConfig.locale"
-            :item-title="(item) => item.slice(3, -5)"
-            :item-value="(item) => item"
-            variant="outlined"
-            prepend-icon="$mdiWeb"
-            :menu-props="{ transition: 'slide-y-transition' }"
-            class="vn-title-textinput"
-            style="max-width: 178px"
-          >
-            <template #prepend-inner>
-              <img :src="`icons/${gameConfig.locale}.svg`" />
-            </template>
-            <template #item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.raw.slice(3, -5)">
-                <template #prepend>
-                  <img :src="`icons/${item.raw}.svg`" class="mr-3" />
-                </template>
-              </v-list-item>
-            </template>
-          </v-select> -->
-        <!-- </v-row> -->
-
-        <!-- ------------------------- Wine Prefix / Runners ------------------------------- -->
-        <!-- <v-row class="flex-grow-0 flex-nowrap">
-          <v-select
-            label="Wine Prefix"
-            density="compact"
-            :items="gameStore.lutrisDB.winePrefixes"
-            v-model="gameConfig.winePrefix"
-            variant="outlined"
-            prepend-icon="$mdiPackageVariantClosed"
-            :menu-props="{ transition: 'slide-y-transition' }"
-            class="vn-title-textinput"
-            style="max-width: calc(50% - 10px) !important"
-          />
-
-          <div style="width: 20px"></div>
-
-          <v-select
-            label="Wine Runner"
-            density="compact"
-            :items="gameStore.lutrisDB.wineRunners"
-            v-model="gameConfig.wineRunner"
-            variant="outlined"
-            prepend-icon="$customWineEmptyVariant"
-            :menu-props="{ transition: 'slide-y-transition' }"
-            class="vn-title-textinput"
-            style="max-width: calc(50% - 10px)"
-          />
-        </v-row> -->
 
         <!-- ------------------------- Executable Selection ------------------------------- -->
         <v-row>

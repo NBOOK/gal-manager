@@ -38,20 +38,12 @@ const databaseBtn = computed(() => {
       action: () => {},
     };
   } else if (props.game.linked) {
-    // console.log(
-    //   props.game.gameName,
-    //   "Lutris: ",
-    //   props.game.inLutrisDB,
-    //   ", Steam: ",
-    //   props.game.inSteamDB
-    // );
     if (props.game.inDatabase === 1) {
       return {
         icon: "$mdiDatabase",
         iconHover: "$mdiDatabaseEdit",
         color: "green",
         readonly: false,
-        // action: () => props.game.removeDB(),
         action: () => gameStore.dbEditList.push(props.game),
       };
     } else if (props.game.inDatabase === 2) {
@@ -154,7 +146,6 @@ const cloudBtn = computed(() => {
         color: "red",
         colorHover: "red",
         readonly: true,
-        // action: () => (props.game.inNetDisk = true), // @TODO: 上传到云端
         action: () => {},
       };
     } else {
@@ -180,7 +171,6 @@ const storageBtn = computed(() => {
       hoverColor: "green",
       readonly: false,
       action: () => {}, // handled by dialog action
-      // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
     };
   } else if (gameStore.fileOperatable && props.game.inDeck) {
     return {
@@ -190,7 +180,6 @@ const storageBtn = computed(() => {
       hoverColor: "green",
       readonly: false,
       action: () => {},
-      // action: async () => await props.game.deleteLocal(), // @TODO: 移除本地存储
     };
   } else {
     return {
@@ -203,24 +192,6 @@ const storageBtn = computed(() => {
     };
   }
 });
-
-// const moveBtn = computed(() => {
-//   if (props.game.inDeck || props.game.inSDCard) {
-//     return {
-//       icon: "$mdiFolderMove",
-//       color: "green",
-//       readonly: false,
-//       action: () => {},
-//     };
-//   } else {
-//     return {
-//       icon: "$mdiFolderMove",
-//       color: "blue-grey",
-//       readonly: true,
-//       action: () => {},
-//     };
-//   }
-// });
 
 const selectBtn = computed(() => {
   return {
@@ -257,14 +228,6 @@ const platformBtn = computed(() => {
     action: () => "",
   };
 });
-
-// const starBtn = computed(() => {
-//   return {
-//     icon: props.game.starred ? "$mdiStar" : "$mdiStarOutline",
-//     color: "amber",
-//     action: () => (props.game.starred = !props.game.starred),
-//   };
-// });
 
 const syncChecking = ref(false);
 const syncBtn = computed(() => {
@@ -318,24 +281,6 @@ function pushToDownloadList(target: string) {
 <template>
   <!-- 右侧按钮 -->
   <div class="game-controls">
-    <!-- Dummy Placeholder -->
-    <!-- <v-btn icon size="x-small" variant="text" class="invisible"></v-btn>
-    <v-btn icon size="x-small" variant="text" class="invisible"></v-btn> -->
-
-    <!-- Star Button -->
-    <!-- <v-btn
-      class="invisible"
-      icon
-      size="x-small"
-      variant="text"
-      @click="starBtn.action"
-    >
-      <v-icon
-        :icon="starBtn.icon"
-        :color="starBtn.color"
-        size="x-large"
-      ></v-icon>
-    </v-btn> -->
 
     <!-- Select Button -->
     <v-btn icon size="x-small" variant="text" @click="selectBtn.action">
@@ -503,13 +448,6 @@ function pushToDownloadList(target: string) {
                   <v-icon variant="text">$mdiMicroSd</v-icon>
                 </v-btn>
 
-                <!-- <v-btn
-                  @click="
-                    pushToDownloadList(gameStore.config.value.gamesUSBPath)
-                  "
-                >
-                  <v-icon variant="text">$mdiUsb</v-icon>
-                </v-btn> -->
               </v-btn-group>
             </v-sheet>
           </v-menu>
@@ -618,46 +556,6 @@ function pushToDownloadList(target: string) {
       ></v-icon>
     </v-btn>
 
-    <!-- Move Button -->
-    <!-- <v-btn icon size="x-small" variant="text" :readonly="moveBtn.readonly">
-      <v-icon
-        :icon="moveBtn.icon"
-        :color="moveBtn.color"
-        size="x-large"
-      ></v-icon>
-      <v-menu
-        activator="parent"
-        scroll-strategy="close"
-        transition="slide-x-reverse-transition"
-        location="start center"
-        origin="end center"
-      >
-        <v-sheet rounded="lg">
-          <v-btn-group density="compact">
-            <v-btn
-              v-if="!game.inDeck"
-              @click="pushToDownloadList(gameStore.config.value.gamesDataPath)"
-            >
-              <v-icon variant="text">$mdiGamepadSquare</v-icon>
-            </v-btn>
-
-            <v-btn
-              v-if="!game.inSDCard"
-              @click="pushToDownloadList(gameStore.config.value.gamesSDPath)"
-            >
-              <v-icon variant="text">$mdiMicroSd</v-icon>
-            </v-btn>
-
-            <v-btn
-              v-if="!game.inUSB"
-              @click="pushToDownloadList(gameStore.config.value.gamesUSBPath)"
-            >
-              <v-icon variant="text">$mdiUsb</v-icon>
-            </v-btn>
-          </v-btn-group>
-        </v-sheet>
-      </v-menu>
-    </v-btn> -->
   </div>
 </template>
 

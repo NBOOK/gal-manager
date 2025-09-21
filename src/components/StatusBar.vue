@@ -5,7 +5,6 @@ import utils from "@/modules/utils";
 import CloudIcon from "@/icons/CloudIcon.vue";
 import GamePadIcon from "@/icons/GamePadIcon.vue";
 import SDCardIcon from "@/icons/SDCardIcon.vue";
-// import USBIcon from "@/icons/USBIcon.vue";
 
 const gameStore = useGameStore();
 
@@ -86,13 +85,9 @@ watch(
           }}
           games
         </span>
-        <!-- <USBIcon :fillPercentage="1" class="storage-icon" /> -->
       </template>
 
-      <!-- <v-app-bar-title>Application Bar</v-app-bar-title> -->
-
       <template v-slot:append>
-        <!-- <v-btn icon="$mdiMagnify"></v-btn> -->
         <v-row
           v-if="Object.values(gameStore.selectedGames).length > 0"
           class="ma-0 text-truncate"

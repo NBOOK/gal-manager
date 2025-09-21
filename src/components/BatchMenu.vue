@@ -40,16 +40,6 @@ function pushAllToDownloadList(target: string) {
 }
 
 async function pushAlltoSyncList() {
-  // gameStore.syncManager.syncing = true;
-  // const syncManagers = await Promise.all(
-  //   gameStore.selectedGames.map(async (game) => await game.getSyncManager())
-  // );
-  // const validSyncManagers = syncManagers.filter(
-  //   (manager) => manager && manager?.FileSyncers.length > 0
-  // ) as DirSyncer[];
-  // if (validSyncManagers.length > 0) {
-  //   gameStore.syncManager.syncList.push(...validSyncManagers);
-  // }
   gameStore.gamesToSync.push(...gameStore.selectedGames);
 }
 
@@ -213,14 +203,6 @@ async function deleteAllSelectedGames() {
                   >
                     <v-icon size="x-large">$mdiMicroSd</v-icon>
                   </v-btn>
-
-                  <!-- <v-btn
-                    @click="
-                      pushAllToDownloadList(gameStore.config.value.gamesUSBPath)
-                    "
-                  >
-                    <v-icon size="x-large">$mdiUsb</v-icon>
-                  </v-btn> -->
                 </v-btn-group>
               </v-sheet>
             </v-menu>
@@ -281,14 +263,6 @@ async function deleteAllSelectedGames() {
                   >
                     <v-icon size="x-large">$mdiMicroSd</v-icon>
                   </v-btn>
-
-                  <!-- <v-btn
-                    @click="
-                      pushAllToDownloadList(gameStore.config.value.gamesUSBPath)
-                    "
-                  >
-                    <v-icon size="x-large">$mdiUsb</v-icon>
-                  </v-btn> -->
                 </v-btn-group>
               </v-sheet>
             </v-menu>

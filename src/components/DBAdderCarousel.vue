@@ -34,19 +34,6 @@ function setPageGame(direction: "forward" | "backward" = "forward") {
           break;
       }
     }
-    // if (processed.value + 2 < gameStore.dbEditList.length) {
-    //   switch (page.value) {
-    //     case 0:
-    //       page2Game.value = gameStore.dbEditList[processed.value + 2];
-    //       break;
-    //     case 1:
-    //       page0Game.value = gameStore.dbEditList[processed.value + 2];
-    //       break;
-    //     case 2:
-    //       page1Game.value = gameStore.dbEditList[processed.value + 2];
-    //       break;
-    //   }
-    // }
   }
   if (direction === "backward") {
     if (processed.value - 1 >= 0) {
@@ -62,19 +49,6 @@ function setPageGame(direction: "forward" | "backward" = "forward") {
           break;
       }
     }
-    // if (processed.value - 2 >= 0) {
-    //   switch (page.value) {
-    //     case 0:
-    //       page1Game.value = gameStore.dbEditList[processed.value - 2];
-    //       break;
-    //     case 1:
-    //       page2Game.value = gameStore.dbEditList[processed.value - 2];
-    //       break;
-    //     case 2:
-    //       page0Game.value = gameStore.dbEditList[processed.value - 2];
-    //       break;
-    //   }
-    // }
   }
 }
 
@@ -179,12 +153,6 @@ watch(
           @abort="abort"
         />
       </v-carousel>
-      <!-- <br /> -->
-      <!-- <div class="d-flex justify-space-evenly align-center">
-        <v-btn icon="$mdiChevronLeft" @click.stop="abort"></v-btn>
-        <div class="text-h5" style="color: white">{{ page }}</div>
-        <v-btn icon="$mdiChevronRight" @click.stop="proceed"></v-btn>
-      </div> -->
     </v-container>
   </v-overlay>
 </template>

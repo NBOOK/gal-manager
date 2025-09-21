@@ -51,7 +51,6 @@ class SteamDB {
     this.steamShortcutPath = config.steam.shortcutPath;
     this.steamGridPath = config.steam.gridPath;
     this.linkLowRes = config.assetsLinkLowRes;
-    // this.steamLaunchOptionsPrefix = config.steamLaunchOptionsPrefix;
     this.steamControllerConfigPath = config.steam.controllerConfigPath;
     this.steamControllerTemplatePath = config.steam.controllerTemplatePath;
     this.steamLocalConfigPath = config.steam.localConfigPath;
@@ -110,7 +109,7 @@ class SteamDB {
       "readVDF",
       this.steamLocalConfigPath
     );
-    // console.log("localConfigVDF", this.localConfigVDF);
+    
     this.nonSteamCategories = JSON.parse(
       this.localConfigVDF.UserLocalConfigStore.WebStorage[
         "user-collections"
@@ -201,8 +200,6 @@ class SteamDB {
   }
 
   async addGame(game: GameEntry, gameConfig: GameConfig) {
-    // this.taskQueue.push({ action: "add", game });
-    // this.processQueue(); // @TOCHECK should we await this?
     await this.mutex.runExclusive(
       async () => await this._addGame(game, gameConfig)
     );
@@ -328,41 +325,6 @@ class SteamDB {
     }
   }
 
-  // getAppID(gameOrGameNameEN: GameEntry | string): number {
-  //   let gameNameEN: string;
-  //   if (typeof gameOrGameNameEN === "string") {
-  //     gameNameEN = gameOrGameNameEN;
-  //   } else {
-  //     gameNameEN = gameOrGameNameEN.gameNameEN;
-  //   }
-  //   const exe = "/usr/bin/flatpak";
-  //   const uniqueID = exe + gameNameEN;
-  //   const encoder = new TextEncoder();
-  //   const data = encoder.encode(uniqueID);
-
-  //   function crc32(buf: Uint8Array): number {
-  //     const table = Array.from({ length: 256 }, (_, k) => {
-  //       let c = k;
-  //       for (let j = 0; j < 8; j++) {
-  //         c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-  //       }
-  //       return c >>> 0;
-  //     });
-
-  //     let crc = 0xffffffff;
-  //     for (const byte of buf) {
-  //       crc = table[(crc ^ byte) & 0xff] ^ (crc >>> 8);
-  //     }
-
-  //     return (crc ^ 0xffffffff) >>> 0;
-  //   }
-
-  //   const crc32Result = crc32(data);
-  //   const appID = (crc32Result | 0x80000000) >>> 0;
-  //   console.log(`AppID for ${uniqueID}: ${appID}`);
-  //   return appID;
-  // }
-
   getAppID(gameOrGameNameSlug: GameEntry | string): number {
     let gameNameSlug: string;
     if (typeof gameOrGameNameSlug === "string") {
@@ -468,15 +430,7 @@ class SteamDB {
     if (!this.shortcutVDF || !this.shortcutVDF.shortcuts) {
       return -1;
     }
-    // const launchOptions = this.steamLaunchOptionsPrefix + gameNameSlug;
-    // const keys = Object.keys(this.shortcutVDF.shortcuts);
-    // for (const key of keys) {
-    //   if (
-    //     (this.shortcutVDF.shortcuts as Record<string, any>)[key].AppName === gameNameEN
-    //   ) {
-    //     return key;
-    //   }
-    // }
+    
     if (this.steamGameIndices[game.gameNameEN] !== undefined) {
       return this.steamGameIndices[game.gameNameEN];
     }

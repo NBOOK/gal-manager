@@ -7,7 +7,6 @@ import { FileSyncer } from "@/modules/Synchronizer";
 const gameStore = useGameStore();
 
 const props = defineProps<{ manager: SyncManager }>();
-// const props.manager = props.props.manager;
 
 const currentScanningGame = ref<string>("");
 const scannedGames = ref<number>(0);
@@ -34,14 +33,9 @@ const totalSize = computed(() => {
       dirSyncer.fileSyncers.reduce(
         (accFile: number, fileSyncer: FileSyncer) => {
           try {
-            // console.log(fileSyncer);
             if (fileSyncer.behavior.startsWith("delete"))
               // no file copy here
               return accFile;
-            // if (!fileSyncer.fileInfoL)
-            //   return accFile + fileSyncer.fileInfoR!.size;
-            // else if (!fileSyncer.fileInfoR)
-            //   return accFile + fileSyncer.fileInfoL!.size;
             else if (fileSyncer.behavior.endsWith("R"))
               // from left to right
               return accFile + fileSyncer.fileInfoL!.size;
@@ -70,8 +64,6 @@ const allFileSyncers = computed(() => {
   }, []) as FileSyncer[];
 });
 
-// const currentSyncingGame = ref<string>("");
-// const syncedGames = ref<number>(0);
 const syncedFiles = ref<number>(0);
 
 const displayedBehaviors = ref([
@@ -323,8 +315,6 @@ async function syncAll() {
     }
   );
 
-  // console.log(sortedFileSyncers);
-
   const timer = setInterval(() => {
     elapsedTime.value++;
   }, 1000);
@@ -336,12 +326,6 @@ async function syncAll() {
     syncedFiles.value++;
     if (abort.value) break;
   }
-  // for (const dirSyncer of props.manager.syncList) {
-  //   currentSyncingGame.value = dirSyncer.dirName;
-  //   await dirSyncer.syncAll();
-  //   syncedGames.value++;
-  //   if (abort.value) break;
-  // }
 
   clearInterval(timer);
 
@@ -652,7 +636,7 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
               behaviorIconDirection(currentFileSyncer?.behavior)
             }}</v-icon>
           </v-progress-circular>
-          <!-- <span>{{ currentSyncingFilePath }}</span> -->
+
           <span class="text-truncate mr-2">
             {{ currentSyncingFilePath }}
           </span>
@@ -662,7 +646,6 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
             /
             {{ utils.formatSize(currentSyncingFileSize) }}
           </span>
-          <!-- <span>&nbsp;({{ currentSyncingFileProgress }}%)</span> -->
         </v-row>
         <v-progress-linear
           :model-value="syncedSize"
@@ -671,10 +654,7 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
           stream
           color="green"
         ></v-progress-linear>
-        <!-- {{ utils.formatSize(syncedSize) }} /
-            {{ utils.formatSize(totalSize) }}
-            ・ in
-            {{ utils.formatTime(remainingTime) }} -->
+
         <v-row
           class="text-caption text-medium-emphasis ma-0 justify-space-between position-relative"
         >
@@ -715,18 +695,6 @@ function mouseDownHandler(event: MouseEvent, item: FileSyncer) {
         class="flex-grow-1 ml-3"
         >Sync Changes</v-btn
       >
-      <!-- <v-btn
-          variant="outlined"
-          icon
-          rounded
-          height="36"
-          width="36"
-          color="grey"
-          @click="props.manager.managerOpen = false"
-          class="flex-grow-0 mx-3"
-        >
-          <v-icon icon="$mdiPageLast" style="transform: rotate(90deg)" />
-        </v-btn> -->
     </v-row>
   </v-sheet>
   <v-menu v-model="contextMenuOpen" :target="currentCursorPos">

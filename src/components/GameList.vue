@@ -32,8 +32,6 @@ function showScrollCover() {
 
 onMounted(() => {
   window.addEventListener("resize", updateContentHeight);
-  // virtualScrollRef.value?.$el.addEventListener("wheel", hideScrollCover);
-  // virtualScrollRef.value?.$el.addEventListener("touchmove", hideScrollCover);
 });
 
 onUnmounted(() => {

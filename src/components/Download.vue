@@ -2,7 +2,6 @@
 import { computed, ref, watch } from "vue";
 import { useGameStore } from "@/store/global-store";
 import utils from "@/modules/utils";
-// import GameEntry from "@/modules/GameEntry";
 const gameStore = useGameStore();
 
 const pathIconMap: { [key: string]: string } = {
@@ -15,11 +14,7 @@ const pathIconMap: { [key: string]: string } = {
 const downloading = ref(false);
 
 const lastUpdateTime = ref(0);
-// const remainingTime = ref(0); // seconds
 const incrementSinceLastUpdate = ref(0);
-// const deltaProgressOfUpdates = ref<number[]>([]);
-
-// const avgDeltaProgressPerMs = ref(0);
 
 const totalSize = computed(() =>
   gameStore.downloadList.reduce((acc, item) => acc + item.game.diskUsage, 0)
@@ -77,30 +72,6 @@ window.ipcRenderer.on("copy-progress", (_event, { increment }) => {
     }
 
     incrementSinceLastUpdate.value = 0;
-
-    // const deltaProgress =
-    //   (incrementSinceLastUpdate.value / currentGame.value.diskUsage) * 100;
-    // currentItem.value.progress += deltaProgress;
-
-    // const deltaProgressPerMs =
-    //   deltaProgress / (currentTime - lastUpdateTime.value);
-
-    // deltaProgressOfUpdates.value.push(deltaProgressPerMs);
-    // if (deltaProgressOfUpdates.value.length > 15) {
-    //   deltaProgressOfUpdates.value.shift();
-    // }
-    // avgDeltaProgressPerMs.value =
-    //   deltaProgressOfUpdates.value.reduce((acc, val) => acc + val, 0) /
-    //   deltaProgressOfUpdates.value.length;
-
-    // remainingTime.value = Math.round(
-    //   (100 - currentItem.value.progress) /
-    //     Math.max(avgDeltaProgressPerMs.value, 0.0001) /
-    //     1000
-    // );
-    // if (remainingTime.value < 0) remainingTime.value = 0;
-    // lastUpdateTime.value = currentTime;
-    // incrementSinceLastUpdate.value = 0;
   }
 });
 
@@ -129,9 +100,6 @@ async function downloadAll() {
     await currentItem.value.game.downloadTo(currentItem.value.target);
 
     currentItem.value.progress = 100; // sometimes the progress is not 100%
-    // lastUpdateTime.value = 0;
-    // remainingTime.value = 0;
-    // deltaProgressOfUpdates.value = [];
     console.log(
       "Downloaded",
       currentIndex.value,
@@ -176,8 +144,6 @@ watch(
         size="small"
         icon="$mdiDownload"
       />
-      <!-- <v-btn icon>
-      <v-icon icon="$mdiDownload" /> -->
       <v-menu
         v-if="gameStore.downloadList.length"
         activator="parent"
@@ -189,7 +155,6 @@ watch(
         @update:model-value="scrollIntoCurrentGame()"
       >
         <v-list max-width="800" min-width="400" max-height="500">
-          <!-- <div>Download List</div> -->
           <v-list-item
             v-for="(item, index) in gameStore.downloadList"
             :key="index"

@@ -9,7 +9,6 @@ defineProps<{ game: GameEntry }>(); // use props.game to access the game object
 </script>
 
 <template>
-  <!-- <div class="game-item"> -->
   <v-sheet
     rounded="lg"
     elevation="3"
