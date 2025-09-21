@@ -6,14 +6,10 @@ declare global {
     isFile: boolean;
     isSymbolicLink: boolean;
     symbolicTarget: string;
-    // diskUsage: number;
     size: number;
     createdTime: number;
     modifiedTime: number;
   }
-  // let GameEntryVar: typeof GameEntry;
-  // let ImageAssetsVar: typeof ImageAssets;
-  // let SteamDBVar: typeof SteamDB;
 
   interface HTMLElement {
     __resizeObserver__?: ResizeObserver;

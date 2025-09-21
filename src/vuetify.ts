@@ -239,10 +239,6 @@ const vuetify = createVuetify({
     defaultSet: "mdi",
     aliases: {
       ...aliasesCustom,
-      // ...aliases,
-      // account: mdiAccount,
-      // customWineEmpty: customWineEmpty,
-      // customWineFill: customWineFill,
     },
     sets: {
       mdi,

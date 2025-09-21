@@ -40,9 +40,13 @@ function fieldRequired(value: string) {
 function endsWithSlash(path: string) {
   return !path.endsWith("/") || "Path must not ends with a slash";
 }
-// function sameSteamID(value: string) {
-//   return value.includes(config.value.steam.id) || "Steam ID must be the same";
-// }
+function sameSteamID(value: string) {
+  return (
+    value.includes("<STEAM_ID>") ||
+    value.includes(config.value.steam.id) ||
+    "Steam ID must be the same"
+  );
+}
 
 const wineRunners = ref(["default"]);
 const winePrefixes = ref(["default"]);
@@ -51,17 +55,13 @@ watch(
   () => config.value.wineRunnerPath,
   async () => {
     wineRunners.value = await getWineRunners();
-    // formRef.value?.validate();
   }
-  //   { immediate: true }
 );
 watch(
   () => config.value.winePrefixPath,
   async () => {
     winePrefixes.value = await getWinePrefixes();
-    // formRef.value?.validate();
   }
-  //   { immediate: true }
 );
 
 watch(
@@ -376,7 +376,7 @@ async function saveAndRestart() {
               v-if="config.steam"
               v-model="config.steam.shortcutPath"
               label="Steam Shortcuts Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, sameSteamID]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -386,7 +386,7 @@ async function saveAndRestart() {
               v-if="config.steam"
               v-model="config.steam.localConfigPath"
               label="Steam Local Config Path"
-              :rules="[fieldRequired, pathMustExist]"
+              :rules="[fieldRequired, pathMustExist, sameSteamID]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -396,7 +396,12 @@ async function saveAndRestart() {
               v-if="config.steam"
               v-model="config.steam.gridPath"
               label="Steam Grid Path"
-              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
+              :rules="[
+                fieldRequired,
+                pathMustExist,
+                endsWithSlash,
+                sameSteamID,
+              ]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -406,7 +411,12 @@ async function saveAndRestart() {
               v-if="config.steam"
               v-model="config.steam.onlineCategoryPath"
               label="Steam LevelDB Path"
-              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
+              :rules="[
+                fieldRequired,
+                pathMustExist,
+                endsWithSlash,
+                sameSteamID,
+              ]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -426,7 +436,12 @@ async function saveAndRestart() {
               v-if="config.steam"
               v-model="config.steam.controllerConfigPath"
               label="Steam Controller Configurations Path"
-              :rules="[fieldRequired, pathMustExist, endsWithSlash]"
+              :rules="[
+                fieldRequired,
+                pathMustExist,
+                endsWithSlash,
+                sameSteamID,
+              ]"
               :spellcheck="false"
               variant="outlined"
               density="compact"
@@ -435,15 +450,6 @@ async function saveAndRestart() {
 
             <v-divider :thickness="3" class="mb-5"></v-divider>
 
-            <!-- <v-text-field
-              v-model="config.steamLaunchOptionsPrefix"
-              label="Steam Launch Option Prefix"
-              :rules="[fieldRequired]"
-              :spellcheck="false"
-              variant="outlined"
-              density="compact"
-              class="mb-1"
-            /> -->
             <v-text-field
               v-if="config.lutris"
               v-model="config.lutris.steamTargetPath"

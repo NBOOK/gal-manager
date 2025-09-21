@@ -12,7 +12,6 @@ export function gameEntrySetStore() {
 
 class GameEntry {
   basePath: string = "";
-  // folderName: string = "";
   gameBrand: string = "";
   gameBrandEN: string = "";
   gameName: string = "";
@@ -20,7 +19,6 @@ class GameEntry {
   gameNameSlug: string = "";
   gameReleaseYear: string = "";
   platform: string = "";
-  // launcher: string = ""; // "Lutris" | "Heroic" | ""
   createdTime: number = 0;
   modifiedTime: number = 0;
   diskUsage: number = 0;
@@ -123,9 +121,6 @@ class GameEntry {
 
   async setup(entry: DirEntry) {
     this.basePath = entry.basePath; // Home | Data | SD | Net
-    // if (entry.symbolicTarget) {
-    // handled in Loading.vue
-    // }
     if (entry.name.includes(" ‐ ")) this.splitter = " ‐ ";
     if (!entry.name.includes(this.splitter)) {
       throw new Error(
@@ -150,7 +145,6 @@ class GameEntry {
       this.splitter
     );
 
-    // this.inLutrisDB = gameStore.lutrisDB.inDB(this);
     if (this.inLutrisDB) {
       const gameProperties = await gameStore.lutrisDB.getGameConfig(this);
       this.gameNameEN = gameProperties.gameNameEN;
@@ -177,7 +171,6 @@ class GameEntry {
       this.gameNameSlug = utils.slugify(this.gameNameEN);
       this.platform = "Unknown";
     }
-    // this.inSteamDB = gameStore.steamDB.inDB(this);
   }
 
   async refreshDiskUsage() {
@@ -310,15 +303,8 @@ class GameEntry {
       return;
     }
 
-    // const wasInDatabase = this.inDatabase > 0;
-    // const wasLinked = this.linked;
-
-    // if (wasInDatabase) {
-    //   await this.removeDB();
-    // }
-    // if (wasLinked) {
     await this.unlink(false);
-    // }
+
     const gameBasePaths = [
       gameStore.config.value.gamesDataPath,
       gameStore.config.value.gamesSDPath,
@@ -347,12 +333,8 @@ class GameEntry {
     this.gameName = newGameName;
     this.imageAssets.gameBrand = this.gameBrand;
     this.imageAssets.gameName = this.gameName;
-    // if (wasLinked) {
+
     await this.link(false);
-    // }
-    // if (wasInDatabase) {
-    //   await this.addDB(gameConfig);
-    // }
   }
 
   async downloadTo(target: string) {
@@ -380,21 +362,6 @@ class GameEntry {
       exclude
     );
     console.log(`Downloaded ${this.gamePath} to ${destination}`);
-
-    // // below is not needed anymore, as images are copied in syncImageAssets
-    // const assetsSource = this.imageAssets.assetsFolderPath;
-    // const assetsDestination = `${gameStore.config.value.gamesAssetsPath}/${this.folderName}/${gameStore.config.value.assetsFolderName}`;
-    // console.log(`Downloading ${assetsSource} to ${assetsDestination}...`);
-    // console.log(`Include: ${include}`);
-    // console.log(`Exclude: ${exclude}`);
-    // await window.ipcRenderer.invoke(
-    //   "start-copy",
-    //   assetsSource,
-    //   assetsDestination,
-    //   include,
-    //   exclude
-    // );
-    // console.log(`Downloaded ${assetsSource} to ${assetsDestination}`);
 
     await this.deleteLocal(); // when moving Data <==> SD, the old one should be deleted
 
@@ -468,18 +435,7 @@ class GameEntry {
     const localPath = this.gamePath;
 
     const exclude = [gameStore.config.value.assetsFolderName];
-    // const include = [
-    //   this.imageAssets.capsuleName,
-    //   this.imageAssets.headerName,
-    //   this.imageAssets.heroName,
-    //   this.imageAssets.logoName,
-    //   this.imageAssets.iconName,
-    //   this.imageAssets.capsuleSDName,
-    //   this.imageAssets.headerSDName,
-    //   this.imageAssets.heroSDName,
-    // ]
-    //   .filter((name) => name !== "")
-    //   .map((name) => `${gameStore.config.value.assetsFolderName}/${name}`);
+    
     let include: string[] = [];
     for (const asset of [
       gameStore.config.value.assetsCapsuleName,

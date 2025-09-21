@@ -53,15 +53,6 @@ async function saveAndScanBinds() {
 //
 
 const scannedDirNames = reactive({} as { [baseName: string]: string[] });
-// const excludedDirNames = computed(() => {
-//   const result = {} as { [baseName: string]: string[] };
-//   for (const baseName of Object.keys(syncConfig.value)) {
-//     result[baseName] = scannedDirNames[baseName].filter(
-//       (dirName) => !syncConfig.value[baseName].items.includes(dirName)
-//     );
-//   }
-//   return result;
-// });
 
 async function scanBindDirs() {
   for (const baseName of Object.keys(syncConfig.value)) {
@@ -115,17 +106,7 @@ async function scanDiffs() {
       );
     }
   }
-  // for (const bindName of Object.keys(syncConfig.value)) {
-  //   const config = syncConfig.value[bindName];
-  //   dirSyncers.push(
-  //     new DirSyncer(
-  //       config.remotePath,
-  //       config.localPath,
-  //       [],
-  //       excludedDirNames.value[bindName]
-  //     )
-  //   );
-  // }
+  
   await Promise.all(
     dirSyncers.map((dirSyncer) =>
       limit(async () => {

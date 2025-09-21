@@ -21,6 +21,10 @@ const ASSET_TYPES = [
 
 type AssetPaths = { [K in (typeof ASSET_TYPES)[number]]: string };
 
+function createAssetPath(basePath: string, fileName?: string): string {
+  return fileName ? `${basePath}/${fileName}` : "";
+}
+
 class ImageAssets {
   basePath: string = "";
   gameBrand: string = "";
@@ -36,10 +40,6 @@ class ImageAssets {
   heroSDName: string = "";
 
   game: GameEntry | null = null;
-
-  private _createAssetPath(basePath: string, fileName?: string): string {
-    return fileName ? `${basePath}/${fileName}` : "";
-  }
 
   get gameFolderName() {
     return `${this.gameBrand}${this.splitter}${this.gameName}`;
@@ -61,10 +61,7 @@ class ImageAssets {
   get originalPaths(): AssetPaths {
     return ASSET_TYPES.reduce((acc, type) => {
       const fileName = this[`${type}Name` as keyof this] as string | undefined;
-      acc[type] = this._createAssetPath(
-        this.assetsOriginalFolderPath,
-        fileName
-      );
+      acc[type] = createAssetPath(this.assetsOriginalFolderPath, fileName);
       return acc;
     }, {} as AssetPaths);
   }
@@ -76,81 +73,10 @@ class ImageAssets {
   get paths(): AssetPaths {
     return ASSET_TYPES.reduce((acc, type) => {
       const fileName = this[`${type}Name` as keyof this] as string | undefined;
-      acc[type] = this._createAssetPath(this.assetsFolderPath, fileName);
+      acc[type] = createAssetPath(this.assetsFolderPath, fileName);
       return acc;
     }, {} as AssetPaths);
   }
-
-  // get iconOriginalPath() {
-  //   return this.iconName
-  //     ? `${this.assetsOriginalFolderPath}/${this.iconName}`
-  //     : "";
-  // }
-  // get logoOriginalPath() {
-  //   return this.logoName
-  //     ? `${this.assetsOriginalFolderPath}/${this.logoName}`
-  //     : "";
-  // }
-  // get capsuleOriginalPath() {
-  //   return this.capsuleName
-  //     ? `${this.assetsOriginalFolderPath}/${this.capsuleName}`
-  //     : "";
-  // }
-  // get headerOriginalPath() {
-  //   return this.headerName
-  //     ? `${this.assetsOriginalFolderPath}/${this.headerName}`
-  //     : "";
-  // }
-  // get heroOriginalPath() {
-  //   return this.heroName
-  //     ? `${this.assetsOriginalFolderPath}/${this.heroName}`
-  //     : "";
-  // }
-  // get capsuleSDOriginalPath() {
-  //   return this.capsuleSDName
-  //     ? `${this.assetsOriginalFolderPath}/${this.capsuleSDName}`
-  //     : "";
-  // }
-  // get headerSDOriginalPath() {
-  //   return this.headerSDName
-  //     ? `${this.assetsOriginalFolderPath}/${this.headerSDName}`
-  //     : "";
-  // }
-  // get heroSDOriginalPath() {
-  //   return this.heroSDName
-  //     ? `${this.assetsOriginalFolderPath}/${this.heroSDName}`
-  //     : "";
-  // }
-  // get iconPath() {
-  //   return this.iconName ? `${this.assetsFolderPath}/${this.iconName}` : "";
-  // }
-  // get logoPath() {
-  //   return this.logoName ? `${this.assetsFolderPath}/${this.logoName}` : "";
-  // }
-  // get capsulePath() {
-  //   return this.capsuleName
-  //     ? `${this.assetsFolderPath}/${this.capsuleName}`
-  //     : "";
-  // }
-  // get headerPath() {
-  //   return this.headerName ? `${this.assetsFolderPath}/${this.headerName}` : "";
-  // }
-  // get heroPath() {
-  //   return this.heroName ? `${this.assetsFolderPath}/${this.heroName}` : "";
-  // }
-  // get capsuleSDPath() {
-  //   return this.capsuleSDName
-  //     ? `${this.assetsFolderPath}/${this.capsuleSDName}`
-  //     : "";
-  // }
-  // get headerSDPath() {
-  //   return this.headerSDName
-  //     ? `${this.assetsFolderPath}/${this.headerSDName}`
-  //     : "";
-  // }
-  // get heroSDPath() {
-  //   return this.heroSDName ? `${this.assetsFolderPath}/${this.heroSDName}` : "";
-  // }
 
   static async create(
     game: GameEntry,
@@ -166,7 +92,7 @@ class ImageAssets {
       gameName,
       splitter
     );
-    // await imageAssets.setGamePath(basePath, gameBrand, gameName);
+
     return imageAssets;
   }
 
@@ -311,12 +237,6 @@ class ImageAssets {
       heroSDName: this.heroSDName,
     };
 
-    // const generatedAssets: {[key: string]: string} = {
-    //   capsuleSDName: assets.capsuleSDName,
-    //   headerSDName: assets.headerSDName,
-    //   heroSDName: assets.heroSDName
-    // };
-
     await Promise.all([
       (async () => {
         if (assets.capsuleName && !assets.capsuleSDName) {
@@ -328,10 +248,6 @@ class ImageAssets {
             gameStore.config.value.assetsLowResFormat
           );
           assets.capsuleSDName = capsuleSDName;
-          // Update instance if working on default folder
-          // if (dirPath === this.assetsFolderPath) {
-          //   this.capsuleSDName = capsuleSDName;
-          // }
         }
       })(),
       (async () => {
@@ -344,10 +260,6 @@ class ImageAssets {
             gameStore.config.value.assetsLowResFormat
           );
           assets.headerSDName = headerSDName;
-          // Update instance if working on default folder
-          // if (dirPath === this.assetsFolderPath) {
-          //   this.headerSDName = headerSDName;
-          // }
         }
       })(),
       (async () => {
@@ -360,10 +272,6 @@ class ImageAssets {
             gameStore.config.value.assetsLowResFormat
           );
           assets.heroSDName = heroSDName;
-          // Update instance if working on default folder
-          // if (dirPath === this.assetsFolderPath) {
-          //   this.heroSDName = heroSDName;
-          // }
         }
       })(),
     ]);

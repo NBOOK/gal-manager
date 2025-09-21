@@ -94,8 +94,6 @@ class LutrisDB {
   }
 
   async addGame(game: GameEntry, gameConfig: GameConfig) {
-    // this.taskQueue.push({ action: "remove", game });
-    // this.processQueue(); // @TOCHECK should we await this?
     await this.mutex.runExclusive(
       async () => await this._addGame(game, gameConfig)
     );

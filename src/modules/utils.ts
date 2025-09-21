@@ -559,11 +559,6 @@ function releaseTitleCleaner(title: string, origTitle: string) {
     "i"
   );
 
-  // const suffixRegex = new RegExp(
-  //   `(?:\\s+-)?(?:\\s*${keywordPattern})+(?:\\s*-?\\s*)$`,
-  //   "i"
-  // );
-
   title = title.replace(suffixRegex, "").trim();
   let lastChar = title.at(-1);
   if (
@@ -919,39 +914,6 @@ function sortGames(
     }
   });
 }
-
-// function filterGamesByQuery(
-//   games: GameEntry[],
-//   searchQuery: string
-// ): GameEntry[] {
-//   if (searchQuery) {
-//     searchQuery = searchQuery.toLowerCase();
-//     if (searchQuery.includes("@n=")) {
-//       const nameQuery = searchQuery.split("@n=")[1].split("@b=")[0].trim();
-//       games = games.filter(
-//         (game) =>
-//           game.gameName.toLowerCase().includes(nameQuery) ||
-//           game.gameNameEN.toLowerCase().includes(nameQuery)
-//       );
-//     } else if (searchQuery.includes("@b=")) {
-//       const brandQuery = searchQuery.split("@b=")[1].split("@n=")[0].trim();
-//       games = games.filter(
-//         (game) =>
-//           game.gameBrand.toLowerCase().includes(brandQuery) ||
-//           game.gameBrandEN.toLowerCase().includes(brandQuery)
-//       );
-//     } else {
-//       games = games.filter(
-//         (game) =>
-//           game.gameName.toLowerCase().includes(searchQuery) ||
-//           game.gameNameEN.toLowerCase().includes(searchQuery) ||
-//           game.gameBrand.toLowerCase().includes(searchQuery) ||
-//           game.gameBrandEN.toLowerCase().includes(searchQuery)
-//       );
-//     }
-//   }
-//   return games;
-// }
 
 function filterGamesByFilter(
   games: GameEntry[],
