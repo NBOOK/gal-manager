@@ -1,13 +1,13 @@
 import GameEntry from "@/modules/GameEntry";
 import { Mutex } from "async-mutex";
-import { useGameStore } from "@/store/global-store";
-let gameStore: ReturnType<typeof useGameStore>;
+// import { useGameStore } from "@/store/global-store";
+// let gameStore: ReturnType<typeof useGameStore>;
 
-export function heroicDBSetStore() {
-  if (!gameStore) {
-    gameStore = useGameStore();
-  }
-}
+// export function heroicDBSetStore() {
+//   if (!gameStore) {
+//     gameStore = useGameStore();
+//   }
+// }
 
 class HeroicDB {
   private static instance: HeroicDB | null = null;
@@ -142,19 +142,19 @@ class HeroicDB {
       [game.gameNameSlug]: {},
     };
     if (gameConfig.heroicRunner !== "default") {
-      const runnerType = gameConfig.heroicRunner.split("-")[0]; // Proton | Wine
-      const runner = gameConfig.heroicRunner.split("-")[1];
-      const runnerName = `${runnerType} - ${gameConfig.heroicRunner}`;
+      let runnerType = gameConfig.heroicRunner.split("-")[0]; // Proton | Wine
+      const runner = gameConfig.heroicRunner; //.split("-").slice(1).join("-");
+      const runnerName = `${runnerType} - ${runner}`;
       const wineVersion: Record<string, any> = {
         type: runnerType.toLowerCase(), // "proton" | "wine"
         name: runnerName,
       };
-      if (runnerType === "wine") {
-        wineVersion.bin = `${gameStore.config.wineRunnerPath}/${runner}/bin/wine`;
-        wineVersion.lib32 = `${gameStore.config.wineRunnerPath}/${runner}/lib`;
-        wineVersion.wineserver = `${gameStore.config.wineRunnerPath}/${runner}/bin/wineserver`;
-      } else if (runnerType === "proton") {
-        wineVersion.bin = `${gameStore.config.wineRunnerPath}/${runner}/proton`;
+      if (runnerType === "Wine") {
+        wineVersion.bin = `${this.wineRunnerPath}/${runner}/bin/wine`;
+        wineVersion.lib32 = `${this.wineRunnerPath}/${runner}/lib`;
+        wineVersion.wineserver = `${this.wineRunnerPath}/${runner}/bin/wineserver`;
+      } else if (runnerType === "Proton") {
+        wineVersion.bin = `${this.wineRunnerPath}/${runner}/proton`;
       } else {
         throw new Error(`Unknown runner type: ${runnerType}`);
       }
@@ -163,9 +163,27 @@ class HeroicDB {
     if (gameConfig.heroicPrefix !== "default") {
       heroicPerGameConfig[
         game.gameNameSlug
-      ].winePrefix = `${gameStore.config.winePrefixPath}/${gameConfig.heroicPrefix}`;
+      ].winePrefix = `${this.winePrefixPath}/${gameConfig.heroicPrefix}`;
     }
-
+    if (gameConfig.locale !== "ja_JP.utf8") {
+      const env_locale = { key: "LANG", value: gameConfig.locale };
+      // check heroicPerGameConfig[game.gameNameSlug].enviromentOptions (should be a list of objects)
+      if (!heroicPerGameConfig[game.gameNameSlug].enviromentOptions) {
+        heroicPerGameConfig[game.gameNameSlug].enviromentOptions = [];
+      }
+      // replace or add LANG in enviromentOptions
+      const envIndex = heroicPerGameConfig[
+        game.gameNameSlug
+      ].enviromentOptions.findIndex((env: any) => env.key === "LANG");
+      if (envIndex !== -1) {
+        heroicPerGameConfig[game.gameNameSlug].enviromentOptions[envIndex] =
+          env_locale;
+      } else {
+        heroicPerGameConfig[game.gameNameSlug].enviromentOptions.push(
+          env_locale
+        );
+      }
+    }
     this.heroicPerGameConfigs[game.gameName] = {
       ...(this.heroicPerGameConfigs[game.gameName] || {}),
       ...heroicPerGameConfig,
@@ -283,7 +301,9 @@ class HeroicDB {
   }
 
   getPerGameConfig(game: GameEntry): Record<string, any> {
-    return this.heroicPerGameConfigs[game.gameName]?.[game.gameNameSlug] || {};
+    return (
+      this.heroicPerGameConfigs[game.gameNameSlug]?.[game.gameNameSlug] || {}
+    );
   }
 
   async categoriesForGame(game: GameEntry): Promise<string[]> {

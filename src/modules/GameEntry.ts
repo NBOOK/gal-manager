@@ -145,23 +145,43 @@ class GameEntry {
       this.splitter
     );
 
+    const lutrisGameProperties = await gameStore.lutrisDB.getGameConfig(this);
+    const heroicGameProperties = await gameStore.heroicDB.getGameConfig(this);
     if (this.inLutrisDB) {
-      const gameProperties = await gameStore.lutrisDB.getGameConfig(this);
-      this.gameNameEN = gameProperties.gameNameEN;
-      if (gameProperties.gameBrandEN) {
-        this.gameBrandEN = gameProperties.gameBrandEN;
+      this.gameNameEN = lutrisGameProperties.gameNameEN;
+      if (lutrisGameProperties.gameBrandEN) {
+        this.gameBrandEN = lutrisGameProperties.gameBrandEN;
       } else {
         this.gameBrandEN = await utils.romanize(this.gameBrand);
       }
-      this.gameNameSlug = gameProperties.gameNameSlug;
+      this.gameNameSlug = lutrisGameProperties.gameNameSlug;
       if (
-        gameProperties.gameReleaseYear &&
-        gameProperties.gameReleaseYear !== "null"
+        lutrisGameProperties.gameReleaseYear &&
+        lutrisGameProperties.gameReleaseYear !== "null"
       ) {
-        this.gameReleaseYear = gameProperties.gameReleaseYear;
+        this.gameReleaseYear = lutrisGameProperties.gameReleaseYear;
       }
-      if (gameProperties.gamePlatform) {
-        this.platform = gameProperties.gamePlatform;
+      if (lutrisGameProperties.gamePlatform) {
+        this.platform = lutrisGameProperties.gamePlatform;
+      } else {
+        this.platform = "Unknown";
+      }
+    } else if (this.inHeroicDB) {
+      this.gameNameEN = heroicGameProperties.gameNameEN;
+      if (heroicGameProperties.gameBrandEN) {
+        this.gameBrandEN = heroicGameProperties.gameBrandEN;
+      } else {
+        this.gameBrandEN = await utils.romanize(this.gameBrand);
+      }
+      this.gameNameSlug = heroicGameProperties.gameNameSlug;
+      if (
+        heroicGameProperties.gameReleaseYear &&
+        heroicGameProperties.gameReleaseYear !== "null"
+      ) {
+        this.gameReleaseYear = heroicGameProperties.gameReleaseYear;
+      }
+      if (heroicGameProperties.gamePlatform) {
+        this.platform = heroicGameProperties.gamePlatform;
       } else {
         this.platform = "Unknown";
       }
@@ -435,7 +455,7 @@ class GameEntry {
     const localPath = this.gamePath;
 
     const exclude = [gameStore.config.value.assetsFolderName];
-    
+
     let include: string[] = [];
     for (const asset of [
       gameStore.config.value.assetsCapsuleName,

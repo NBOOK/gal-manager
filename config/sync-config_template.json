@@ -1,7 +1,7 @@
 {
     "Documents": {
         "localPath": "/run/media/deck/Data/Documents",
-        "remotePath": "/run/media/deck/NetDisk/Saves/Documents",
+        "remotePath": "/run/media/deck/NetDisk/Games/Saves/Documents",
         "items": [
             "AliceSoft",
             "CRYSTALiA",
@@ -17,7 +17,7 @@
     },
     "Roaming": {
         "localPath": "/run/media/deck/Windows/Users/<USER>/AppData/Roaming",
-        "remotePath": "/run/media/deck/NetDisk/Saves/AppData/Roaming",
+        "remotePath": "/run/media/deck/NetDisk/Games/Saves/AppData/Roaming",
         "items": [
             "Archive",
             "FRONTWING",
@@ -42,7 +42,7 @@
     },
     "LocalLow": {
         "localPath": "/run/media/deck/Windows/Users/<USER>/AppData/LocalLow",
-        "remotePath": "/run/media/deck/NetDisk/Saves/AppData/LocalLow",
+        "remotePath": "/run/media/deck/NetDisk/Games/Saves/AppData/LocalLow",
         "items": [
             "Ex-Erotia",
             "GirlGame",
@@ -56,12 +56,12 @@
     },
     "Local": {
         "localPath": "/run/media/deck/Windows/Users/<USER>/AppData/Local",
-        "remotePath": "/run/media/deck/NetDisk/Saves/AppData/Local",
+        "remotePath": "/run/media/deck/NetDisk/Games/Saves/AppData/Local",
         "items": []
     },
     "Games": {
         "localPath": "/run/media/deck/Data/Games",
-        "remotePath": "/run/media/deck/NetDisk/Saves/Games",
+        "remotePath": "/run/media/deck/NetDisk/Games/Saves/Games",
         "items": [
             "WillPlus"
         ]

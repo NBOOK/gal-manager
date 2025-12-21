@@ -14,9 +14,7 @@ app.mount("#app");
 import { gameEntrySetStore } from "@/modules/GameEntry";
 import { imageAssetsSetStore } from "@/modules/ImageAssets";
 import { steamDBSetStore } from "@/modules/SteamDB";
-import { heroicDBSetStore } from "@/modules/HeroicDB";
 
 gameEntrySetStore();
 imageAssetsSetStore();
 steamDBSetStore();
-heroicDBSetStore();

@@ -280,7 +280,6 @@ async function setUpExcutables() {
   executablesLoading.value = false;
 }
 
-
 async function setupEnv() {
   // setup categories, prefix, runner, locale, launcher
   const heroicPergameConfig = gameStore.heroicDB.getPerGameConfig(props.game);
@@ -323,6 +322,7 @@ async function setupEnv() {
       props.game
     );
   } else {
+    gameConfig.heroicCategories.length = 0;
     gameConfig.heroicCategories.push("Gal");
   }
 
@@ -363,6 +363,7 @@ async function setupEnv() {
       props.game
     );
   } else {
+    gameConfig.lutrisCategories.length = 0;
     gameConfig.lutrisCategories.push("Gal");
   }
 
@@ -373,6 +374,7 @@ async function setupEnv() {
       props.game
     );
   } else {
+    gameConfig.steamCategories.length = 0;
     gameConfig.steamCategories.push("Gal");
   }
 
@@ -994,7 +996,6 @@ async function openVNDBLink(id: string) {
             </template>
           </v-select>
         </v-row>
-
 
         <!-- ------------------------- Executable Selection ------------------------------- -->
         <v-row>

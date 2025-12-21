@@ -109,7 +109,7 @@ class SteamDB {
       "readVDF",
       this.steamLocalConfigPath
     );
-    
+
     this.nonSteamCategories = JSON.parse(
       this.localConfigVDF.UserLocalConfigStore.WebStorage[
         "user-collections"
@@ -369,7 +369,8 @@ class SteamDB {
         .appid as number;
     }
 
-    await this.linkImage(game.imageAssets.paths.logo, appID, "_logo");
+    // even if logo source file is .webp, we force png extension for logo to be compatible with Steam
+    await this.linkImage(game.imageAssets.paths.logo, appID, "_logo", "png");
     if (this.linkLowRes) {
       await this.linkImage(game.imageAssets.paths.headerSD, appID, "");
       await this.linkImage(game.imageAssets.paths.capsuleSD, appID, "p");
@@ -391,7 +392,8 @@ class SteamDB {
         .appid as number;
     }
 
-    await this.unlinkImage(game.imageAssets.paths.logo, appID, "_logo");
+    // even if logo source file is .webp, we force png extension for logo to be compatible with Steam
+    await this.unlinkImage(game.imageAssets.paths.logo, appID, "_logo", "png");
     await this.unlinkImage("dummy.json", appID, "");
     if (this.linkLowRes) {
       await this.unlinkImage(game.imageAssets.paths.headerSD, appID, "");
@@ -404,9 +406,16 @@ class SteamDB {
     }
   }
 
-  private async linkImage(sourcePath: string, appID: number, suffix: string) {
+  private async linkImage(
+    sourcePath: string,
+    appID: number,
+    suffix: string,
+    extension: string = ""
+  ) {
     const assetExtention = sourcePath.split(".").pop();
-    const targetPath = `${this.steamGridPath}/${appID}${suffix}.${assetExtention}`;
+    const targetPath = `${this.steamGridPath}/${appID}${suffix}.${
+      extension || assetExtention
+    }`;
 
     console.log(`${sourcePath} -> ${targetPath}`);
     await window.ipcRenderer.invoke(
@@ -416,9 +425,16 @@ class SteamDB {
     );
   }
 
-  private async unlinkImage(sourcePath: string, appID: number, suffix: string) {
+  private async unlinkImage(
+    sourcePath: string,
+    appID: number,
+    suffix: string,
+    extension: string = ""
+  ) {
     const assetExtention = sourcePath.split(".").pop();
-    const targetPath = `${this.steamGridPath}/${appID}${suffix}.${assetExtention}`;
+    const targetPath = `${this.steamGridPath}/${appID}${suffix}.${
+      extension || assetExtention
+    }`;
 
     console.log(`[X] ${targetPath}`);
     await window.ipcRenderer.invoke("removeSymbolicLink", targetPath);
@@ -430,7 +446,7 @@ class SteamDB {
     if (!this.shortcutVDF || !this.shortcutVDF.shortcuts) {
       return -1;
     }
-    
+
     if (this.steamGameIndices[game.gameNameEN] !== undefined) {
       return this.steamGameIndices[game.gameNameEN];
     }
