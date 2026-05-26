@@ -69,10 +69,13 @@ const gameConfig = reactive<GameConfig>({
   platform: "",
 });
 const gameBrandFromFolder = computed(
-  () => folderName.value.split(props.game.splitter)[0]
+  () => folderName.value.split(props.game.splitter)[0],
 );
 const gameNameFromFolder = computed(() =>
-  folderName.value.split(props.game.splitter).slice(1).join(props.game.splitter)
+  folderName.value
+    .split(props.game.splitter)
+    .slice(1)
+    .join(props.game.splitter),
 );
 
 async function getSetGameENCandidates() {
@@ -92,13 +95,15 @@ async function getSetGameENCandidates() {
   enTitleColor.value = titleKindColor[gameNameENCandidates.value[0].kind];
   selectedBrands.value = [];
   selectedBrands.value.push(
-    ...gameBrandENCandidates.value.filter((brand) => brand.kind === "developer")
+    ...gameBrandENCandidates.value.filter(
+      (brand) => brand.kind === "developer",
+    ),
   );
   if (selectedBrands.value.length === 0)
     selectedBrands.value.push(
       ...gameBrandENCandidates.value.filter(
-        (brand) => brand.kind === "publisher"
-      )
+        (brand) => brand.kind === "publisher",
+      ),
     );
   if (selectedBrands.value.length === 0)
     selectedBrands.value.push(gameBrandENCandidates.value[0]);
@@ -127,7 +132,7 @@ function checkWindowsForbiddenChars() {
   const forbiddenChars = /[<>:"/\\|?*]/;
   if (forbiddenChars.test(folderName.value))
     return `Folder name contains forbidden characters: ${folderName.value.match(
-      forbiddenChars
+      forbiddenChars,
     )}`;
   if (folderName.value.endsWith(" ") || folderName.value.startsWith(" "))
     return "Folder name cannot start or end with a space.";
@@ -154,9 +159,9 @@ watch(
   () => {
     gameConfig.gameNameSlug = slugify(
       `${gameConfig.gameBrandEN} - ${gameConfig.gameNameEN}`,
-      gameConfig.gameNameSlug
+      gameConfig.gameNameSlug,
     );
-  }
+  },
 );
 
 watch(
@@ -183,7 +188,7 @@ watch(
       gameConfig.gameBrand = newBrand;
     }
     if (oldName !== newName) gameConfig.gameName = newName;
-  }
+  },
 );
 
 watch(
@@ -199,15 +204,12 @@ watch(
     gameConfig.gameBrand = sorted.map((brand) => brand.origName).join("×");
     enBrandColor.value =
       titleKindColor[
-        sorted.some((brand) => brand.kind === "developer")
-          ? "developer"
-          : sorted.some((brand) => brand.kind === "developer")
-          ? "publisher"
-          : props.game.inLutrisDB
-          ? "stored"
-          : "romanized"
+        sorted.some((brand) => brand.kind === "developer") ? "developer"
+        : sorted.some((brand) => brand.kind === "developer") ? "publisher"
+        : props.game.inLutrisDB ? "stored"
+        : "romanized"
       ];
-  }
+  },
 );
 
 async function setUpTitles() {
@@ -232,7 +234,7 @@ async function setUpTitles() {
 
     const titlesAndBrands = await utils.getGameNameEN(
       gameConfig.gameName,
-      gameConfig.gameBrand
+      gameConfig.gameBrand,
     );
     gameNameENCandidates.value = titlesAndBrands.titles;
     gameBrandENCandidates.value = titlesAndBrands.brands;
@@ -248,7 +250,7 @@ async function setUpExcutables() {
   const gamePath = `${props.game.basePath}/${props.game.folderName}`;
   const scannedFiles: DirEntry[] = await window.ipcRenderer.invoke(
     "scanDir",
-    gamePath
+    gamePath,
   );
   const filteredFiles: DirEntry[] = [];
   for (const file of scannedFiles) {
@@ -260,7 +262,7 @@ async function setUpExcutables() {
         file.name.toLowerCase().endsWith(".appimage") ||
         (await window.ipcRenderer.invoke(
           "hasExecutableMagic",
-          `${gamePath}/${file.name}`
+          `${gamePath}/${file.name}`,
         )))
     ) {
       filteredFiles.push(file);
@@ -290,7 +292,7 @@ async function setupEnv() {
   if (!gameConfig.heroicPrefix) {
     if (
       gameStore.heroicDB.winePrefixes.includes(
-        gameStore.config.value.heroic.defaultWinePrefix
+        gameStore.config.value.heroic.defaultWinePrefix,
       )
     ) {
       gameConfig.heroicPrefix = gameStore.config.value.heroic.defaultWinePrefix;
@@ -304,7 +306,7 @@ async function setupEnv() {
   if (!gameConfig.heroicRunner) {
     if (
       gameStore.heroicDB.wineRunners.includes(
-        gameStore.config.value.heroic.defaultWineRunner
+        gameStore.config.value.heroic.defaultWineRunner,
       )
     )
       gameConfig.heroicRunner = gameStore.config.value.heroic.defaultWineRunner;
@@ -315,11 +317,11 @@ async function setupEnv() {
 
   // heroic categories
   allHeroicCategories.value = Object.keys(
-    gameStore.heroicDB.heroicCategories
+    gameStore.heroicDB.heroicCategories,
   ).sort();
   if (props.game.inHeroicDB) {
     gameConfig.heroicCategories = await gameStore.heroicDB.categoriesForGame(
-      props.game
+      props.game,
     );
   } else {
     gameConfig.heroicCategories.length = 0;
@@ -331,7 +333,7 @@ async function setupEnv() {
   if (!gameConfig.lutrisPrefix) {
     if (
       gameStore.lutrisDB.winePrefixes.includes(
-        gameStore.config.value.lutris.defaultWinePrefix
+        gameStore.config.value.lutris.defaultWinePrefix,
       )
     ) {
       gameConfig.lutrisPrefix = gameStore.config.value.lutris.defaultWinePrefix;
@@ -345,7 +347,7 @@ async function setupEnv() {
   if (!gameConfig.lutrisRunner) {
     if (
       gameStore.lutrisDB.wineRunners.includes(
-        gameStore.config.value.lutrisDefaultWineRunner
+        gameStore.config.value.lutrisDefaultWineRunner,
       )
     )
       gameConfig.lutrisRunner = gameStore.config.value.lutrisDefaultWineRunner;
@@ -356,11 +358,11 @@ async function setupEnv() {
 
   // lutris categories
   allLutrisCategories.value = Object.keys(
-    gameStore.lutrisDB.lutrisCategories
+    gameStore.lutrisDB.lutrisCategories,
   ).sort();
   if (props.game.inLutrisDB) {
     gameConfig.lutrisCategories = await gameStore.lutrisDB.categoriesForGame(
-      props.game
+      props.game,
     );
   } else {
     gameConfig.lutrisCategories.length = 0;
@@ -371,7 +373,7 @@ async function setupEnv() {
   allSteamCategories.value = gameStore.steamDB.steamCategoriesNames.sort();
   if (props.game.inSteamDB) {
     gameConfig.steamCategories = gameStore.steamDB.categoriesForGame(
-      props.game
+      props.game,
     );
   } else {
     gameConfig.steamCategories.length = 0;
@@ -394,7 +396,7 @@ async function setupEnv() {
   // launcher
   gameConfig.launcher = props.game.launcher; // either already set or "", will set below
   if (!gameConfig.launcher || gameConfig.launcher === "Unknown") {
-    gameConfig.launcher = "Heroic";
+    gameConfig.launcher = "Lutris";
   }
 }
 
@@ -425,7 +427,7 @@ watch(
     reset();
     Promise.all([setUpTitles(), setUpExcutables(), setupEnv()]);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 async function addGameToDB() {
@@ -508,10 +510,14 @@ async function openVNDBLink(id: string) {
                 :spellcheck="false"
                 :rules="[checkFolderNameFormat, checkWindowsForbiddenChars]"
                 :hint="
-                  gameConfig.gameBrand + game.splitter + gameConfig.gameName ===
-                  folderName
-                    ? ''
-                    : gameConfig.gameBrand + game.splitter + gameConfig.gameName
+                  (
+                    gameConfig.gameBrand +
+                      game.splitter +
+                      gameConfig.gameName ===
+                    folderName
+                  ) ?
+                    ''
+                  : gameConfig.gameBrand + game.splitter + gameConfig.gameName
                 "
                 persistent-hint
                 v-model="folderName"
@@ -1056,11 +1062,10 @@ async function openVNDBLink(id: string) {
                   <v-icon
                     v-else
                     :icon="
-                      item.endsWith('.exe')
-                        ? '$mdiApplicationOutline'
-                        : item.endsWith('.bat') || item.endsWith('.sh')
-                        ? '$mdiConsole'
-                        : '$mdiFileOutline'
+                      item.endsWith('.exe') ? '$mdiApplicationOutline'
+                      : item.endsWith('.bat') || item.endsWith('.sh') ?
+                        '$mdiConsole'
+                      : '$mdiFileOutline'
                     "
                     color="grey-darken-2"
                     style="height: 30px; width: 30px; flex-grow: 0"
