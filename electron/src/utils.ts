@@ -25,7 +25,8 @@ const kuroshiro = new Kuroshiro();
 
 async function scanDir(
   dirPath: string,
-  netDiskOnline: boolean = false
+  netDiskOnline: boolean = false,
+  skipSymbolicTargetPrefix?: string
 ): Promise<DirEntry[]> {
   // console.log("Scanning directory:", dirPath);
   try {
@@ -36,13 +37,13 @@ async function scanDir(
         const entryPath = path.join(dirPath, entry.name);
         const isSymbolicLink = entry.isSymbolicLink();
 
-        // 初始化返回对象
-        const stats = await fs.promises.stat(path.join(dirPath, entry.name));
+        // Use lstat first so broken/offline symlinks do not block normal entries.
+        const stats = await fs.promises.lstat(entryPath);
         const result: DirEntry = {
           basePath: dirPath,
           name: entry.name,
-          isDirectory: entry.isDirectory(),
-          isFile: entry.isFile(),
+          isDirectory: stats.isDirectory(),
+          isFile: stats.isFile(),
           isSymbolicLink: isSymbolicLink,
           symbolicTarget: "",
           // diskUsage: 0,
@@ -56,6 +57,13 @@ async function scanDir(
           if (isSymbolicLink) {
             try {
               result.symbolicTarget = await fs.promises.readlink(entryPath);
+              if (
+                skipSymbolicTargetPrefix &&
+                result.symbolicTarget.startsWith(skipSymbolicTargetPrefix)
+              ) {
+                result.basePath = "";
+                return result;
+              }
               const stats = await fs.promises.stat(entryPath);
               result.isDirectory = stats.isDirectory();
               result.isFile = stats.isFile();

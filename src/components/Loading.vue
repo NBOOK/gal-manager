@@ -75,7 +75,7 @@ async function processGameEntries(
   if (
     gameStore.games[name].inDeck &&
     gameStore.games[name].linkedBasePath !==
-      gameStore.config.value.gamesDeckPath
+      gameStore.config.value.gamesDataPath
   )
     imageAssetsDirs.push(
       `${gameStore.config.value.gamesDataPath}/${name}/${gameStore.config.value.assetsFolderName}`
@@ -109,20 +109,26 @@ async function scanGames() {
   // let updateLock = Promise.resolve();
   const startTimestamp = Date.now();
 
-  const paths = {
-    gamesMainPath: gameStore.config.value.gamesMainPath,
-    gamesDataPath: gameStore.config.value.gamesDataPath,
-    gamesSDPath: gameStore.config.value.gamesSDPath,
-    gamesNetPath: gameStore.config.value.gamesNetPath,
-    gamesAssetsPath: gameStore.config.value.gamesAssetsPath,
-  };
+  const paths = gameStore.config.value;
+  const skipSymbolicTargetPrefix = gameStore.netDiskOnline
+    ? undefined
+    : paths.gamesNetPath;
+  const scanDir = (path: string) =>
+    window.ipcRenderer.invoke(
+      "scanDir",
+      path,
+      gameStore.netDiskOnline,
+      skipSymbolicTargetPrefix
+    );
 
   // scan all game directories in multiple paths
-  const entries = (await Promise.all(
-    Object.values(paths).map((path) =>
-      window.ipcRenderer.invoke("scanDir", path)
-    )
-  )) as DirEntry[][];
+  const entries = (await Promise.all([
+    scanDir(paths.gamesMainPath),
+    scanDir(paths.gamesDataPath),
+    scanDir(paths.gamesSDPath),
+    gameStore.netDiskOnline ? scanDir(paths.gamesNetPath) : [],
+    scanDir(paths.gamesAssetsPath),
+  ])) as DirEntry[][];
   const [
     mainEntries,
     deckEntries,

@@ -30,13 +30,13 @@ function registerIpcMain(win: Electron.BrowserWindow | null, MAIN_DIST: string) 
     ipcMain.handle('openDevTools', () => {
       win?.webContents.openDevTools();
     });
-    ipcMain.handle('scanDir', (_event, dirPath: string) => {
+    ipcMain.handle('scanDir', (_event, dirPath: string, netDiskOnline: boolean = false, skipSymbolicTargetPrefix?: string) => {
       if (dirPath.startsWith("<MAIN_DIST>")) {
         dirPath = path.join(MAIN_DIST, dirPath.slice(11));
       } else if (dirPath.startsWith("<HOME>")) {
         dirPath = path.join(os.homedir(), dirPath.slice(6));
       }
-      return utils.scanDir(dirPath)
+      return utils.scanDir(dirPath, netDiskOnline, skipSymbolicTargetPrefix)
     });
     ipcMain.handle('getDirDiskUsage', (_event, dirPath: string) => {
       return utils.getDirDiskUsage(dirPath)
