@@ -316,6 +316,7 @@ async function resizeImage(
   const baseName = path.basename(sourcePath, ext);
   const targetName = `${baseName}_sd.${format}`;
   const targetPath = path.join(path.dirname(sourcePath), targetName);
+  const sharpFormat = format === "jpg" ? "jpeg" : format;
 
   // return targetPath;
 
@@ -324,7 +325,7 @@ async function resizeImage(
 
     await image
       .resize({ width: targetWidth, background: { r: 255, g: 255, b: 255 } })
-      .toFormat(format, {
+      .toFormat(sharpFormat, {
         quality: quality,
         chromaSubsampling: "4:4:4",
         progressive: true,
